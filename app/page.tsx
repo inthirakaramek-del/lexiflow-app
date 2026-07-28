@@ -1033,8 +1033,16 @@ export default function Home() {
                           </svg>
                         </div>
                         <div className="flex flex-col gap-0.5 text-left">
-                          <span className="font-bold uppercase tracking-wider text-amber-700">Gemini API Warning ({apiError})</span>
-                          <p className="text-slate-600 font-medium">Using dynamic local templates. Set a valid <code>GEMINI_API_KEY</code> in <code>.env.local</code> and restart the server to enable AI sentences.</p>
+                          <span className="font-bold uppercase tracking-wider text-amber-700">
+                            {apiError.includes("429") || apiError.toLowerCase().includes("quota")
+                              ? "⚠️ AI กำลังพักประมวลผลชั่วคราวเนื่องจากเรียกใช้งานถี่เกินไป (Rate Limit)"
+                              : "Gemini API Warning"}
+                          </span>
+                          <p className="text-slate-600 font-medium">
+                            {apiError.includes("429") || apiError.toLowerCase().includes("quota")
+                              ? "กรุณารอประมาณ 1 นาทีโดยหลีกเลี่ยงการกดรีเฟรชหน้าจอรัวๆ (เพื่อไม่ให้นับเวลาเริ่มต้นใหม่) ระหว่างนี้คุณสามารถอ่านประโยคตัวอย่างจำลองภาษาไทยที่เราเตรียมไว้เพื่อเรียนรู้ต่อได้ทันทีครับ"
+                              : `เกิดข้อผิดพลาดในการดึงข้อมูลจาก AI: ${apiError} (ระบบได้นำประโยคตัวอย่างจำลองขึ้นมาแสดงชั่วคราว)`}
+                          </p>
                         </div>
                       </div>
                     </div>
