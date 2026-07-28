@@ -1300,22 +1300,6 @@ export default function Home() {
                     </div>
                   </div>
 
-                  {/* Regenerate Button */}
-                  <div className="w-full max-w-xl flex justify-end">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        regenerateCard();
-                      }}
-                      disabled={loadingAI}
-                      className="bg-white hover:bg-slate-50 border border-slate-200 hover:border-slate-300 disabled:opacity-50 text-slate-500 hover:text-slate-800 px-4 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 shadow-sm"
-                    >
-                      <svg className={`w-3.5 h-3.5 ${loadingAI ? 'animate-spin' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 6.891M21 21v-5h-.581m0 0a8.003 8.003 0 11-15.357-2" />
-                      </svg>
-                      {loadingAI ? "Regenerating..." : "Regenerate with AI"}
-                    </button>
-                  </div>
 
                   {/* Starred Notes Input Area */}
                   <div className="w-full max-w-xl bg-white border border-[#e5effa] rounded-2xl p-4 flex flex-col gap-3 shadow-sm">
