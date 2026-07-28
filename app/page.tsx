@@ -2,12 +2,12 @@
 
 import { useState, useEffect, useMemo, useRef } from "react";
 import { VOCAB } from "./vocab";
-import { Word, UserProgress } from "./types";
+import { Word, UserProgress, ReviewWord, GeneralNote } from "./types";
 import { CardData, generateFallbackCard } from "./utils/fallbackGenerator";
 
 export default function Home() {
-  // Tab state: 'dashboard' | 'flashcards' | 'quiz' | 'explorer'
-  const [activeTab, setActiveTab] = useState<"dashboard" | "flashcards" | "quiz" | "explorer">("dashboard");
+  // Tab state: 'dashboard' | 'flashcards' | 'quiz' | 'explorer' | 'review' | 'notes'
+  const [activeTab, setActiveTab] = useState<"dashboard" | "flashcards" | "quiz" | "explorer" | "review" | "notes">("dashboard");
 
   // Global Progress State
   const [progress, setProgress] = useState<UserProgress>({
@@ -19,6 +19,10 @@ export default function Home() {
   // Database cache of generated sentence data
   const [cardCache, setCardCache] = useState<Record<string, CardData>>({});
 
+  // Review list and notebook notes
+  const [reviewWords, setReviewWords] = useState<ReviewWord[]>([]);
+  const [generalNotes, setGeneralNotes] = useState<GeneralNote[]>([]);
+
   // Active card data for flashcards
   const [activeCardData, setActiveCardData] = useState<CardData | null>(null);
   const [loadingAI, setLoadingAI] = useState(false);
@@ -28,7 +32,31 @@ export default function Home() {
   const [lastWordIdToRestore, setLastWordIdToRestore] = useState<string | null>(null);
   const [flashcardSearchQuery, setFlashcardSearchQuery] = useState("");
 
-  // Load progress and card cache from server database, with localStorage fallback
+  // Quiz pool type: 'unmastered' | 'mastered'
+  const [quizPoolType, setQuizPoolType] = useState<"unmastered" | "mastered">("unmastered");
+
+  // Word translation states
+  const [wordToTranslate, setWordToTranslate] = useState("");
+  const [showTranslateModal, setShowTranslateModal] = useState(false);
+  const [translationLoading, setTranslationLoading] = useState(false);
+  const [translationResult, setTranslationResult] = useState<any>(null);
+
+  // Custom word inputs
+  const [customWordInput, setCustomWordInput] = useState("");
+  const [customWordPos, setCustomWordPos] = useState("n.");
+  const [customWordTranslation, setCustomWordTranslation] = useState("");
+
+  // Notebook editor states
+  const [noteEditId, setNoteEditId] = useState<string | null>(null);
+  const [noteTitleInput, setNoteTitleInput] = useState("");
+  const [noteContentInput, setNoteContentInput] = useState("");
+  const [noteSearchQuery, setNoteSearchQuery] = useState("");
+
+  // Review filters
+  const [reviewFilter, setReviewFilter] = useState<"all" | "base" | "custom">("all");
+  const [reviewSearchQuery, setReviewSearchQuery] = useState("");
+
+  // Load progress, cache, review words, and notes from server DB, with localStorage fallback
   useEffect(() => {
     try {
       const savedDeckType = localStorage.getItem("lexiflow_deck_type");
@@ -51,27 +79,38 @@ export default function Home() {
       .then((data) => {
         const dbProgress = data.progress || { masteredIds: [], starredIds: [], notes: {} };
         const dbCache = data.cardCache || {};
+        const dbReviewWords = data.reviewWords || [];
+        const dbGeneralNotes = data.generalNotes || [];
 
         setProgress(dbProgress);
         setCardCache(dbCache);
+        setReviewWords(dbReviewWords);
+        setGeneralNotes(dbGeneralNotes);
 
         localStorage.setItem("lexiflow_progress", JSON.stringify(dbProgress));
         localStorage.setItem("lexiflow_card_cache", JSON.stringify(dbCache));
+        localStorage.setItem("lexiflow_review_words", JSON.stringify(dbReviewWords));
+        localStorage.setItem("lexiflow_general_notes", JSON.stringify(dbGeneralNotes));
       })
       .catch((err) => {
         console.warn("Failed to fetch data from server DB, falling back to localStorage", err);
         try {
           const savedProgress = localStorage.getItem("lexiflow_progress");
           const savedCache = localStorage.getItem("lexiflow_card_cache");
+          const savedReview = localStorage.getItem("lexiflow_review_words");
+          const savedNotes = localStorage.getItem("lexiflow_general_notes");
+          
           if (savedProgress) setProgress(JSON.parse(savedProgress));
           if (savedCache) setCardCache(JSON.parse(savedCache));
+          if (savedReview) setReviewWords(JSON.parse(savedReview));
+          if (savedNotes) setGeneralNotes(JSON.parse(savedNotes));
         } catch (e) {
           console.error("Failed to load fallback localStorage state", e);
         }
       });
   }, []);
 
-  // Save card cache to localStorage and server DB
+  // Save card cache using partial patches
   const addCardToCache = (wordId: string, cardData: CardData) => {
     setCardCache((prevCache) => {
       const updatedCache = { ...prevCache, [wordId]: cardData };
@@ -79,7 +118,7 @@ export default function Home() {
       fetch("/api/db", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ cardCache: updatedCache })
+        body: JSON.stringify({ cardCachePatch: { [wordId]: cardData } })
       }).catch((e) => {
         console.error("Failed to save card cache to server DB", e);
       });
@@ -100,6 +139,76 @@ export default function Home() {
       });
       return updatedProgress;
     });
+  };
+
+  const updateReviewWordsInDb = (updatedList: ReviewWord[]) => {
+    localStorage.setItem("lexiflow_review_words", JSON.stringify(updatedList));
+    fetch("/api/db", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ reviewWords: updatedList })
+    }).catch((e) => {
+      console.error("Failed to save review words to server DB", e);
+    });
+  };
+
+  const updateGeneralNotesInDb = (updatedList: GeneralNote[]) => {
+    localStorage.setItem("lexiflow_general_notes", JSON.stringify(updatedList));
+    fetch("/api/db", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ generalNotes: updatedList })
+    }).catch((e) => {
+      console.error("Failed to save general notes to server DB", e);
+    });
+  };
+
+  const addWordToReviewList = (wordText: string, wordPos: string, wordTranslation: string, sourceWordId?: string, isCustom = false) => {
+    const exists = reviewWords.some((rw) => rw.word.toLowerCase() === wordText.toLowerCase());
+    if (exists) return;
+
+    const newReviewWord: ReviewWord = {
+      id: `rw-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+      word: wordText,
+      pos: wordPos,
+      translation: wordTranslation,
+      addedAt: new Date().toISOString(),
+      isCustom,
+      sourceWordId
+    };
+
+    const updatedList = [newReviewWord, ...reviewWords];
+    setReviewWords(updatedList);
+    updateReviewWordsInDb(updatedList);
+  };
+
+  const openTranslationModal = (wordText: string) => {
+    setWordToTranslate(wordText);
+    setTranslationResult(null);
+    setShowTranslateModal(true);
+    setTranslationLoading(true);
+
+    fetch("/api/generate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "translate", word: wordText })
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        setTranslationResult(data);
+        setCustomWordInput(wordText);
+        setCustomWordPos(data.pos || "n.");
+        setCustomWordTranslation(data.translation || "");
+      })
+      .catch((e) => {
+        console.error("Translation API failed", e);
+        setCustomWordInput(wordText);
+        setCustomWordPos("n.");
+        setCustomWordTranslation("");
+      })
+      .finally(() => {
+        setTranslationLoading(false);
+      });
   };
 
   // Helper toggle functions
@@ -173,6 +282,28 @@ export default function Home() {
     const end = explorerPage * itemsPerPage;
     return filteredWords.slice(0, end);
   }, [filteredWords, explorerPage]);
+
+  const filteredReviewWords = useMemo(() => {
+    return reviewWords.filter((rw) => {
+      const matchesSearch = rw.word.toLowerCase().includes(reviewSearchQuery.toLowerCase()) || 
+        rw.translation.toLowerCase().includes(reviewSearchQuery.toLowerCase());
+      
+      let matchesFilter = true;
+      if (reviewFilter === "base") {
+        matchesFilter = !rw.isCustom;
+      } else if (reviewFilter === "custom") {
+        matchesFilter = rw.isCustom;
+      }
+      return matchesSearch && matchesFilter;
+    });
+  }, [reviewWords, reviewFilter, reviewSearchQuery]);
+
+  const filteredGeneralNotes = useMemo(() => {
+    return generalNotes.filter((note) => {
+      return note.title.toLowerCase().includes(noteSearchQuery.toLowerCase()) ||
+        note.content.toLowerCase().includes(noteSearchQuery.toLowerCase());
+    });
+  }, [generalNotes, noteSearchQuery]);
 
   // ----------------------------------------------------
   // FLASHCARDS STATE
@@ -330,6 +461,27 @@ export default function Home() {
     }
   };
 
+  const renderInteractiveSentence = (sentence: string) => {
+    const tokens = sentence.split(/(\s+)/);
+    return tokens.map((token, i) => {
+      const cleanWord = token.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, "").trim();
+      if (!cleanWord) return <span key={i}>{token}</span>;
+      return (
+        <span
+          key={i}
+          onClick={(e) => {
+            e.stopPropagation();
+            openTranslationModal(cleanWord);
+          }}
+          className="px-0.5 hover:bg-pink-100 hover:text-[#fa6a8d] rounded font-semibold transition cursor-pointer"
+          title={`Click to analyze/add "${cleanWord}" to Review`}
+        >
+          {token}
+        </span>
+      );
+    });
+  };
+
   // Keyboard controls for flashcards
   useEffect(() => {
     if (activeTab !== "flashcards") return;
@@ -393,18 +545,19 @@ export default function Home() {
 
     if (VOCAB.length === 0) return;
 
-    const cachedIds = Object.keys(cardCache);
-    let pool = VOCAB.filter((w) => cachedIds.includes(w.id));
-    
-    // Safety fallback
+    let pool: Word[] = [];
+    if (quizPoolType === "mastered") {
+      pool = VOCAB.filter((w) => progress.masteredIds.includes(w.id));
+    } else {
+      pool = VOCAB.filter((w) => !progress.masteredIds.includes(w.id));
+    }
+
+    // Safety fallback if the chosen pool is empty
     if (pool.length === 0) {
       pool = VOCAB;
     }
 
-    let unmastered = pool.filter((w) => !progress.masteredIds.includes(w.id));
-    if (unmastered.length === 0) unmastered = pool;
-
-    const randomWord = unmastered[Math.floor(Math.random() * unmastered.length)];
+    const randomWord = pool[Math.floor(Math.random() * pool.length)];
     setCurrentQuizWord(randomWord);
 
     if (quizMode === "pos") {
@@ -593,6 +746,20 @@ export default function Home() {
             </button>
 
             <button
+              onClick={() => setActiveTab("review")}
+              className={`flex items-center gap-4 px-4 py-3.5 rounded-xl text-sm font-bold transition-all duration-200 group ${
+                activeTab === "review"
+                  ? "bg-[#ffedf1] text-[#fa6a8d] border border-[#ffdee5] shadow-sm"
+                  : "text-slate-500 hover:text-slate-800 hover:bg-slate-50 border border-transparent"
+              }`}
+            >
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+              </svg>
+              Review Deck ({reviewWords.length})
+            </button>
+
+            <button
               onClick={() => setActiveTab("quiz")}
               className={`flex items-center gap-4 px-4 py-3.5 rounded-xl text-sm font-bold transition-all duration-200 group ${
                 activeTab === "quiz"
@@ -618,6 +785,20 @@ export default function Home() {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M8 4H6a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-2m-4-1v8m0 0l3-3m-3 3L9 8m-5 5h2.586a1 1 0 01.707.293l2.414 2.414a1 1 0 00.707.293h3.172a1 1 0 00.707-.293l2.414-2.414a1 1 0 01.707-.293H20" />
               </svg>
               Word Explorer
+            </button>
+
+            <button
+              onClick={() => setActiveTab("notes")}
+              className={`flex items-center gap-4 px-4 py-3.5 rounded-xl text-sm font-bold transition-all duration-200 group ${
+                activeTab === "notes"
+                  ? "bg-[#ffedf1] text-[#fa6a8d] border border-[#ffdee5] shadow-sm"
+                  : "text-slate-500 hover:text-slate-800 hover:bg-slate-50 border border-transparent"
+              }`}
+            >
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+              </svg>
+              Knowledge Notes ({generalNotes.length})
             </button>
           </nav>
         </div>
@@ -658,8 +839,10 @@ export default function Home() {
           >
             <option value="dashboard">Dashboard</option>
             <option value="flashcards">Grammar Cards</option>
+            <option value="review">Review Deck</option>
             <option value="quiz">Quiz Arena</option>
             <option value="explorer">Word Explorer</option>
+            <option value="notes">Knowledge Notes</option>
           </select>
         </header>
 
@@ -675,7 +858,7 @@ export default function Home() {
                   Welcome to LexiFlow
                 </h2>
                 <p className="text-sm md:text-base text-slate-600 max-w-lg leading-relaxed font-medium">
-                  Learn grammar dynamically. Every card is now backed by a persistent database cache generating 5 distinct sentence structures and memory tricks.
+                  Learn grammar dynamically. Every card is backed by a persistent database cache generating 5 distinct sentence structures and memory tricks.
                 </p>
               </div>
               <div className="flex flex-col items-center justify-center bg-white/90 border border-[#e8f1fc] rounded-2xl px-6 py-4 text-center shadow-sm">
@@ -684,96 +867,81 @@ export default function Home() {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className="bg-white/90 border border-[#e8f1fc] rounded-2xl p-5 flex flex-col gap-2 shadow-sm">
-                <span className="text-slate-400 text-xs font-bold uppercase tracking-wider">Total Words</span>
-                <span className="text-3xl font-black text-slate-800">{VOCAB.length}</span>
-              </div>
-              <div className="bg-white/90 border border-[#e8f1fc] rounded-2xl p-5 flex flex-col gap-2 shadow-sm">
-                <span className="text-slate-400 text-xs font-bold uppercase tracking-wider">Words Mastered</span>
-                <span className="text-3xl font-black text-[#fa6a8d]">{progress.masteredIds.length}</span>
-              </div>
-              <div className="bg-white/90 border border-[#e8f1fc] rounded-2xl p-5 flex flex-col gap-2 shadow-sm">
-                <span className="text-slate-400 text-xs font-bold uppercase tracking-wider">Starred Items</span>
-                <span className="text-3xl font-black text-amber-500">{progress.starredIds.length}</span>
-              </div>
-              <div className="bg-white/90 border border-[#e8f1fc] rounded-2xl p-5 flex flex-col gap-2 shadow-sm">
-                <span className="text-slate-400 text-xs font-bold uppercase tracking-wider">Cards in Database Cache</span>
-                <span className="text-3xl font-black text-sky-600">
-                  {Object.keys(cardCache).length}
-                </span>
-              </div>
-            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {/* Main Mastery Progress Card */}
+              <div className="bg-white/90 border border-[#e8f1fc] rounded-3xl p-6 md:col-span-2 flex flex-col justify-between gap-6 shadow-sm">
+                <div className="flex flex-col gap-2">
+                  <h3 className="text-lg font-bold text-slate-800">สถิติการท่องคำศัพท์รวม (Overall Vocabulary Stats)</h3>
+                  <p className="text-xs text-slate-500 font-medium">ความคืบหน้าการจำคำศัพท์สะสมของคุณจากคลังคำศัพท์ทั้งหมด</p>
+                </div>
+                
+                <div className="flex flex-col items-center justify-center py-6 bg-slate-50/50 rounded-2xl border border-slate-100/80">
+                  <div className="text-5xl font-black text-[#fa6a8d] tracking-tight">
+                    {progress.masteredIds.length} <span className="text-xl font-bold text-slate-400">/ {VOCAB.length} คำ</span>
+                  </div>
+                  <div className="text-sm font-extrabold text-slate-500 mt-2">
+                    คุณจำได้แล้วคิดเป็น <span className="text-emerald-600 text-base">{masteredPercentage}%</span> ของคำศัพท์ทั้งหมด
+                  </div>
+                </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <div className="bg-white/90 border border-[#e8f1fc] rounded-3xl p-6 lg:col-span-2 flex flex-col gap-6 shadow-sm">
-                <h3 className="text-lg font-bold text-slate-800">Part of Speech Distribution</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {["n.", "v.", "adj.", "adv.", "prep.", "pron."].map((pos) => {
-                     const total = VOCAB.filter((w) => w.pos === pos).length;
-                     const mastered = VOCAB.filter(
-                       (w) => w.pos === pos && progress.masteredIds.includes(w.id)
-                     ).length;
-                     const percent = Math.round((total / VOCAB.length) * 100);
-                     const masteryPercent = Math.round((mastered / total) * 100) || 0;
-
-                     return (
-                       <div key={pos} className="bg-slate-50/50 border border-slate-100 rounded-xl p-4 flex flex-col gap-3">
-                         <div className="flex justify-between items-center">
-                           <span className="text-sm font-extrabold text-slate-700 uppercase">
-                             {pos === "n." ? "Noun" : pos === "v." ? "Verb" : pos === "adj." ? "Adjective" : pos === "adv." ? "Adverb" : pos === "prep." ? "Preposition" : "Pronoun"} ({pos})
-                           </span>
-                           <span className="text-xs text-slate-400 font-semibold">{total} words ({percent}%)</span>
-                         </div>
-                         <div className="flex flex-col gap-1">
-                           <div className="flex justify-between text-[10px] text-slate-500 font-semibold">
-                             <span>Mastered: {mastered}/{total}</span>
-                             <span>{masteryPercent}%</span>
-                           </div>
-                           <div className="w-full bg-slate-200 h-1.5 rounded-full overflow-hidden">
-                             <div className="bg-[#fa8fa6] h-full rounded-full" style={{ width: `${masteryPercent}%` }} />
-                           </div>
-                         </div>
-                       </div>
-                     );
-                  })}
+                <div className="flex flex-col gap-2">
+                  <div className="w-full bg-slate-200 h-3.5 rounded-full overflow-hidden shadow-inner">
+                    <div
+                      className="bg-gradient-to-r from-[#fa8fa6] to-[#fcb1c3] h-full rounded-full transition-all duration-500"
+                      style={{ width: `${masteredPercentage}%` }}
+                    />
+                  </div>
                 </div>
               </div>
 
-              <div className="bg-white/90 border border-[#e8f1fc] rounded-3xl p-6 flex flex-col gap-6 justify-between shadow-sm">
+              {/* General App Info & Shortcuts */}
+              <div className="bg-white/90 border border-[#e8f1fc] rounded-3xl p-6 flex flex-col gap-5 justify-between shadow-sm">
                 <div className="flex flex-col gap-4">
-                  <h3 className="text-lg font-bold text-slate-800">Suggested Review</h3>
-                  <div className="flex flex-col gap-2">
+                  <h3 className="text-lg font-bold text-slate-800">ข้อมูลและคลังทบทวน</h3>
+                  
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="bg-slate-50/50 border border-slate-100 rounded-xl p-3 text-center">
+                      <span className="text-[10px] text-slate-400 font-bold uppercase block mb-1">Starred Items</span>
+                      <span className="text-lg font-black text-amber-500">{progress.starredIds.length} คำ</span>
+                    </div>
+                    <div className="bg-slate-50/50 border border-slate-100 rounded-xl p-3 text-center">
+                      <span className="text-[10px] text-slate-400 font-bold uppercase block mb-1">Review Deck</span>
+                      <span className="text-lg font-black text-[#fa6a8d]">{reviewWords.length} คำ</span>
+                    </div>
+                    <div className="bg-slate-50/50 border border-slate-100 rounded-xl p-3 text-center col-span-2">
+                      <span className="text-[10px] text-slate-400 font-bold uppercase block mb-1">Knowledge Notes</span>
+                      <span className="text-lg font-black text-sky-600">{generalNotes.length} โน๊ต</span>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col gap-2 pt-2 border-t border-slate-150">
                     <button
                       onClick={() => {
                         setFlashcardDeckType("learning");
                         setActiveTab("flashcards");
                       }}
-                      className="w-full flex items-center justify-between bg-slate-50 hover:bg-pink-50/50 border border-slate-100 hover:border-[#ffdbe3] text-slate-700 px-4 py-3 rounded-xl text-xs font-semibold transition"
+                      className="w-full flex items-center justify-between bg-[#fffcfd] hover:bg-pink-50/30 border border-[#ffdbe3] text-slate-700 px-4 py-2.5 rounded-xl text-xs font-semibold transition"
                     >
-                      <span>Study progress pool</span>
+                      <span>ฝึกคำศัพท์ที่ยังจำไม่ได้</span>
                       <span className="bg-white border border-[#ffdbe3] text-[#fa6a8d] px-2 py-0.5 rounded-md font-bold">
-                        {VOCAB.length - progress.masteredIds.length} left
+                        {VOCAB.length - progress.masteredIds.length} คำ
                       </span>
                     </button>
                     <button
                       onClick={() => {
-                        if (progress.starredIds.length === 0) return;
-                        setFlashcardDeckType("starred");
-                        setActiveTab("flashcards");
+                        setActiveTab("review");
                       }}
-                      disabled={progress.starredIds.length === 0}
-                      className="w-full flex items-center justify-between bg-slate-50 hover:bg-amber-50/30 border border-slate-100 hover:border-amber-200 text-slate-700 px-4 py-3 rounded-xl text-xs font-semibold transition disabled:opacity-50"
+                      className="w-full flex items-center justify-between bg-slate-50 hover:bg-slate-100/80 border border-slate-200 text-slate-700 px-4 py-2.5 rounded-xl text-xs font-semibold transition"
                     >
-                      <span>Review starred items</span>
-                      <span className="bg-white border border-amber-200 text-amber-600 px-2 py-0.5 rounded-md font-bold">
-                        {progress.starredIds.length} starred
+                      <span>เปิดคลังคำศัพท์ทวนเพิ่มเติม</span>
+                      <span className="bg-white border border-slate-200 text-slate-650 px-2 py-0.5 rounded-md font-bold">
+                        {reviewWords.length} คำ
                       </span>
                     </button>
                   </div>
                 </div>
                 <div className="text-center text-[10px] text-slate-400 font-bold uppercase tracking-wider">
-                  Cache auto-saved in local database
+                  Syncing automatically with DB
                 </div>
               </div>
             </div>
@@ -895,9 +1063,38 @@ export default function Home() {
                       {/* CARD FRONT: Shows Word, POS, and 5 Example Sentence Structures (STRICTLY ENGLISH) */}
                       <div className="absolute inset-0 card-face w-full h-full bg-white/95 rounded-3xl p-3.5 sm:p-6 md:p-8 flex flex-col justify-between shadow-sm overflow-y-auto">
                         <div className="w-full flex justify-between items-center border-b border-slate-100 pb-2 sm:pb-3">
-                          <span className={`text-[8.5px] sm:text-[10px] uppercase tracking-wider font-extrabold px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full ${getPosBadgeColor(currentWordObj.pos)}`}>
-                            {currentWordObj.pos}
-                          </span>
+                          <div className="flex items-center gap-2">
+                            <span className={`text-[8.5px] sm:text-[10px] uppercase tracking-wider font-extrabold px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full ${getPosBadgeColor(currentWordObj.pos)}`}>
+                              {currentWordObj.pos}
+                            </span>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                addWordToReviewList(
+                                  currentWordObj.word,
+                                  currentWordObj.pos,
+                                  activeCardData?.wordTranslation || "คำแปลของการ์ดหลัก",
+                                  currentWordObj.id,
+                                  false
+                                );
+                                if (progress.masteredIds.includes(currentWordObj.id)) {
+                                  toggleMastered(currentWordObj.id);
+                                }
+                              }}
+                              className={`transition flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-lg border ${
+                                reviewWords.some(rw => rw.word.toLowerCase() === currentWordObj.word.toLowerCase())
+                                  ? "bg-rose-50 border-rose-200 text-[#fa6a8d] cursor-not-allowed"
+                                  : "bg-slate-50 border-slate-200 text-slate-500 hover:bg-rose-50 hover:border-[#ffdbe3] hover:text-[#fa6a8d]"
+                              }`}
+                              disabled={reviewWords.some(rw => rw.word.toLowerCase() === currentWordObj.word.toLowerCase())}
+                              title="Add to Review List (ยังจำไม่ได้)"
+                            >
+                              <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                              </svg>
+                              {reviewWords.some(rw => rw.word.toLowerCase() === currentWordObj.word.toLowerCase()) ? "ต้องทบทวนแล้ว" : "ทวนคำนี้ (จำไม่ได้)"}
+                            </button>
+                          </div>
                           <div className="flex items-center gap-2">
                             <span className="text-[8.5px] sm:text-[10px] text-slate-400 uppercase tracking-widest font-bold">Front: 5 English Structures</span>
                             <button
@@ -912,7 +1109,7 @@ export default function Home() {
                                   progress.starredIds.includes(currentWordObj.id)
                                     ? "fill-amber-400 text-amber-500"
                                     : "text-slate-300 hover:text-slate-500"
-                                }`}
+                                  }`}
                                 fill="none"
                                 viewBox="0 0 24 24"
                                 stroke="currentColor"
@@ -961,7 +1158,7 @@ export default function Home() {
                                     </span>
                                     <div className="flex-1">
                                       <p className="text-[11px] xs:text-xs sm:text-sm font-semibold text-slate-700 leading-snug">
-                                        {s.sentence}
+                                        {renderInteractiveSentence(s.sentence)}
                                       </p>
                                       {s.thaiPronunciation && (
                                         <p className="text-[9.5px] sm:text-[10px] text-[#fa6a8d]/80 font-semibold tracking-wide mt-0.5">
@@ -1003,9 +1200,35 @@ export default function Home() {
                           <span className="text-[8.5px] sm:text-[10px] text-slate-400 uppercase tracking-widest font-bold flex items-center gap-1.5 flex-wrap">
                             Back: {currentWordObj.word} {activeCardData?.thaiPronunciation && <span className="text-emerald-600 font-extrabold">[{activeCardData.thaiPronunciation}]</span>} {activeCardData?.wordTranslation && `(แปลหลัก: ${activeCardData.wordTranslation})`}
                           </span>
-                          <span className={`text-[8.5px] sm:text-[10px] uppercase tracking-wider font-extrabold px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full ${getPosBadgeColor(currentWordObj.pos)}`}>
-                            {currentWordObj.pos}
-                          </span>
+                          <div className="flex items-center gap-2 animate-none">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                addWordToReviewList(
+                                  currentWordObj.word,
+                                  currentWordObj.pos,
+                                  activeCardData?.wordTranslation || "คำแปลของการ์ดหลัก",
+                                  currentWordObj.id,
+                                  false
+                                );
+                                if (progress.masteredIds.includes(currentWordObj.id)) {
+                                  toggleMastered(currentWordObj.id);
+                                }
+                              }}
+                              className={`transition flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-lg border ${
+                                reviewWords.some(rw => rw.word.toLowerCase() === currentWordObj.word.toLowerCase())
+                                  ? "bg-rose-50 border-rose-200 text-[#fa6a8d] cursor-not-allowed"
+                                  : "bg-slate-50 border-slate-200 text-slate-500 hover:bg-rose-50 hover:border-[#ffdbe3] hover:text-[#fa6a8d]"
+                              }`}
+                              disabled={reviewWords.some(rw => rw.word.toLowerCase() === currentWordObj.word.toLowerCase())}
+                              title="Add to Review List (ยังจำไม่ได้)"
+                            >
+                              ทวนคำนี้ (จำไม่ได้)
+                            </button>
+                            <span className={`text-[8.5px] sm:text-[10px] uppercase tracking-wider font-extrabold px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full ${getPosBadgeColor(currentWordObj.pos)}`}>
+                              {currentWordObj.pos}
+                            </span>
+                          </div>
                         </div>
 
                         {/* Translation List */}
@@ -1020,7 +1243,9 @@ export default function Home() {
                                         {s.structure}
                                       </span>
                                       <div className="flex-1">
-                                        <p className="text-slate-700 font-semibold text-[11px] xs:text-xs leading-snug">{s.sentence}</p>
+                                        <p className="text-slate-700 font-semibold text-[11px] xs:text-xs leading-snug">
+                                          {renderInteractiveSentence(s.sentence)}
+                                        </p>
                                         {s.thaiPronunciation && (
                                           <p className="text-[9px] sm:text-[10px] text-[#fa6a8d]/80 font-semibold tracking-wide mt-0.5">
                                             อ่าน: {s.thaiPronunciation}
@@ -1148,8 +1373,8 @@ export default function Home() {
                   </div>
 
                   <p className="text-[11px] text-slate-400 text-center font-bold uppercase tracking-widest hidden md:block">
-                    Press <span className="text-slate-500 bg-slate-100 border border-slate-200 px-1.5 py-0.5 rounded shadow-sm">Space</span> to flip •{" "}
-                    <span className="text-slate-500 bg-slate-100 border border-slate-200 px-1.5 py-0.5 rounded shadow-sm">← / →</span> to navigate
+                    Press <span className="text-slate-505 bg-slate-100 border border-slate-200 px-1.5 py-0.5 rounded shadow-sm">Space</span> to flip •{" "}
+                    <span className="text-slate-505 bg-slate-100 border border-slate-200 px-1.5 py-0.5 rounded shadow-sm">← / →</span> to navigate
                   </p>
                 </div>
               )
@@ -1164,14 +1389,40 @@ export default function Home() {
           <section className="flex flex-col items-center gap-6 max-w-3xl mx-auto w-full">
             {!quizStarted ? (
               <div className="w-full flex flex-col gap-6">
-                <div className="bg-white/90 border border-[#e8f1fc] rounded-3xl p-6 md:p-8 text-center flex flex-col gap-2 shadow-sm">
+                <div className="bg-white/90 border border-[#e8f1fc] rounded-3xl p-6 md:p-8 text-center flex flex-col gap-4 shadow-sm">
                   <h2 className="text-2xl font-black text-slate-800">Quiz Arena</h2>
                   <p className="text-sm text-slate-500 max-w-md mx-auto font-medium">
                     Challenge yourself to reinforce your vocabulary memory. Select a mode to start playing.
                   </p>
+
+                  <div className="flex flex-col items-center gap-2.5 mt-2 border-t border-slate-100 pt-4">
+                    <span className="text-xs font-bold text-slate-600">เลือกคลังคำศัพท์ที่ต้องการเล่น:</span>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => setQuizPoolType("unmastered")}
+                        className={`px-4 py-2.5 rounded-xl text-xs font-extrabold border transition ${
+                          quizPoolType === "unmastered"
+                            ? "bg-[#ffedf1] border-[#ffdee5] text-[#fa6a8d]"
+                            : "bg-slate-50 border-slate-200 text-slate-500 hover:bg-slate-100"
+                        }`}
+                      >
+                        ศัพท์ที่ยังจำไม่ได้ ({VOCAB.length - progress.masteredIds.length} คำ)
+                      </button>
+                      <button
+                        onClick={() => setQuizPoolType("mastered")}
+                        className={`px-4 py-2.5 rounded-xl text-xs font-extrabold border transition ${
+                          quizPoolType === "mastered"
+                            ? "bg-[#ffedf1] border-[#ffdee5] text-[#fa6a8d]"
+                            : "bg-slate-50 border-slate-200 text-slate-500 hover:bg-slate-100"
+                        }`}
+                      >
+                        ศัพท์ที่จำได้แล้ว ({progress.masteredIds.length} คำ)
+                      </button>
+                    </div>
+                  </div>
                 </div>
 
-                {Object.keys(cardCache).length === 0 ? (
+                {quizPoolType === "mastered" && progress.masteredIds.length === 0 ? (
                   <div className="bg-white/90 border border-[#e8f1fc] rounded-3xl p-8 text-center flex flex-col items-center gap-4 shadow-sm">
                     <div className="w-14 h-14 rounded-2xl bg-amber-500/10 text-amber-600 flex items-center justify-center">
                       <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
@@ -1179,17 +1430,11 @@ export default function Home() {
                       </svg>
                     </div>
                     <div className="flex flex-col gap-1 max-w-md">
-                      <h3 className="text-base font-bold text-slate-800">Quiz Arena is Locked</h3>
-                      <p className="text-xs text-slate-500 leading-relaxed text-left md:text-center font-semibold">
-                        คุณยังไม่มีคำศัพท์ที่บันทึกในระบบแคชเลย ระบบต้องการคำศัพท์ที่เคยผ่านการเปิดดูการ์ดเพื่อนำมาใช้ตั้งคำถาม กรุณาเปิดดูการ์ดคำศัพท์ที่หน้าเมนู <strong>Grammar Cards</strong> อย่างน้อย 1 คำก่อน จึงจะสามารถปลดล็อกควิซนี้ได้ครับ!
+                      <h3 className="text-base font-bold text-slate-800">ไม่มีคำศัพท์ที่จำได้แล้ว</h3>
+                      <p className="text-xs text-slate-500 leading-relaxed font-semibold">
+                        คุณยังไม่ได้กดเลือก 'จำได้แล้ว' ให้กับคำศัพท์ใดๆ เลย กรุณาเปลี่ยนตัวเลือกเป็น 'ศัพท์ที่ยังจำไม่ได้' หรือไปทำเครื่องหมายติ้กจำได้แล้วในเมนู Word Explorer ก่อนเริ่มเล่นครับ!
                       </p>
                     </div>
-                    <button
-                      onClick={() => setActiveTab("flashcards")}
-                      className="bg-[#fa6a8d] hover:bg-[#fa8fa6] text-white font-extrabold text-xs px-6 py-2.5 rounded-xl transition mt-2 shadow-sm"
-                    >
-                      Go to Grammar Cards
-                    </button>
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -1235,7 +1480,7 @@ export default function Home() {
                           </svg>
                         </div>
                         <h3 className="text-lg font-bold text-slate-800">Missing Letters</h3>
-                        <p className="text-xs text-slate-500 leading-relaxed font-medium">
+                        <p className="text-xs text-slate-505 leading-relaxed font-medium">
                           Fill in blanks (e.g. a_a_d_n) to correctly complete the word.
                         </p>
                       </div>
@@ -1442,7 +1687,7 @@ export default function Home() {
                       <div
                         key={wordObj.id}
                         className={`bg-white border rounded-2xl p-4.5 flex flex-col justify-between gap-4 transition group shadow-sm ${
-                          isMastered ? "border-emerald-200 bg-emerald-50/[0.15]" : "border-[#e5effa] hover:border-[#ffdbe3]"
+                          isMastered ? "border-emerald-250 bg-emerald-50/20" : "border-[#e5effa] hover:border-[#ffdbe3]"
                         }`}
                       >
                         <div className="flex justify-between items-start">
@@ -1463,7 +1708,15 @@ export default function Home() {
                           </div>
                         </div>
 
-                        <h4 className="text-base font-extrabold text-slate-800 group-hover:text-[#fa6a8d] transition">{wordObj.word}</h4>
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="checkbox"
+                            checked={isMastered}
+                            onChange={() => toggleMastered(wordObj.id)}
+                            className="w-4 h-4 text-emerald-600 rounded border-slate-350 focus:ring-emerald-500 focus:ring-2 cursor-pointer transition shrink-0"
+                          />
+                          <h4 className="text-base font-extrabold text-slate-800 group-hover:text-[#fa6a8d] transition">{wordObj.word}</h4>
+                        </div>
 
                         {progress.notes[wordObj.id] && (
                           <p className="text-xs text-slate-600 bg-slate-50 border border-slate-100 rounded-lg px-2.5 py-1.5 mt-1 italic">
@@ -1473,17 +1726,26 @@ export default function Home() {
 
                         <div className="flex items-center justify-between border-t border-slate-100 pt-2.5 mt-1">
                           <span className="text-[10px] text-slate-450 font-semibold">
-                            Status: <strong className={isMastered ? "text-emerald-600" : "text-slate-400"}>{isMastered ? "Mastered" : "Learning"}</strong>
+                            Status: <strong className={isMastered ? "text-emerald-600" : "text-slate-400"}>{isMastered ? "จำได้แล้ว" : "ยังจำไม่ได้"}</strong>
                           </span>
                           <button
-                            onClick={() => toggleMastered(wordObj.id)}
+                            onClick={() => {
+                              const isWordInReview = reviewWords.some(rw => rw.word.toLowerCase() === wordObj.word.toLowerCase());
+                              if (isWordInReview) {
+                                const updated = reviewWords.filter(item => item.word.toLowerCase() !== wordObj.word.toLowerCase());
+                                setReviewWords(updated);
+                                updateReviewWordsInDb(updated);
+                              } else {
+                                addWordToReviewList(wordObj.word, wordObj.pos, "คำแปลของคำนี้", wordObj.id, false);
+                              }
+                            }}
                             className={`text-[10px] font-extrabold uppercase px-2.5 py-1.5 rounded-lg border transition ${
-                              isMastered
-                                ? "bg-emerald-50 border-emerald-200 text-emerald-600 hover:text-slate-800"
-                                : "bg-slate-50 border-slate-200 text-slate-500 hover:text-slate-800"
+                              reviewWords.some(rw => rw.word.toLowerCase() === wordObj.word.toLowerCase())
+                                ? "bg-rose-50 border-rose-200 text-[#fa6a8d] hover:bg-rose-100"
+                                : "bg-slate-50 border-slate-200 text-slate-500 hover:bg-slate-100"
                             }`}
                           >
-                            {isMastered ? "Reset" : "Mark Mastered"}
+                            {reviewWords.some(rw => rw.word.toLowerCase() === wordObj.word.toLowerCase()) ? "ต้องทวน" : "ใส่คลังทวน"}
                           </button>
                         </div>
                       </div>
@@ -1503,7 +1765,419 @@ export default function Home() {
             )}
           </section>
         )}
+
+        {/* ------------------------------------------------------------------------
+            TAB 5: REVIEW DECK (คลังทบทวน)
+        ------------------------------------------------------------------------ */}
+        {activeTab === "review" && (
+          <section className="flex flex-col gap-6 max-w-5xl mx-auto w-full">
+            <div className="bg-white border border-[#e8f1fc] rounded-3xl p-6 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
+              <div>
+                <h2 className="text-xl font-bold text-slate-800">คลังคำศัพท์สำหรับทบทวน (Review Deck)</h2>
+                <p className="text-xs text-slate-500 font-medium">ทบทวนคำศัพท์ที่ยังจำไม่ได้ หรือคำศัพท์เพิ่มเติมที่คุณเพิ่มเข้ามาด้วยตัวเอง</p>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => {
+                    const word = prompt("ใส่คำศัพท์ภาษาอังกฤษที่ต้องการเพิ่ม:");
+                    if (word) {
+                      openTranslationModal(word.trim());
+                    }
+                  }}
+                  className="bg-[#fa6a8d] hover:bg-[#fa8fa6] text-white font-extrabold text-xs px-4 py-2.5 rounded-xl transition flex items-center gap-1.5 shadow-sm font-sans"
+                >
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+                  </svg>
+                  เพิ่มคำศัพท์ทวนเอง
+                </button>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 bg-white/90 border border-[#e8f1fc] rounded-3xl p-5 shadow-sm">
+              <div className="flex flex-col gap-1.5 md:col-span-2">
+                <label className="text-[10px] text-slate-500 font-bold uppercase tracking-wider pl-1">ค้นหาคำศัพท์ทวน</label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={reviewSearchQuery}
+                    onChange={(e) => setReviewSearchQuery(e.target.value)}
+                    placeholder="ค้นหาคำศัพท์ในคลังทบทวน..."
+                    className="w-full bg-slate-55 border border-slate-200 hover:border-pink-300 focus:border-[#fa8fa6] rounded-xl pl-10 pr-4 py-2 text-sm text-slate-700 focus:outline-none transition"
+                  />
+                  <svg className="absolute left-3.5 top-3 w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-1.5 md:col-span-2">
+                <label className="text-[10px] text-slate-500 font-bold uppercase tracking-wider pl-1">ประเภทคำศัพท์</label>
+                <div className="flex gap-2">
+                  {(["all", "base", "custom"] as const).map((type) => (
+                    <button
+                      key={type}
+                      onClick={() => setReviewFilter(type)}
+                      className={`flex-1 text-xs font-bold py-2 rounded-xl border transition ${
+                        reviewFilter === type
+                          ? "bg-[#ffedf1] border-[#ffdee5] text-[#fa6a8d]"
+                          : "bg-slate-50 border-slate-200 text-slate-500 hover:bg-slate-100"
+                      }`}
+                    >
+                      {type === "all" ? "ทั้งหมด" : type === "base" ? "จาก 3,440 คำ" : "เพิ่มเอง/จากประโยค"}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* List of Review Words */}
+            {filteredReviewWords.length === 0 ? (
+              <div className="bg-white/90 border border-[#e8f1fc] rounded-3xl p-12 text-center flex flex-col gap-3 items-center shadow-sm">
+                <svg className="w-12 h-12 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                </svg>
+                <h3 className="text-sm font-bold text-slate-700">ไม่มีคำศัพท์ในรายการนี้</h3>
+                <p className="text-xs text-slate-400">เมื่อคุณเจอศัพท์ที่ยังจำไม่ได้ หรือกดคำศัพท์จากประโยค ตัวเลือกนั้นจะถูกบันทึกไว้ที่นี่</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                {filteredReviewWords.map((rw) => (
+                  <div
+                    key={rw.id}
+                    className="bg-white border border-[#e5effa] hover:border-pink-300 rounded-2xl p-4.5 flex flex-col justify-between gap-4 transition group shadow-sm"
+                  >
+                    <div className="flex justify-between items-start">
+                      <span className={`text-[9px] uppercase tracking-wider font-extrabold px-2.5 py-0.5 rounded-full ${getPosBadgeColor(rw.pos)}`}>
+                        {rw.pos}
+                      </span>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => speakWord(rw.word)}
+                          className="text-slate-400 hover:text-slate-700 transition"
+                          title="ออกเสียง"
+                        >
+                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+                          </svg>
+                        </button>
+                        <button
+                          onClick={() => {
+                            const newTranslation = prompt("แก้ไขคำแปล:", rw.translation);
+                            if (newTranslation !== null) {
+                              const updated = reviewWords.map(item => item.id === rw.id ? { ...item, translation: newTranslation } : item);
+                              setReviewWords(updated);
+                              updateReviewWordsInDb(updated);
+                            }
+                          }}
+                          className="text-slate-400 hover:text-[#fa6a8d] transition"
+                          title="แก้ไขคำแปล"
+                        >
+                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                          </svg>
+                        </button>
+                        <button
+                          onClick={() => {
+                            if (confirm(`คุณต้องการลบคำว่า "${rw.word}" ออกจากคลังทบทวน?`)) {
+                              const updated = reviewWords.filter(item => item.id !== rw.id);
+                              setReviewWords(updated);
+                              updateReviewWordsInDb(updated);
+                            }
+                          }}
+                          className="text-slate-450 hover:text-rose-500 transition"
+                          title="ลบคำศัพท์"
+                        >
+                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                        </button>
+                      </div>
+                    </div>
+
+                    <div>
+                      <h4 className="text-base font-extrabold text-slate-800">{rw.word}</h4>
+                      <p className="text-xs font-bold text-[#fa6a8d] mt-1">แปล: {rw.translation}</p>
+                      <p className="text-[10px] text-slate-400 mt-2">
+                        ประเภท: {rw.isCustom ? "เพิ่มเอง/จากประโยค" : "ศัพท์หลักจาก 3440 คำ"}
+                      </p>
+                    </div>
+
+                    <div className="border-t border-slate-100 pt-2.5 mt-1 flex justify-between items-center">
+                      <span className="text-[10px] text-slate-400">
+                        เพิ่มเมื่อ: {new Date(rw.addedAt).toLocaleDateString("th-TH")}
+                      </span>
+                      <button
+                        onClick={() => {
+                          if (!rw.isCustom && rw.sourceWordId) {
+                            toggleMastered(rw.sourceWordId);
+                          }
+                          const updated = reviewWords.filter(item => item.id !== rw.id);
+                          setReviewWords(updated);
+                          updateReviewWordsInDb(updated);
+                        }}
+                        className="bg-emerald-50 border border-emerald-200 text-emerald-600 text-[10px] font-extrabold uppercase px-2.5 py-1 rounded-lg hover:bg-emerald-500 hover:text-white transition"
+                      >
+                        จำได้แล้ว
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
+        )}
+
+        {/* ------------------------------------------------------------------------
+            TAB 6: STUDY NOTES / KNOWLEDGE BASE (โน๊ตความรู้)
+        ------------------------------------------------------------------------ */}
+        {activeTab === "notes" && (
+          <section className="flex flex-col gap-6 max-w-5xl mx-auto w-full">
+            <div className="bg-white border border-[#e8f1fc] rounded-3xl p-6 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
+              <div>
+                <h2 className="text-xl font-bold text-slate-800">โน๊ตความรู้เพิ่มเติม (Knowledge Notes)</h2>
+                <p className="text-xs text-slate-500 font-medium">บันทึกทริคการจำ ไวยากรณ์ หรือความรู้อื่นๆ ที่คุณพบนอกบทเรียน</p>
+              </div>
+              <button
+                onClick={() => {
+                  setNoteEditId("new");
+                  setNoteTitleInput("");
+                  setNoteContentInput("");
+                }}
+                className="bg-[#fa6a8d] hover:bg-[#fa8fa6] text-white font-extrabold text-xs px-4 py-2.5 rounded-xl transition flex items-center gap-1.5 shadow-sm font-sans"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+                </svg>
+                เขียนโน๊ตใหม่
+              </button>
+            </div>
+
+            {noteEditId !== null ? (
+              // Notebook Editor View
+              <div className="bg-white border border-[#e5effa] rounded-3xl p-6 shadow-md flex flex-col gap-4">
+                <h3 className="text-base font-bold text-slate-800">
+                  {noteEditId === "new" ? "เขียนโน๊ตความรู้ชิ้นใหม่" : "แก้ไขโน๊ตความรู้"}
+                </h3>
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">หัวข้อ (Title)</label>
+                  <input
+                    type="text"
+                    value={noteTitleInput}
+                    onChange={(e) => setNoteTitleInput(e.target.value)}
+                    placeholder="เช่น หลักการจำการใช้ S+V+IO+DO, ทริคจำคำศัพท์..."
+                    className="bg-slate-50 border border-slate-200 focus:border-[#fa8fa6] focus:bg-white rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-800 focus:outline-none"
+                  />
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">เนื้อหาโน๊ต (Content)</label>
+                  <textarea
+                    value={noteContentInput}
+                    onChange={(e) => setNoteContentInput(e.target.value)}
+                    placeholder="พิมพ์รายละเอียดเนื้อหา ทริค หรือเกร็ดความรู้ของคุณลงที่นี่..."
+                    rows={10}
+                    className="bg-slate-50 border border-slate-200 focus:border-[#fa8fa6] focus:bg-white rounded-xl px-4 py-3 text-sm text-slate-700 focus:outline-none resize-none font-sans"
+                  />
+                </div>
+                <div className="flex gap-3 justify-end mt-2">
+                  <button
+                    onClick={() => setNoteEditId(null)}
+                    className="bg-slate-100 hover:bg-slate-200 text-slate-600 px-4 py-2 rounded-xl text-xs font-bold transition"
+                  >
+                    ยกเลิก
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (!noteTitleInput.trim() || !noteContentInput.trim()) return;
+                      let updatedList: GeneralNote[] = [];
+                      if (noteEditId === "new") {
+                        const newNote: GeneralNote = {
+                          id: `note-${Date.now()}`,
+                          title: noteTitleInput.trim(),
+                          content: noteContentInput.trim(),
+                          updatedAt: new Date().toISOString()
+                        };
+                        updatedList = [newNote, ...generalNotes];
+                      } else {
+                        updatedList = generalNotes.map(note =>
+                          note.id === noteEditId
+                            ? { ...note, title: noteTitleInput.trim(), content: noteContentInput.trim(), updatedAt: new Date().toISOString() }
+                            : note
+                        );
+                      }
+                      setGeneralNotes(updatedList);
+                      updateGeneralNotesInDb(updatedList);
+                      setNoteEditId(null);
+                    }}
+                    disabled={!noteTitleInput.trim() || !noteContentInput.trim()}
+                    className="bg-[#fa6a8d] hover:bg-[#fa8fa6] disabled:opacity-50 text-white font-extrabold text-xs px-5 py-2.5 rounded-xl transition shadow-md"
+                  >
+                    บันทึกโน๊ต
+                  </button>
+                </div>
+              </div>
+            ) : (
+              // Notebook Lists View
+              <div className="flex flex-col gap-4">
+                <div className="relative max-w-md w-full">
+                  <input
+                    type="text"
+                    value={noteSearchQuery}
+                    onChange={(e) => setNoteSearchQuery(e.target.value)}
+                    placeholder="ค้นหาโน๊ต..."
+                    className="w-full bg-white border border-[#e8f1fc] hover:border-pink-300 focus:border-[#fa8fa6] rounded-xl pl-10 pr-4 py-2 text-sm text-slate-700 focus:outline-none shadow-sm"
+                  />
+                  <svg className="absolute left-3.5 top-3 w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                </div>
+
+                {filteredGeneralNotes.length === 0 ? (
+                  <div className="bg-white/90 border border-[#e8f1fc] rounded-3xl p-12 text-center flex flex-col gap-3 items-center shadow-sm">
+                    <svg className="w-12 h-12 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                    </svg>
+                    <h3 className="text-sm font-bold text-slate-700">ไม่มีบันทึกความรู้</h3>
+                    <p className="text-xs text-slate-400">เริ่มบันทึกทริคและเกร็ดความรู้ของคุณได้ทันทีโดยคลิก "เขียนโน๊ตใหม่"</p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {filteredGeneralNotes.map((note) => (
+                      <div key={note.id} className="bg-white border border-[#e5effa] rounded-3xl p-6 shadow-sm flex flex-col justify-between gap-4">
+                        <div>
+                          <div className="flex justify-between items-start gap-4">
+                            <h3 className="text-base font-extrabold text-slate-800 line-clamp-1">{note.title}</h3>
+                            <span className="text-[10px] text-slate-400 whitespace-nowrap">
+                              {new Date(note.updatedAt).toLocaleDateString("th-TH")}
+                            </span>
+                          </div>
+                          <p className="text-xs text-slate-655 leading-relaxed font-semibold mt-3 whitespace-pre-wrap line-clamp-6 font-sans">
+                            {note.content}
+                          </p>
+                        </div>
+                        
+                        <div className="border-t border-slate-100 pt-3 flex justify-end gap-3 mt-1">
+                          <button
+                            onClick={() => {
+                              setNoteEditId(note.id);
+                              setNoteTitleInput(note.title);
+                              setNoteContentInput(note.content);
+                            }}
+                            className="text-xs font-bold text-[#fa6a8d] hover:text-[#fa8fa6] transition"
+                          >
+                            แก้ไข
+                          </button>
+                          <button
+                            onClick={() => {
+                              if (confirm(`คุณต้องการลบโน๊ต "${note.title}"?`)) {
+                                const updated = generalNotes.filter(item => item.id !== note.id);
+                                setGeneralNotes(updated);
+                                updateGeneralNotesInDb(updated);
+                              }
+                            }}
+                            className="text-xs font-bold text-rose-500 hover:text-rose-600 transition"
+                          >
+                            ลบ
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </section>
+        )}
+
       </main>
+
+      {/* WORD TRANSLATION AND ANALYSIS MODAL */}
+      {showTranslateModal && (
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-50 p-4 font-sans animate-fade-in">
+          <div className="bg-white rounded-3xl border border-slate-100 p-6 max-w-md w-full shadow-2xl flex flex-col gap-4 text-left">
+            <div className="flex justify-between items-center border-b border-slate-100 pb-3">
+              <h3 className="text-lg font-black text-slate-800">บันทึกคำศัพท์เข้าคลังทบทวน</h3>
+              <button onClick={() => setShowTranslateModal(false)} className="text-slate-450 hover:text-slate-600 transition p-1 rounded-lg">
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            {translationLoading ? (
+              <div className="py-8 flex flex-col items-center gap-3">
+                <div className="w-8 h-8 border-3 border-[#fa8fa6] border-t-transparent rounded-full animate-spin" />
+                <span className="text-xs text-slate-500 font-extrabold uppercase tracking-wider">กำลังแปลคำศัพท์ด้วย AI...</span>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-4">
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[10px] text-slate-500 font-extrabold uppercase tracking-wider pl-1">คำศัพท์ภาษาอังกฤษ (English Word)</label>
+                  <input
+                    type="text"
+                    value={customWordInput}
+                    onChange={(e) => setCustomWordInput(e.target.value)}
+                    className="bg-slate-50 border border-slate-200 focus:border-[#fa8fa6] focus:bg-white rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-800 focus:outline-none"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-[10px] text-slate-500 font-extrabold uppercase tracking-wider pl-1">ประเภทคำ (POS)</label>
+                    <select
+                      value={customWordPos}
+                      onChange={(e) => setCustomWordPos(e.target.value)}
+                      className="bg-slate-50 border border-slate-200 hover:border-pink-300 text-slate-700 text-sm font-semibold rounded-xl px-4 py-2.5 focus:outline-none focus:border-[#fa8fa6] transition"
+                    >
+                      <option value="n.">Noun (n.)</option>
+                      <option value="v.">Verb (v.)</option>
+                      <option value="adj.">Adjective (adj.)</option>
+                      <option value="adv.">Adverb (adv.)</option>
+                      <option value="prep.">Preposition (prep.)</option>
+                      <option value="conj.">Conjunction (conj.)</option>
+                      <option value="pron.">Pronoun (pron.)</option>
+                    </select>
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-[10px] text-slate-500 font-extrabold uppercase tracking-wider pl-1">คำอ่านไทย (Phonetic)</label>
+                    <input
+                      type="text"
+                      value={translationResult?.thaiPronunciation || ""}
+                      readOnly
+                      placeholder="AI คำอ่าน"
+                      className="bg-slate-100 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-550 focus:outline-none cursor-not-allowed font-semibold"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[10px] text-slate-500 font-extrabold uppercase tracking-wider pl-1">คำแปลภาษาไทย (Translation)</label>
+                  <input
+                    type="text"
+                    value={customWordTranslation}
+                    onChange={(e) => setCustomWordTranslation(e.target.value)}
+                    placeholder="เช่น โอกาส, การช่วยเหลือ"
+                    className="bg-slate-50 border border-slate-200 focus:border-[#fa8fa6] focus:bg-white rounded-xl px-4 py-2.5 text-sm text-slate-800 focus:outline-none font-semibold"
+                  />
+                </div>
+
+                <button
+                  onClick={() => {
+                    if (customWordInput.trim() && customWordTranslation.trim()) {
+                      addWordToReviewList(customWordInput.trim(), customWordPos, customWordTranslation.trim(), currentWordObj?.id, true);
+                      setShowTranslateModal(false);
+                    }
+                  }}
+                  disabled={!customWordInput.trim() || !customWordTranslation.trim()}
+                  className="w-full bg-gradient-to-r from-[#fa6a8d] to-[#fc8fa6] hover:from-[#fa8fa6] hover:to-[#fcb1c3] disabled:opacity-50 text-white font-extrabold text-sm py-4 rounded-2xl transition shadow-md duration-200 mt-2"
+                >
+                  บันทึกเข้าคลังทบทวน
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

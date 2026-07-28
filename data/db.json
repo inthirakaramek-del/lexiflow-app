@@ -1,305 +1,107 @@
 {
   "progress": {
-    "masteredIds": [
-      "w-4"
-    ],
+    "notes": {},
     "starredIds": [],
-    "notes": {}
+    "masteredIds": [
+      "w-0"
+    ]
   },
   "cardCache": {
-    "w-9": {
-      "wordTranslation": "ความสามารถ",
-      "thaiPronunciation": "อะ บิล ลิ ที",
-      "sentences": [
-        {
-          "structure": "S + V",
-          "sentence": "Her ability grew.",
-          "translation": "ความสามารถของเธอเติบโตขึ้น",
-          "thaiPronunciation": "เฮอร์ อะ บิล ลิ ที กรู",
-          "grammar": "S (Her ability: ความสามารถของเธอ) + V (grew: เติบโตขึ้น)"
-        },
-        {
-          "structure": "S + V + O",
-          "sentence": "He demonstrated great ability.",
-          "translation": "เขาแสดงให้เห็นถึงความสามารถที่ยอดเยี่ยม",
-          "thaiPronunciation": "ฮี เดม ออน สเทรท เอท เกรท อะ บิล ลิ ที",
-          "grammar": "S (He: เขา) + V (demonstrated: แสดงให้เห็น) + O (great ability: ความสามารถที่ยอดเยี่ยม)"
-        },
-        {
-          "structure": "S + V + C",
-          "sentence": "Writing is a special ability.",
-          "translation": "การเขียนคือความสามารถพิเศษอย่างหนึ่ง",
-          "thaiPronunciation": "ไร ทิง อิส อะ สเป ชอล อะ บิล ลิ ที",
-          "grammar": "S (Writing: การเขียน) + V (is: คือ) + C (a special ability: ความสามารถพิเศษอย่างหนึ่ง)"
-        },
-        {
-          "structure": "S + V + IO + DO",
-          "sentence": "The teacher gave the student ability to succeed.",
-          "translation": "ครูมอบความสามารถในการประสบความสำเร็จให้กับนักเรียน",
-          "thaiPronunciation": "เดอะ ทีช เชอร์ เกฟ เดอะ สตยู เดนท์ อะ บิล ลิ ที ทู ซัค ซีด",
-          "grammar": "S (The teacher: ครู) + V (gave: มอบ) + IO (the student: นักเรียน) + DO (ability to succeed: ความสามารถในการประสบความสำเร็จ)"
-        },
-        {
-          "structure": "S + V + O + C",
-          "sentence": "The coach considered his ability sufficient.",
-          "translation": "โค้ชพิจารณาแล้วว่าความสามารถของเขาเพียงพอแล้ว",
-          "thaiPronunciation": "เดอะ โคช คอน ซิด เดอร์ด ฮิส อะ บิล ลิ ที ซัฟ ฟิ เชินท",
-          "grammar": "S (The coach: โค้ช) + V (considered: พิจารณาว่า) + O (his ability: ความสามารถของเขา) + C (sufficient: เพียงพอ)"
-        }
-      ],
-      "trick": "จำว่า 'อะ-บิล-ลิ-ที' คล้ายกับ 'อยากมีบิล (ใบเสร็จ) ให้เก่ง' คือต้องมี 'ความสามารถ' ในการหาเงินมาจ่ายบิล"
-    },
     "w-0": {
-      "wordTranslation": "เล็กน้อย, นิดหน่อย",
-      "thaiPronunciation": "อะ บิท",
+      "trick": "a bit (อะ บิท) เหมือนมี 'bit' (บิท) ของข้อมูลแค่ 'นิดหน่อย' เท่านั้น ไม่เยอะ",
       "sentences": [
         {
+          "grammar": "S (The children: เด็กๆ) + V (complained: บ่น) + adv (a bit: เล็กน้อย)",
+          "sentence": "The children complained a bit.",
           "structure": "S + V",
-          "sentence": "She hesitated a bit.",
-          "translation": "เธอลังเลเล็กน้อย",
-          "thaiPronunciation": "ชี เฮสิเททิด อะ บิท",
-          "grammar": "S (She: เธอ) + V (hesitated: ลังเล) + Adv (a bit: เล็กน้อย)"
+          "translation": "เด็กๆ บ่นเล็กน้อย",
+          "thaiPronunciation": "เดอะ ชิลเดรน คอมเพลนด์ อะ บิท"
         },
         {
+          "grammar": "S (I: ฉัน) + V (understand: เข้าใจ) + O (the situation: สถานการณ์) + adv (a bit: เล็กน้อย)",
+          "sentence": "I understand the situation a bit.",
           "structure": "S + V + O",
-          "sentence": "He drank a bit of water.",
-          "translation": "เขาดื่มน้ำเล็กน้อย",
-          "thaiPronunciation": "ฮี แดรงค์ อะ บิท ออฟ วอเทอร์",
-          "grammar": "S (He: เขา) + V (drank: ดื่ม) + O (a bit of water: น้ำเล็กน้อย)"
+          "translation": "ฉันเข้าใจสถานการณ์เล็กน้อย",
+          "thaiPronunciation": "ไอ อันเดอร์สแตนด์ เดอะ ซิชูเอชัน อะ บิท"
         },
         {
+          "grammar": "S (She: เธอ) + V (feels: รู้สึก) + C (a bit sad: เศร้าเล็กน้อย)",
+          "sentence": "She feels a bit sad.",
           "structure": "S + V + C",
-          "sentence": "The weather felt a bit cold.",
-          "translation": "อากาศรู้สึกเย็นเล็กน้อย",
-          "thaiPronunciation": "เดอะ เวเธอร์ เฟลท์ อะ บิท โคลด์",
-          "grammar": "S (The weather: อากาศ) + V (felt: รู้สึก) + C (a bit cold: เย็นเล็กน้อย)"
+          "translation": "เธอรู้สึกเศร้าเล็กน้อย",
+          "thaiPronunciation": "ชี ฟีลส์ อะ บิท แซด"
         },
         {
+          "grammar": "S (She: เธอ) + V (offered: เสนอ) + IO (him: เขา) + DO (a helping hand: ความช่วยเหลือ) + adv (a bit: เล็กน้อย)",
+          "sentence": "She offered him a helping hand a bit.",
           "structure": "S + V + IO + DO",
-          "sentence": "They gave me a bit of advice.",
-          "translation": "พวกเขาให้คำแนะนำฉันเล็กน้อย",
-          "thaiPronunciation": "เธย์ เกฟ มี อะ บิท ออฟ แอดไวซ์",
-          "grammar": "S (They: พวกเขา) + V (gave: ให้) + IO (me: ฉัน) + DO (a bit of advice: คำแนะนำเล็กน้อย)"
+          "translation": "เธอเสนอความช่วยเหลือให้เขาเล็กน้อย",
+          "thaiPronunciation": "ชี ออฟเฟอร์ด ฮิม อะ เฮลปปิง แฮนด์ อะ บิท"
         },
         {
+          "grammar": "S (The news: ข่าว) + V (made: ทำให้) + O (him: เขา) + C (a bit sad: เศร้าเล็กน้อย)",
+          "sentence": "The news made him a bit sad.",
           "structure": "S + V + O + C",
-          "sentence": "I found the movie a bit boring.",
-          "translation": "ฉันพบว่าหนังเรื่องนี้น่าเบื่อเล็กน้อย",
-          "thaiPronunciation": "ไอ ฟาวด์ เดอะ มูฟวี่ อะ บิท บอริ่ง",
-          "grammar": "S (I: ฉัน) + V (found: พบว่า) + O (the movie: หนังเรื่องนี้) + C (a bit boring: น่าเบื่อเล็กน้อย)"
+          "translation": "ข่าวทำให้เขาเศร้าเล็กน้อย",
+          "thaiPronunciation": "เดอะ นิวส์ เมด ฮิม อะ บิท แซด"
         }
       ],
-      "trick": "จำว่า 'อะ บิท' เหมือนเรากิน 'บิสกิต' สัก 'นิดหน่อย' พอแก้หิว"
+      "wordTranslation": "เล็กน้อย, นิดหน่อย",
+      "thaiPronunciation": "อะ บิท"
     },
     "w-1": {
-      "wordTranslation": "สองสาม, สองสามอย่าง",
-      "thaiPronunciation": "อะ คัปเปิล",
+      "trick": "A couple คือ 2-3 สิ่ง/คน คล้ายคำว่า 'คู่' ที่หมายถึงสอง",
       "sentences": [
         {
+          "grammar": "S (A couple of friends: เพื่อนสองสามคน) + V (arrived: มาถึงแล้ว)",
+          "sentence": "A couple of friends arrived.",
           "structure": "S + V",
-          "sentence": "A couple arrived.",
-          "translation": "คู่รักคู่หนึ่งมาถึงแล้ว",
-          "thaiPronunciation": "อะ คัปเปิล อะไรฟด์",
-          "grammar": "S (A couple: คู่รักคู่หนึ่ง) + V (arrived: มาถึง)"
+          "translation": "เพื่อนสองสามคนมาถึงแล้ว",
+          "thaiPronunciation": "อะ คัพเพิล ออฟ เฟรนดส์ อะไรฟด์"
         },
         {
+          "grammar": "S (She: เธอ) + V (bought: ซื้อ) + O (a couple of books: หนังสือสองสามเล่ม)",
+          "sentence": "She bought a couple of books.",
           "structure": "S + V + O",
-          "sentence": "I bought a couple.",
-          "translation": "ฉันซื้อมาสองสามชิ้น",
-          "thaiPronunciation": "ไอ บอท อะ คัปเปิล",
-          "grammar": "S (I: ฉัน) + V (bought: ซื้อ) + O (a couple: สองสามชิ้น)"
+          "translation": "เธอซื้อหนังสือสองสามเล่ม",
+          "thaiPronunciation": "ชี บอท อะ คัพเพิล ออฟ บุคส์"
         },
         {
+          "grammar": "S (A couple of students: นักเรียนสองสามคน) + V (became: กลายเป็น) + C (restless: กระสับกระส่าย)",
+          "sentence": "A couple of students became restless.",
           "structure": "S + V + C",
-          "sentence": "They are a couple.",
-          "translation": "พวกเขาเป็นคู่รักกัน",
-          "thaiPronunciation": "เด อาร์ อะ คัปเปิล",
-          "grammar": "S (They: พวกเขา) + V (are: เป็น) + C (a couple: คู่รัก)"
+          "translation": "นักเรียนสองสามคนเริ่มกระสับกระส่าย",
+          "thaiPronunciation": "อะ คัพเพิล ออฟ สตูเดนท์ส บีเคม เรสท์เลส"
         },
         {
+          "grammar": "S (He: เขา) + V (sent: ส่ง) + IO (us: พวกเรา) + DO (a couple of emails: อีเมลสองสามฉบับ)",
+          "sentence": "He sent us a couple of emails.",
           "structure": "S + V + IO + DO",
-          "sentence": "He gave a couple an apple.",
-          "translation": "เขามอบแอปเปิลหนึ่งลูกให้คู่รักคู่นั้น",
-          "thaiPronunciation": "ฮี เกฟ อะ คัปเปิล แอน แอปเปิล",
-          "grammar": "S (He: เขา) + V (gave: มอบให้) + IO (a couple: คู่รัก) + DO (an apple: แอปเปิล)"
+          "translation": "เขาส่งอีเมลสองสามฉบับให้เรา",
+          "thaiPronunciation": "ฮี เซนท์ อัส อะ คัพเพิล ออฟ อีเมลส์"
         },
         {
+          "grammar": "S (We: พวกเรา) + V (found: พบว่า) + O (a couple of items: ของสองสามชิ้น) + C (missing: หายไป)",
+          "sentence": "We found a couple of items missing.",
           "structure": "S + V + O + C",
-          "sentence": "We call a couple partners.",
-          "translation": "พวกเราเรียกคู่รักว่าเป็นหุ้นส่วนกัน",
-          "thaiPronunciation": "วี คอล อะ คัปเปิล พาร์ทเนอร์ส",
-          "grammar": "S (We: พวกเรา) + V (call: เรียก) + O (a couple: คู่รัก) + C (partners: หุ้นส่วน)"
+          "translation": "เราพบว่าของสองสามชิ้นหายไป",
+          "thaiPronunciation": "วี เฟานด์ อะ คัพเพิล ออฟ ไอเทมส์ มิสซิ่ง"
         }
       ],
-      "trick": "จำว่า คัปเปิล (Couple) เสียงคล้าย คำว่า 'กับ-เปิล' ให้คิดภาพว่ามีคน 'กับ' (มาด้วยกัน) เป็นคู่ๆ"
-    },
-    "w-2": {
-      "wordTranslation": "จำนวนเล็กน้อย",
-      "thaiPronunciation": "อะ ฟิว",
-      "sentences": [
-        {
-          "structure": "S + V",
-          "sentence": "A few students arrived.",
-          "translation": "นักเรียนจำนวนเล็กน้อยมาถึงแล้ว",
-          "thaiPronunciation": "อะ ฟิว สทิวเดนท์ส อะไรฟด์",
-          "grammar": "S (A few students: นักเรียนจำนวนเล็กน้อย) + V (arrived: มาถึง)"
-        },
-        {
-          "structure": "S + V + O",
-          "sentence": "I bought a few apples.",
-          "translation": "ฉันซื้อแอปเปิลมาจำนวนเล็กน้อย",
-          "thaiPronunciation": "ไอ บอท อะ ฟิว แอปเปิลส์",
-          "grammar": "S (I: ฉัน) + V (bought: ซื้อ) + O (a few apples: แอปเปิลจำนวนเล็กน้อย)"
-        },
-        {
-          "structure": "S + V + C",
-          "sentence": "These are a few secrets.",
-          "translation": "นี่คือความลับจำนวนเล็กน้อย",
-          "thaiPronunciation": "ดีส อาร์ อะ ฟิว ซีเครทส์",
-          "grammar": "S (These: สิ่งเหล่านี้) + V (are: คือ) + C (a few secrets: ความลับจำนวนเล็กน้อย)"
-        },
-        {
-          "structure": "S + V + IO + DO",
-          "sentence": "She gave a few people a gift.",
-          "translation": "เธอมอบของขวัญให้คนจำนวนเล็กน้อย",
-          "thaiPronunciation": "ชี เกฟ อะ ฟิว พีเพิล อะ กิฟท์",
-          "grammar": "S (She: เธอ) + V (gave: มอบให้) + IO (a few people: คนจำนวนเล็กน้อย) + DO (a gift: ของขวัญ)"
-        },
-        {
-          "structure": "S + V + O + C",
-          "sentence": "They consider a few friends special.",
-          "translation": "พวกเขาถือว่าเพื่อนจำนวนเล็กน้อยนั้นพิเศษ",
-          "thaiPronunciation": "เด คอนซิเดอร์ อะ ฟิว เฟรนด์ส สเปเชียล",
-          "grammar": "S (They: พวกเขา) + V (consider: ถือว่า) + O (a few friends: เพื่อนจำนวนเล็กน้อย) + C (special: พิเศษ)"
-        }
-      ],
-      "trick": "จำว่า ฟิว (Few) เหมือน ผิว - มี 'ผิว' ดีจำนวนเล็กน้อย ก็ถือว่าโชคดีแล้ว"
-    },
-    "w-3": {
-      "wordTranslation": "เล็กน้อย",
-      "thaiPronunciation": "อะ ลิทเทิล",
-      "sentences": [
-        {
-          "structure": "S + V",
-          "sentence": "The baby slept a little.",
-          "translation": "ทารกนอนหลับไปเล็กน้อย",
-          "thaiPronunciation": "เดอะ เบบี้ สเลพท์ อะ ลิทเทิล",
-          "grammar": "S (The baby: ทารก) + V (slept: นอนหลับ) + Adv (a little: เล็กน้อย)"
-        },
-        {
-          "structure": "S + V + O",
-          "sentence": "She ate a little cake.",
-          "translation": "เธอกินเค้กเล็กน้อย",
-          "thaiPronunciation": "ชี เอท อะ ลิทเทิล เค้ก",
-          "grammar": "S (She: เธอ) + V (ate: กิน) + O (a little cake: เค้กเล็กน้อย)"
-        },
-        {
-          "structure": "S + V + C",
-          "sentence": "He is a little tired.",
-          "translation": "เขาเหนื่อยเล็กน้อย",
-          "thaiPronunciation": "ฮี อิส อะ ลิทเทิล ไทเอิร์ด",
-          "grammar": "S (He: เขา) + V (is: คือ/เป็น) + C (a little tired: เหนื่อยเล็กน้อย)"
-        },
-        {
-          "structure": "S + V + IO + DO",
-          "sentence": "My mother gave me a little sugar.",
-          "translation": "แม่ให้ฉันน้ำตาลเล็กน้อย",
-          "thaiPronunciation": "มาย มาเธอร์ เกฟ มี อะ ลิทเทิล ชูก้า",
-          "grammar": "S (My mother: แม่ของฉัน) + V (gave: ให้) + IO (me: ฉัน) + DO (a little sugar: น้ำตาลเล็กน้อย)"
-        },
-        {
-          "structure": "S + V + O + C",
-          "sentence": "I found the task a little difficult.",
-          "translation": "ฉันพบว่างานนี้ยากนิดหน่อย",
-          "thaiPronunciation": "ไอ ฟาวด์ เดอะ ทาสค์ อะ ลิทเทิล ดัฟฟิคัลท์",
-          "grammar": "S (I: ฉัน) + V (found: พบว่า) + O (the task: งานนี้) + C (a little difficult: ยากเล็กน้อย)"
-        }
-      ],
-      "trick": "จำว่า 'อะ ลิทเทิล' เหมือนคำว่า 'ลิ้นเต้น' คือขยับลิ้นเต้นนิดเดียว แปลว่าเล็กน้อย"
-    },
-    "w-4": {
-      "wordTranslation": "คำแปลของคำว่า \"a lot\"",
-      "thaiPronunciation": "คำอ่านสำหรับ \"a lot\"",
-      "sentences": [
-        {
-          "structure": "S + V",
-          "sentence": "Our teacher acted a lot.",
-          "translation": "Our teacher ได้ปฏิบัติอย่าง a lot",
-          "grammar": "S (Our teacher: ประธาน) + V (acted: ปฏิบัติ/แสดงออก) + M (a lot: อย่างa lot)",
-          "thaiPronunciation": "คำอ่านสำหรับ \"Our teacher acted a lot.\""
-        },
-        {
-          "structure": "S + V + O",
-          "sentence": "We understood the design a lot.",
-          "translation": "พวกเราเข้าใจ the design อย่าง a lot",
-          "grammar": "S (We: พวกเรา) + V (understood: เข้าใจ) + O (the design: the design) + M (a lot: อย่างa lot)",
-          "thaiPronunciation": "คำอ่านสำหรับ \"We understood the design a lot.\""
-        },
-        {
-          "structure": "S + V + C",
-          "sentence": "The presentation was a lot strange.",
-          "translation": "การนำเสนอนั้น a lot strange มาก",
-          "grammar": "S (The presentation: การนำเสนอ) + V (was: เป็น/คือ) + C (strange: strange) + M (a lot: อย่างa lot)",
-          "thaiPronunciation": "คำอ่านสำหรับ \"The presentation was a lot strange.\""
-        },
-        {
-          "structure": "S + V + IO + DO",
-          "sentence": "She gave them a a lot clear answer.",
-          "translation": "เธอตอบคำถามให้พวกเขาเข้าใจกระจ่างแจ้งอย่าง a lot",
-          "grammar": "S (She: เธอ) + V (gave: ให้) + IO (them: พวกเขา) + DO (a a lot clear answer: คำตอบที่ชัดเจนอย่างa lot)",
-          "thaiPronunciation": "คำอ่านสำหรับ \"She gave them a a lot clear answer.\""
-        },
-        {
-          "structure": "S + V + O + C",
-          "sentence": "We consider the task a lot completed.",
-          "translation": "พวกเราถือว่าภารกิจสำเร็จลงแล้วอย่าง a lot",
-          "grammar": "S (We: พวกเรา) + V (consider: ถือว่า) + O (the task: ภารกิจ) + C (completed: เสร็จสิ้น) + M (a lot: อย่างa lot)",
-          "thaiPronunciation": "คำอ่านสำหรับ \"We consider the task a lot completed.\""
-        }
-      ],
-      "trick": "คำว่า \"a lot\" เป็นคำขยาย ให้ลองจับคู่เข้ากับกริยาหรือคุณศัพท์ที่เห็นบ่อยๆ"
-    },
-    "w-5": {
-      "wordTranslation": "คำนำหน้านามนับได้เอกพจน์ (หนึ่ง)",
-      "thaiPronunciation": "อะ, แอน",
-      "sentences": [
-        {
-          "structure": "S + V",
-          "sentence": "An eagle flies.",
-          "translation": "นกอินทรีหนึ่งตัวบิน",
-          "thaiPronunciation": "แอน อีเกิล ฟลายส์",
-          "grammar": "S (An: หนึ่ง + eagle: นกอินทรี) + V (flies: บิน)"
-        },
-        {
-          "structure": "S + V + O",
-          "sentence": "She eats an apple.",
-          "translation": "เธอกินแอปเปิลหนึ่งผล",
-          "thaiPronunciation": "ชี อีทส์ แอน แอปเปิล",
-          "grammar": "S (She: เธอ) + V (eats: กิน) + O (an: หนึ่ง + apple: แอปเปิล)"
-        },
-        {
-          "structure": "S + V + C",
-          "sentence": "He is a doctor.",
-          "translation": "เขาเป็นหมอหนึ่งคน",
-          "thaiPronunciation": "ฮี อีส อะ ดอคเทอร์",
-          "grammar": "S (He: เขา) + V (is: เป็น) + C (a: หนึ่ง + doctor: หมอ)"
-        },
-        {
-          "structure": "S + V + IO + DO",
-          "sentence": "Mom gives me a gift.",
-          "translation": "แม่ให้ของขวัญหนึ่งชิ้นแก่ฉัน",
-          "thaiPronunciation": "มัม กีฟส์ มี อะ กิฟท์",
-          "grammar": "S (Mom: แม่) + V (gives: ให้) + IO (me: ฉัน) + DO (a: หนึ่ง + gift: ของขวัญ)"
-        },
-        {
-          "structure": "S + V + O + C",
-          "sentence": "They call him a hero.",
-          "translation": "พวกเขาเรียกเขาว่าวีรบุรุษคนหนึ่ง",
-          "thaiPronunciation": "เดย์ คอล ฮิม อะ ฮีโร่",
-          "grammar": "S (They: พวกเขา) + V (call: เรียก) + O (him: เขา) + C (a: หนึ่ง + hero: วีรบุรุษ)"
-        }
-      ],
-      "trick": "จำง่ายๆ ว่า 'อะ' ใช้กับเสียงพยัญชนะ (เช่น อะ ด็อก) ส่วน 'แอน' ใช้กับเสียงสระ (เช่น แอน แอปเปิล) เหมือนการเติม 'หนึ่ง' เข้าไปหน้านามครับ"
+      "wordTranslation": "สองสาม, ไม่กี่, สองคน",
+      "thaiPronunciation": "อะ คัพเพิล"
     }
-  }
+  },
+  "generalNotes": [],
+  "reviewWords": [
+    {
+      "id": "rw-1785253082625-543",
+      "word": "a couple",
+      "pos": "det.",
+      "translation": "สองสาม, ไม่กี่, สองคน",
+      "addedAt": "2026-07-28T15:38:02.625Z",
+      "isCustom": false,
+      "sourceWordId": "w-1"
+    }
+  ]
 }

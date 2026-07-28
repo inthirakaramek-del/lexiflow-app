@@ -2,41 +2,88 @@ import { NextResponse } from "next/server";
 
 export async function POST(request: Request) {
   try {
-    const { word, pos } = await request.json();
-
+    const body = await request.json();
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
       return NextResponse.json({ error: "Gemini API key is not configured" }, { status: 400 });
     }
 
+    // Support translation of custom words clicked from example sentences
+    if (body.action === "translate") {
+      const { word } = body;
+      const prompt = `Translate the English word or phrase "${word}" to Thai.
+Return the result as a raw JSON object with the following schema:
+{
+  "translation": "natural Thai translation",
+  "thaiPronunciation": "Thai phonetic reading of the word itself (e.g. 'ออพพอร์ทูนิตี' for 'opportunity')",
+  "pos": "part of speech (n. / v. / adj. / adv. / prep. / conj. / pron.)"
+}
+Return ONLY valid JSON.`;
+
+      const response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: prompt }] }],
+            generationConfig: {
+              responseMimeType: "application/json",
+            },
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Gemini API error: ${errorText}`);
+      }
+
+      const data = await response.json();
+      const textContent = data.candidates[0].content.parts[0].text;
+      const parsedData = JSON.parse(textContent);
+      return NextResponse.json(parsedData);
+    }
+
+    // Normal generation route for words in the dictionary
+    const { word, pos } = body;
     const prompt = `Generate 5 example sentences for the English word or phrase "${word}" (which is a ${pos}).
 Each sentence MUST strictly follow one of the 5 English sentence structures:
-1. S + V (Subject + Verb)
-2. S + V + O (Subject + Verb + Object)
-3. S + V + C (Subject + Verb + Complement)
-4. S + V + IO + DO (Subject + Verb + Indirect Object + Direct Object)
-5. S + V + O + C (Subject + Verb + Object + Complement)
+1. S + V (Subject + Verb) - e.g. "He runs." (The verb must be intransitive or used intransitively)
+2. S + V + O (Subject + Verb + Object) - e.g. "She loves books." (The verb must be transitive and take an object)
+3. S + V + C (Subject + Verb + Complement) - e.g. "He is a doctor.", "She feels happy." (Complement describes the subject, usually after linking verbs like is, am, are, feel, become)
+4. S + V + IO + DO (Subject + Verb + Indirect Object + Direct Object) - e.g. "She gave him a book.", "My mother bought me a shirt."
+5. S + V + O + C (Subject + Verb + Object + Complement) - e.g. "We painted the wall green.", "The news made her sad." (Object complement describes the direct object)
+
+Ensure that:
+- Every English sentence is extremely natural, modern, and practical (commonly used in daily life, work, or school). Avoid robotic or awkward phrasing.
+- The word "${word}" must be integrated naturally in its correct grammatical form (conjugate verbs or pluralize nouns if needed to fit the structure).
+- The Thai translation of the sentence must be smooth, natural, and accurate.
+- The pronunciation (thaiPronunciation) for the word and the sentences must be spelled in Thai phonetics (e.g. 'เดอะ ชิลเดรน แอคทิด อะ บิท' for 'The children acted a bit').
+- The grammar breakdown MUST match the actual words in the sentence exactly and show their meaning in Thai, e.g.: 'S (He: เขา) + V (runs: วิ่ง)' or 'S (She: เธอ) + V (gave: มอบให้) + IO (him: เขา) + DO (a book: หนังสือ)'.
 
 Return the result as a raw JSON object with the following schema:
 {
   "wordTranslation": "Thai translation of the vocabulary word itself (e.g. 'ละทิ้ง' for 'abandon')",
-  "thaiPronunciation": "Thai phonetic pronunciation / reading of the English word itself (e.g. 'อะแบนดัน' for 'abandon', 'อะ บิท' for 'a bit')",
+  "thaiPronunciation": "Thai phonetic pronunciation / reading of the English word itself (e.g. 'อะแบนดัน' for 'abandon')",
   "sentences": [
     {
       "structure": "S + V",
       "sentence": "Example sentence using the word",
       "translation": "Thai translation of the sentence",
-      "thaiPronunciation": "Thai phonetic pronunciation / reading of this English sentence (e.g. 'เดอะ ชิลเดรน แอคทิด อะ บิท' for 'The children acted a bit')",
-      "grammar": "Detailed breakdown matching the specific English words in the sentence to their grammatical parts with Thai translations, formatted exactly like: 'S (SubjectWord: คำแปล) + V (VerbWord: คำแปล) + ...' (e.g. 'S (He: เขา) + V (runs: วิ่ง) + O (the race: การแข่งขัน)')"
+      "thaiPronunciation": "Thai phonetic pronunciation / reading of this English sentence",
+      "grammar": "Detailed breakdown matching the specific English words in the sentence to their grammatical parts with Thai translations, formatted exactly like: 'S (SubjectWord: คำแปล) + V (VerbWord: คำแปล) + ...'"
     }
   ],
   "trick": "A small clever memory trick or mnemonic in Thai to easily remember this word"
 }
 
-Ensure the sentences use the word "${word}" naturally in its correct form (conjugate verbs or pluralize nouns if needed to fit the sentence structure). Return ONLY valid JSON.`;
+Return ONLY valid JSON.`;
 
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key=${apiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
       {
         method: "POST",
         headers: {
@@ -65,3 +112,4 @@ Ensure the sentences use the word "${word}" naturally in its correct form (conju
     return NextResponse.json({ error: error.message || "Failed to generate content" }, { status: 500 });
   }
 }
+
