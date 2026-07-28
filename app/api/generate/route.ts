@@ -77,7 +77,7 @@ Return the result as a raw JSON object with the following schema:
       "grammar": "Detailed breakdown matching the specific English words in the sentence to their grammatical parts with Thai translations, formatted exactly like: 'S (SubjectWord: คำแปล) + V (VerbWord: คำแปล) + ...'"
     }
   ],
-  "trick": "A small clever memory trick or mnemonic in Thai to easily remember this word"
+  "trick": "A clear, practical guide on how to use this word in Thai, explaining its grammatical behavior, common collocations, prepositions it goes with, or specific context rules (e.g., 'คำนี้มักตามด้วยคำว่า...')"
 }
 
 Return ONLY valid JSON.`;
@@ -104,10 +104,24 @@ Return ONLY valid JSON.`;
     }
 
     const data = await response.json();
+    if (!data.candidates || !data.candidates[0]) {
+      console.error("Gemini API returned no candidates:", JSON.stringify(data));
+      throw new Error("No candidates returned from Gemini API");
+    }
     const textContent = data.candidates[0].content.parts[0].text;
-    const parsedData = JSON.parse(textContent);
-
-    return NextResponse.json(parsedData);
+    try {
+      const parsedData = JSON.parse(textContent);
+      return NextResponse.json(parsedData);
+    } catch (parseErr: any) {
+      console.error("Failed to parse JSON from Gemini response. Attempting clean up...", parseErr);
+      const cleanText = textContent.replace(/```json/g, "").replace(/```/g, "").trim();
+      try {
+        const parsedData = JSON.parse(cleanText);
+        return NextResponse.json(parsedData);
+      } catch (secondErr: any) {
+        return NextResponse.json({ error: `JSON Parse Error: ${secondErr.message}. Raw: ${textContent}` }, { status: 500 });
+      }
+    }
   } catch (error: any) {
     return NextResponse.json({ error: error.message || "Failed to generate content" }, { status: 500 });
   }
