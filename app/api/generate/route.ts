@@ -60,9 +60,9 @@ Each sentence MUST strictly follow one of the 5 English sentence structures:
 Ensure that:
 - Every English sentence is extremely natural, modern, and practical (commonly used in daily life, work, or school). Avoid robotic or awkward phrasing.
 - The word "${word}" must be integrated naturally in its correct grammatical form (conjugate verbs or pluralize nouns if needed to fit the structure).
-- The Thai translation of the sentence must be smooth, natural, and accurate.
+- CRITICAL: The "translation" field for the sentence MUST be written entirely in fluent, natural, grammatically correct Thai. You MUST NOT include or leave any English words (such as "The team", "a little", "the message", etc.) in the "translation" string. All parts of the sentence must be translated into natural Thai. For example, write "ทีมงานปฏิบัติงานเล็กน้อย" instead of "The team ได้ปฏิบัติอย่าง a little".
 - The pronunciation (thaiPronunciation) for the word and the sentences must be spelled in Thai phonetics (e.g. 'เดอะ ชิลเดรน แอคทิด อะ บิท' for 'The children acted a bit').
-- The grammar breakdown MUST match the actual words in the sentence exactly and show their meaning in Thai, e.g.: 'S (He: เขา) + V (runs: วิ่ง)' or 'S (She: เธอ) + V (gave: มอบให้) + IO (him: เขา) + DO (a book: หนังสือ)'.
+- The grammar breakdown MUST match the actual words in the sentence exactly and show their meaning in Thai, e.g.: 'S (The team: ทีมงาน) + V (acted: ปฏิบัติ) + M (a little: เล็กน้อย)'.
 
 Return the result as a raw JSON object with the following schema:
 {
