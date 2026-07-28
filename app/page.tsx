@@ -471,7 +471,7 @@ export default function Home() {
             e.stopPropagation();
             openTranslationModal(cleanWord);
           }}
-          className="px-0.5 hover:bg-pink-100 hover:text-[#fa6a8d] rounded font-semibold transition cursor-pointer"
+          className="px-0.5 hover:bg-pink-100 hover:text-[#A28C89] rounded font-semibold transition cursor-pointer"
           title={`Click to analyze/add "${cleanWord}" to Review`}
         >
           {token}
@@ -652,7 +652,7 @@ export default function Home() {
   }, [progress.masteredIds]);
 
   return (
-    <div className="flex flex-1 min-h-screen bg-gradient-to-tr from-[#fff3f5] via-[#f7faff] to-[#eef7ff] text-slate-700 font-sans selection:bg-[#ffedf1] selection:text-[#fa6a8d]">
+    <div className="flex flex-1 min-h-screen bg-gradient-to-tr from-[#F0ECEA] via-[#EAE3DE] to-[#E2D9D3] text-slate-700 font-sans selection:bg-[#F5F1EE] selection:text-[#A28C89]">
       {/* Dynamic CSS animations */}
       <style jsx global>{`
         @keyframes shake {
@@ -700,10 +700,10 @@ export default function Home() {
       `}</style>
 
       {/* Side Bar Navigation */}
-      <aside className="w-80 bg-white/80 backdrop-blur-xl border-r border-[#e8f1fc] p-6 flex flex-col justify-between hidden md:flex">
+      <aside className="w-80 bg-white/80 backdrop-blur-xl border-r border-[#E5E0DC] p-6 flex flex-col justify-between hidden md:flex">
         <div className="flex flex-col gap-8">
           <div className="flex items-center gap-3 pl-2">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-[#fa8fa6] to-[#fcb1c3] flex items-center justify-center shadow-md shadow-pink-200/50">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-[#B8A3A0] to-[#D4C9C8] flex items-center justify-center shadow-md shadow-stone-200/40">
               <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
               </svg>
@@ -719,7 +719,7 @@ export default function Home() {
               onClick={() => setActiveTab("dashboard")}
               className={`flex items-center gap-4 px-4 py-3.5 rounded-xl text-sm font-bold transition-all duration-200 group ${
                 activeTab === "dashboard"
-                  ? "bg-[#ffedf1] text-[#fa6a8d] border border-[#ffdee5] shadow-sm"
+                  ? "bg-[#F5F1EE] text-[#A28C89] border border-[#E5DDD8] shadow-sm"
                   : "text-slate-500 hover:text-slate-800 hover:bg-slate-50 border border-transparent"
               }`}
             >
@@ -733,7 +733,7 @@ export default function Home() {
               onClick={() => setActiveTab("flashcards")}
               className={`flex items-center gap-4 px-4 py-3.5 rounded-xl text-sm font-bold transition-all duration-200 group ${
                 activeTab === "flashcards"
-                  ? "bg-[#ffedf1] text-[#fa6a8d] border border-[#ffdee5] shadow-sm"
+                  ? "bg-[#F5F1EE] text-[#A28C89] border border-[#E5DDD8] shadow-sm"
                   : "text-slate-500 hover:text-slate-800 hover:bg-slate-50 border border-transparent"
               }`}
             >
@@ -747,7 +747,7 @@ export default function Home() {
               onClick={() => setActiveTab("review")}
               className={`flex items-center gap-4 px-4 py-3.5 rounded-xl text-sm font-bold transition-all duration-200 group ${
                 activeTab === "review"
-                  ? "bg-[#ffedf1] text-[#fa6a8d] border border-[#ffdee5] shadow-sm"
+                  ? "bg-[#F5F1EE] text-[#A28C89] border border-[#E5DDD8] shadow-sm"
                   : "text-slate-500 hover:text-slate-800 hover:bg-slate-50 border border-transparent"
               }`}
             >
@@ -761,7 +761,7 @@ export default function Home() {
               onClick={() => setActiveTab("quiz")}
               className={`flex items-center gap-4 px-4 py-3.5 rounded-xl text-sm font-bold transition-all duration-200 group ${
                 activeTab === "quiz"
-                  ? "bg-[#ffedf1] text-[#fa6a8d] border border-[#ffdee5] shadow-sm"
+                  ? "bg-[#F5F1EE] text-[#A28C89] border border-[#E5DDD8] shadow-sm"
                   : "text-slate-500 hover:text-slate-800 hover:bg-slate-50 border border-transparent"
               }`}
             >
@@ -775,7 +775,7 @@ export default function Home() {
               onClick={() => setActiveTab("explorer")}
               className={`flex items-center gap-4 px-4 py-3.5 rounded-xl text-sm font-bold transition-all duration-200 group ${
                 activeTab === "explorer"
-                  ? "bg-[#ffedf1] text-[#fa6a8d] border border-[#ffdee5] shadow-sm"
+                  ? "bg-[#F5F1EE] text-[#A28C89] border border-[#E5DDD8] shadow-sm"
                   : "text-slate-500 hover:text-slate-800 hover:bg-slate-50 border border-transparent"
               }`}
             >
@@ -789,7 +789,7 @@ export default function Home() {
               onClick={() => setActiveTab("notes")}
               className={`flex items-center gap-4 px-4 py-3.5 rounded-xl text-sm font-bold transition-all duration-200 group ${
                 activeTab === "notes"
-                  ? "bg-[#ffedf1] text-[#fa6a8d] border border-[#ffdee5] shadow-sm"
+                  ? "bg-[#F5F1EE] text-[#A28C89] border border-[#E5DDD8] shadow-sm"
                   : "text-slate-500 hover:text-slate-800 hover:bg-slate-50 border border-transparent"
               }`}
             >
@@ -801,14 +801,14 @@ export default function Home() {
           </nav>
         </div>
 
-        <div className="bg-slate-50/80 border border-[#e8f1fc] rounded-2xl p-4 flex flex-col gap-3">
+        <div className="bg-slate-50/80 border border-[#E5E0DC] rounded-2xl p-4 flex flex-col gap-3">
           <div className="flex items-center justify-between text-xs text-slate-600 font-bold">
             <span>Overall Mastery</span>
-            <span className="text-[#fa6a8d]">{masteredPercentage}%</span>
+            <span className="text-[#A28C89]">{masteredPercentage}%</span>
           </div>
           <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
             <div
-              className="bg-gradient-to-r from-[#fa8fa6] to-[#fcb1c3] h-full rounded-full transition-all duration-500"
+              className="bg-gradient-to-r from-[#B8A3A0] to-[#D4C9C8] h-full rounded-full transition-all duration-500"
               style={{ width: `${masteredPercentage}%` }}
             />
           </div>
@@ -821,9 +821,9 @@ export default function Home() {
       {/* Main Panel */}
       <main className="flex-1 flex flex-col overflow-y-auto bg-transparent p-3 sm:p-6 md:p-8">
         {/* Mobile Header / Nav */}
-        <header className="flex md:hidden items-center justify-between bg-white/90 border border-[#e8f1fc] rounded-2xl p-4 mb-6 shadow-sm">
+        <header className="flex md:hidden items-center justify-between bg-white/90 border border-[#E5E0DC] rounded-2xl p-4 mb-6 shadow-sm">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-[#fa8fa6] to-[#fcb1c3] flex items-center justify-center">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-[#B8A3A0] to-[#D4C9C8] flex items-center justify-center">
               <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
               </svg>
@@ -849,7 +849,7 @@ export default function Home() {
         ------------------------------------------------------------------------ */}
         {activeTab === "dashboard" && (
           <section className="flex flex-col gap-8 max-w-5xl mx-auto w-full">
-            <div className="relative overflow-hidden bg-gradient-to-r from-[#ffeef2]/60 to-[#eef7ff]/60 border border-[#ffdbe3] rounded-3xl p-6 md:p-8 flex flex-col md:flex-row items-center justify-between gap-6 shadow-md shadow-pink-100/20">
+            <div className="relative overflow-hidden bg-gradient-to-r from-[#ffeef2]/60 to-[#E2D9D3]/60 border border-[#EBE3DE] rounded-3xl p-6 md:p-8 flex flex-col md:flex-row items-center justify-between gap-6 shadow-md shadow-pink-100/20">
               <div className="absolute right-0 top-0 w-80 h-80 bg-pink-300/10 rounded-full blur-3xl -z-10" />
               <div className="flex flex-col gap-2 text-center md:text-left">
                 <h2 className="text-2xl md:text-3xl font-extrabold text-slate-800 tracking-tight">
@@ -859,22 +859,22 @@ export default function Home() {
                   Learn grammar dynamically. Every card is backed by a persistent database cache generating 5 distinct sentence structures and memory tricks.
                 </p>
               </div>
-              <div className="flex flex-col items-center justify-center bg-white/90 border border-[#e8f1fc] rounded-2xl px-6 py-4 text-center shadow-sm">
-                <span className="text-4xl font-extrabold text-[#fa6a8d]">{masteredPercentage}%</span>
+              <div className="flex flex-col items-center justify-center bg-white/90 border border-[#E5E0DC] rounded-2xl px-6 py-4 text-center shadow-sm">
+                <span className="text-4xl font-extrabold text-[#A28C89]">{masteredPercentage}%</span>
                 <span className="text-[11px] text-slate-500 font-bold uppercase tracking-wider mt-1">Mastery Progress</span>
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {/* Main Mastery Progress Card */}
-              <div className="bg-white/90 border border-[#e8f1fc] rounded-3xl p-6 md:col-span-2 flex flex-col justify-between gap-6 shadow-sm">
+              <div className="bg-white/90 border border-[#E5E0DC] rounded-3xl p-6 md:col-span-2 flex flex-col justify-between gap-6 shadow-sm">
                 <div className="flex flex-col gap-2">
                   <h3 className="text-lg font-bold text-slate-800">สถิติการท่องคำศัพท์รวม (Overall Vocabulary Stats)</h3>
                   <p className="text-xs text-slate-500 font-medium">ความคืบหน้าการจำคำศัพท์สะสมของคุณจากคลังคำศัพท์ทั้งหมด</p>
                 </div>
                 
                 <div className="flex flex-col items-center justify-center py-6 bg-slate-50/50 rounded-2xl border border-slate-100/80">
-                  <div className="text-5xl font-black text-[#fa6a8d] tracking-tight">
+                  <div className="text-5xl font-black text-[#A28C89] tracking-tight">
                     {progress.masteredIds.length} <span className="text-xl font-bold text-slate-400">/ {VOCAB.length} คำ</span>
                   </div>
                   <div className="text-sm font-extrabold text-slate-500 mt-2">
@@ -885,7 +885,7 @@ export default function Home() {
                 <div className="flex flex-col gap-2">
                   <div className="w-full bg-slate-200 h-3.5 rounded-full overflow-hidden shadow-inner">
                     <div
-                      className="bg-gradient-to-r from-[#fa8fa6] to-[#fcb1c3] h-full rounded-full transition-all duration-500"
+                      className="bg-gradient-to-r from-[#B8A3A0] to-[#D4C9C8] h-full rounded-full transition-all duration-500"
                       style={{ width: `${masteredPercentage}%` }}
                     />
                   </div>
@@ -893,7 +893,7 @@ export default function Home() {
               </div>
 
               {/* General App Info & Shortcuts */}
-              <div className="bg-white/90 border border-[#e8f1fc] rounded-3xl p-6 flex flex-col gap-5 justify-between shadow-sm">
+              <div className="bg-white/90 border border-[#E5E0DC] rounded-3xl p-6 flex flex-col gap-5 justify-between shadow-sm">
                 <div className="flex flex-col gap-4">
                   <h3 className="text-lg font-bold text-slate-800">ข้อมูลและคลังทบทวน</h3>
                   
@@ -904,7 +904,7 @@ export default function Home() {
                     </div>
                     <div className="bg-slate-50/50 border border-slate-100 rounded-xl p-3 text-center">
                       <span className="text-[10px] text-slate-400 font-bold uppercase block mb-1">Review Deck</span>
-                      <span className="text-lg font-black text-[#fa6a8d]">{reviewWords.length} คำ</span>
+                      <span className="text-lg font-black text-[#A28C89]">{reviewWords.length} คำ</span>
                     </div>
                     <div className="bg-slate-50/50 border border-slate-100 rounded-xl p-3 text-center col-span-2">
                       <span className="text-[10px] text-slate-400 font-bold uppercase block mb-1">Knowledge Notes</span>
@@ -918,10 +918,10 @@ export default function Home() {
                         setFlashcardDeckType("learning");
                         setActiveTab("flashcards");
                       }}
-                      className="w-full flex items-center justify-between bg-[#fffcfd] hover:bg-pink-50/30 border border-[#ffdbe3] text-slate-700 px-4 py-2.5 rounded-xl text-xs font-semibold transition"
+                      className="w-full flex items-center justify-between bg-[#fffcfd] hover:bg-pink-50/30 border border-[#EBE3DE] text-slate-700 px-4 py-2.5 rounded-xl text-xs font-semibold transition"
                     >
                       <span>ฝึกคำศัพท์ที่ยังจำไม่ได้</span>
-                      <span className="bg-white border border-[#ffdbe3] text-[#fa6a8d] px-2 py-0.5 rounded-md font-bold">
+                      <span className="bg-white border border-[#EBE3DE] text-[#A28C89] px-2 py-0.5 rounded-md font-bold">
                         {VOCAB.length - progress.masteredIds.length} คำ
                       </span>
                     </button>
@@ -951,7 +951,7 @@ export default function Home() {
         ------------------------------------------------------------------------ */}
         {activeTab === "flashcards" && (
           <section className="flex flex-col items-center gap-6 max-w-5xl mx-auto w-full">
-            <div className="w-full bg-white/90 border border-[#e8f1fc] rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm">
+            <div className="w-full bg-white/90 border border-[#E5E0DC] rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm">
               <div className="flex items-center gap-2 w-full sm:w-auto">
                 <span className="text-sm font-bold text-slate-500">Deck:</span>
                 <select
@@ -976,7 +976,7 @@ export default function Home() {
                   value={flashcardSearchQuery}
                   onChange={(e) => setFlashcardSearchQuery(e.target.value)}
                   placeholder="Search word in deck..."
-                  className="w-full bg-slate-50 border border-slate-200 hover:border-pink-300 focus:border-[#fa8fa6] rounded-xl pl-9 pr-8 py-1.5 text-xs text-slate-700 focus:outline-none placeholder:text-slate-400 transition"
+                  className="w-full bg-slate-50 border border-slate-200 hover:border-[#E5DDD8] focus:border-[#B8A3A0] rounded-xl pl-9 pr-8 py-1.5 text-xs text-slate-700 focus:outline-none placeholder:text-slate-400 transition"
                 />
                 <svg className="absolute left-3 top-2.5 w-3.5 h-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -1000,7 +1000,7 @@ export default function Home() {
                     setIsFlipped(false);
                   }}
                   disabled={currentCardIndex === 0 || flashcardWords.length === 0}
-                  className="text-xs font-bold text-[#fa6a8d] disabled:text-slate-400 bg-[#ffedf1] disabled:bg-slate-50 hover:bg-[#fa6a8d] hover:text-white border border-[#ffdee5] disabled:border-slate-200 px-3 py-1.5 rounded-lg transition flex items-center gap-1 shadow-sm disabled:shadow-none"
+                  className="text-xs font-bold text-[#A28C89] disabled:text-slate-400 bg-[#F5F1EE] disabled:bg-slate-50 hover:bg-[#A28C89] hover:text-white border border-[#E5DDD8] disabled:border-slate-200 px-3 py-1.5 rounded-lg transition flex items-center gap-1 shadow-sm disabled:shadow-none"
                   title="Reset to first card"
                 >
                   <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
@@ -1015,9 +1015,9 @@ export default function Home() {
             </div>
 
             {flashcardWords.length === 0 ? (
-              <div className="bg-white/90 border border-[#e8f1fc] rounded-3xl p-12 text-center max-w-md w-full flex flex-col gap-4 items-center shadow-md">
+              <div className="bg-white/90 border border-[#E5E0DC] rounded-3xl p-12 text-center max-w-md w-full flex flex-col gap-4 items-center shadow-md">
                 <h3 className="text-lg font-bold text-slate-800">This deck is empty</h3>
-                <button onClick={() => setFlashcardDeckType("all")} className="bg-[#fa6a8d] hover:bg-[#fa8fa6] px-4 py-2 rounded-xl text-xs font-bold transition text-white shadow-sm">
+                <button onClick={() => setFlashcardDeckType("all")} className="bg-[#A28C89] hover:bg-[#B8A3A0] px-4 py-2 rounded-xl text-xs font-bold transition text-white shadow-sm">
                   Load All Words
                 </button>
               </div>
@@ -1056,7 +1056,7 @@ export default function Home() {
                     className="w-full max-w-3xl min-h-[380px] xs:min-h-[420px] sm:min-h-[500px] cursor-pointer card-perspective"
                   >
                     <div
-                      className={`w-full h-full min-h-[380px] xs:min-h-[420px] sm:min-h-[500px] relative card-inner rounded-3xl border border-[#e5effa] shadow-lg shadow-sky-100/50 ${
+                      className={`w-full h-full min-h-[380px] xs:min-h-[420px] sm:min-h-[500px] relative card-inner rounded-3xl border border-[#E5E0DC] shadow-lg shadow-stone-200/30 ${
                         isFlipped ? "card-flipped" : ""
                       } ${
                         cardTransition === "swipe-left"
@@ -1092,8 +1092,8 @@ export default function Home() {
                               }}
                               className={`transition flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-lg border ${
                                 reviewWords.some(rw => rw.word.toLowerCase() === currentWordObj.word.toLowerCase())
-                                  ? "bg-rose-50 border-rose-200 text-[#fa6a8d] cursor-not-allowed"
-                                  : "bg-slate-50 border-slate-200 text-slate-500 hover:bg-rose-50 hover:border-[#ffdbe3] hover:text-[#fa6a8d]"
+                                  ? "bg-rose-50 border-rose-200 text-[#A28C89] cursor-not-allowed"
+                                  : "bg-slate-50 border-slate-200 text-slate-500 hover:bg-rose-50 hover:border-[#EBE3DE] hover:text-[#A28C89]"
                               }`}
                               disabled={reviewWords.some(rw => rw.word.toLowerCase() === currentWordObj.word.toLowerCase())}
                               title="Add to Review List (ยังจำไม่ได้)"
@@ -1152,7 +1152,7 @@ export default function Home() {
                         <div className="flex-1 flex flex-col gap-2.5 justify-center">
                           {loadingAI ? (
                             <div className="flex flex-col items-center gap-3">
-                              <div className="w-7 h-7 border-3 border-[#fa8fa6] border-t-transparent rounded-full animate-spin" />
+                              <div className="w-7 h-7 border-3 border-[#B8A3A0] border-t-transparent rounded-full animate-spin" />
                               <span className="text-[10px] text-slate-400 font-extrabold uppercase tracking-widest">
                                 Loading sentence data (fetching AI)...
                               </span>
@@ -1160,7 +1160,7 @@ export default function Home() {
                           ) : activeCardData ? (
                             <div className="flex flex-col gap-1.5 xs:gap-2 max-w-2xl mx-auto w-full text-left">
                               {activeCardData.sentences.map((s, idx) => (
-                                <div key={idx} className="bg-[#f8faff] border border-slate-100 rounded-xl px-2.5 py-1.5 xs:px-3 xs:py-2 flex items-center justify-between gap-2.5 hover:border-[#ffdbe3] hover:bg-[#fffcfd] transition">
+                                <div key={idx} className="bg-[#f8faff] border border-slate-100 rounded-xl px-2.5 py-1.5 xs:px-3 xs:py-2 flex items-center justify-between gap-2.5 hover:border-[#EBE3DE] hover:bg-[#fffcfd] transition">
                                   <div className="flex items-start gap-2.5 flex-1 text-left">
                                     <span className="text-[8.5px] xs:text-[9.5px] sm:text-[10px] font-extrabold bg-[#e6f4ff] text-[#0958d9] border border-[#d2e9ff] px-1.5 py-0.5 rounded min-w-[48px] sm:min-w-[70px] text-center shrink-0 mt-0.5">
                                       {s.structure}
@@ -1170,7 +1170,7 @@ export default function Home() {
                                         {renderInteractiveSentence(s.sentence)}
                                       </p>
                                       {s.thaiPronunciation && (
-                                        <p className="text-[9.5px] sm:text-[10px] text-[#fa6a8d]/80 font-semibold tracking-wide mt-0.5">
+                                        <p className="text-[9.5px] sm:text-[10px] text-[#A28C89]/80 font-semibold tracking-wide mt-0.5">
                                           อ่าน: {s.thaiPronunciation}
                                         </p>
                                       )}
@@ -1229,8 +1229,8 @@ export default function Home() {
                               }}
                               className={`transition flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-lg border ${
                                 reviewWords.some(rw => rw.word.toLowerCase() === currentWordObj.word.toLowerCase())
-                                  ? "bg-rose-50 border-rose-200 text-[#fa6a8d] cursor-not-allowed"
-                                  : "bg-slate-50 border-slate-200 text-slate-500 hover:bg-rose-50 hover:border-[#ffdbe3] hover:text-[#fa6a8d]"
+                                  ? "bg-rose-50 border-rose-200 text-[#A28C89] cursor-not-allowed"
+                                  : "bg-slate-50 border-slate-200 text-slate-500 hover:bg-rose-50 hover:border-[#EBE3DE] hover:text-[#A28C89]"
                               }`}
                               disabled={reviewWords.some(rw => rw.word.toLowerCase() === currentWordObj.word.toLowerCase())}
                               title="Add to Review List (ยังจำไม่ได้)"
@@ -1248,7 +1248,7 @@ export default function Home() {
                           {activeCardData && (
                             <div className="flex flex-col gap-1.5 xs:gap-2 max-w-2xl mx-auto w-full text-left">
                               {activeCardData.sentences.map((s, idx) => (
-                                <div key={idx} className="bg-[#f8faff] border border-slate-100 rounded-xl p-2.5 flex flex-col gap-1.5 hover:border-[#ffdbe3] transition">
+                                <div key={idx} className="bg-[#f8faff] border border-slate-100 rounded-xl p-2.5 flex flex-col gap-1.5 hover:border-[#EBE3DE] transition">
                                   <div className="flex items-start justify-between gap-2 text-[10px] sm:text-xs">
                                     <div className="flex items-start gap-2.5 text-left flex-1">
                                       <span className="font-extrabold bg-[#e6f4ff] text-[#0958d9] border border-[#d2e9ff] px-1.5 py-0.5 rounded text-[8.5px] xs:text-[9.5px] shrink-0 mt-0.5 min-w-[48px] sm:min-w-[55px] text-center">
@@ -1259,7 +1259,7 @@ export default function Home() {
                                           {renderInteractiveSentence(s.sentence)}
                                         </p>
                                         {s.thaiPronunciation && (
-                                          <p className="text-[9px] sm:text-[10px] text-[#fa6a8d]/80 font-semibold tracking-wide mt-0.5">
+                                          <p className="text-[9px] sm:text-[10px] text-[#A28C89]/80 font-semibold tracking-wide mt-0.5">
                                             อ่าน: {s.thaiPronunciation}
                                           </p>
                                         )}
@@ -1279,7 +1279,7 @@ export default function Home() {
                                     </button>
                                   </div>
                                   <div className="pl-1.5 flex flex-col gap-0.5 border-l border-slate-200 ml-1">
-                                    <p className="text-[11px] xs:text-xs sm:text-sm font-bold text-[#fa6a8d]">
+                                    <p className="text-[11px] xs:text-xs sm:text-sm font-bold text-[#A28C89]">
                                       แปล: {s.translation}
                                     </p>
                                     <p className="text-[9.5px] sm:text-[11px] text-slate-500 font-semibold leading-normal font-sans">
@@ -1314,7 +1314,7 @@ export default function Home() {
 
 
                   {/* Starred Notes Input Area */}
-                  <div className="w-full max-w-xl bg-white border border-[#e5effa] rounded-2xl p-4 flex flex-col gap-3 shadow-sm">
+                  <div className="w-full max-w-xl bg-white border border-[#E5E0DC] rounded-2xl p-4 flex flex-col gap-3 shadow-sm">
                     <label className="text-xs text-slate-500 font-bold uppercase tracking-wider">
                       Add Custom Study Notes / Translations:
                     </label>
@@ -1323,7 +1323,7 @@ export default function Home() {
                       onChange={(e) => saveNote(currentWordObj.id, e.target.value)}
                       placeholder="e.g. ละทิ้ง, ปล่อย, เลิกคิด / To leave behind permanently..."
                       rows={2}
-                      className="bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm text-slate-700 focus:outline-none focus:border-[#fa8fa6] focus:bg-white transition resize-none placeholder:text-slate-400"
+                      className="bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm text-slate-700 focus:outline-none focus:border-[#B8A3A0] focus:bg-white transition resize-none placeholder:text-slate-400"
                     />
                   </div>
 
@@ -1388,7 +1388,7 @@ export default function Home() {
           <section className="flex flex-col items-center gap-6 max-w-3xl mx-auto w-full">
             {!quizStarted ? (
               <div className="w-full flex flex-col gap-6">
-                <div className="bg-white/90 border border-[#e8f1fc] rounded-3xl p-6 md:p-8 text-center flex flex-col gap-4 shadow-sm">
+                <div className="bg-white/90 border border-[#E5E0DC] rounded-3xl p-6 md:p-8 text-center flex flex-col gap-4 shadow-sm">
                   <h2 className="text-2xl font-black text-slate-800">Quiz Arena</h2>
                   <p className="text-sm text-slate-500 max-w-md mx-auto font-medium">
                     Challenge yourself to reinforce your vocabulary memory. Select a mode to start playing.
@@ -1401,7 +1401,7 @@ export default function Home() {
                         onClick={() => setQuizPoolType("unmastered")}
                         className={`px-4 py-2.5 rounded-xl text-xs font-extrabold border transition ${
                           quizPoolType === "unmastered"
-                            ? "bg-[#ffedf1] border-[#ffdee5] text-[#fa6a8d]"
+                            ? "bg-[#F5F1EE] border-[#E5DDD8] text-[#A28C89]"
                             : "bg-slate-50 border-slate-200 text-slate-500 hover:bg-slate-100"
                         }`}
                       >
@@ -1411,7 +1411,7 @@ export default function Home() {
                         onClick={() => setQuizPoolType("mastered")}
                         className={`px-4 py-2.5 rounded-xl text-xs font-extrabold border transition ${
                           quizPoolType === "mastered"
-                            ? "bg-[#ffedf1] border-[#ffdee5] text-[#fa6a8d]"
+                            ? "bg-[#F5F1EE] border-[#E5DDD8] text-[#A28C89]"
                             : "bg-slate-50 border-slate-200 text-slate-500 hover:bg-slate-100"
                         }`}
                       >
@@ -1422,7 +1422,7 @@ export default function Home() {
                 </div>
 
                 {quizPoolType === "mastered" && progress.masteredIds.length === 0 ? (
-                  <div className="bg-white/90 border border-[#e8f1fc] rounded-3xl p-8 text-center flex flex-col items-center gap-4 shadow-sm">
+                  <div className="bg-white/90 border border-[#E5E0DC] rounded-3xl p-8 text-center flex flex-col items-center gap-4 shadow-sm">
                     <div className="w-14 h-14 rounded-2xl bg-amber-500/10 text-amber-600 flex items-center justify-center">
                       <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
@@ -1437,7 +1437,7 @@ export default function Home() {
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div className="bg-white/90 border border-[#e8f1fc] rounded-3xl p-6 flex flex-col justify-between gap-6 shadow-sm hover:border-[#ffdbe3] transition">
+                    <div className="bg-white/90 border border-[#E5E0DC] rounded-3xl p-6 flex flex-col justify-between gap-6 shadow-sm hover:border-[#EBE3DE] transition">
                       <div className="flex flex-col gap-3">
                         <div className="w-12 h-12 rounded-2xl bg-sky-50 text-sky-600 border border-sky-100 flex items-center justify-center">
                           <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
@@ -1449,12 +1449,12 @@ export default function Home() {
                           Guess whether the highlighted word is a noun, verb, adjective, or other.
                         </p>
                       </div>
-                      <button onClick={() => startQuiz("pos")} className="w-full bg-[#fa6a8d] hover:bg-[#fa8fa6] text-white font-extrabold text-xs py-2.5 rounded-xl transition shadow-md">
+                      <button onClick={() => startQuiz("pos")} className="w-full bg-[#A28C89] hover:bg-[#B8A3A0] text-white font-extrabold text-xs py-2.5 rounded-xl transition shadow-md">
                         Start Mode
                       </button>
                     </div>
 
-                    <div className="bg-white/90 border border-[#e8f1fc] rounded-3xl p-6 flex flex-col justify-between gap-6 shadow-sm hover:border-emerald-200 transition">
+                    <div className="bg-white/90 border border-[#E5E0DC] rounded-3xl p-6 flex flex-col justify-between gap-6 shadow-sm hover:border-emerald-200 transition">
                       <div className="flex flex-col gap-3">
                         <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 border border-emerald-100 flex items-center justify-center">
                           <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
@@ -1471,7 +1471,7 @@ export default function Home() {
                       </button>
                     </div>
 
-                    <div className="bg-white/90 border border-[#e8f1fc] rounded-3xl p-6 flex flex-col justify-between gap-6 shadow-sm hover:border-pink-200 transition">
+                    <div className="bg-white/90 border border-[#E5E0DC] rounded-3xl p-6 flex flex-col justify-between gap-6 shadow-sm hover:border-[#E5DDD8] transition">
                       <div className="flex flex-col gap-3">
                         <div className="w-12 h-12 rounded-2xl bg-pink-50 text-pink-650 border border-pink-100 flex items-center justify-center">
                           <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
@@ -1493,14 +1493,14 @@ export default function Home() {
             ) : (
               currentQuizWord && (
                 <div className="w-full flex flex-col gap-6 max-w-xl">
-                  <div className="flex justify-between items-center bg-white/90 border border-[#e8f1fc] px-6 py-3.5 rounded-2xl text-xs font-bold shadow-sm">
+                  <div className="flex justify-between items-center bg-white/90 border border-[#E5E0DC] px-6 py-3.5 rounded-2xl text-xs font-bold shadow-sm">
                     <button onClick={() => setQuizStarted(false)} className="text-slate-500 hover:text-slate-800 transition flex items-center gap-1.5">
                       <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7 7-7m8 14l-7-7 7-7" />
                       </svg>
                       Leave Quiz
                     </button>
-                    <span className="text-[#fa6a8d] font-extrabold uppercase">
+                    <span className="text-[#A28C89] font-extrabold uppercase">
                       {quizMode === "pos" ? "Part of Speech Quiz" : quizMode === "spelling" ? "Spelling Scramble" : "Missing Letters"}
                     </span>
                     <span className="text-slate-600">
@@ -1508,7 +1508,7 @@ export default function Home() {
                     </span>
                   </div>
 
-                  <div className={`bg-white border border-[#e5effa] rounded-3xl p-8 flex flex-col items-center gap-4 text-center shadow-md ${
+                  <div className={`bg-white border border-[#E5E0DC] rounded-3xl p-8 flex flex-col items-center gap-4 text-center shadow-md ${
                     quizFeedback === "correct" ? "animate-correct" : quizFeedback === "incorrect" ? "animate-shake" : ""
                   }`}>
                     {quizMode === "pos" ? (
@@ -1519,14 +1519,14 @@ export default function Home() {
                     ) : quizMode === "spelling" ? (
                       <>
                         <span className="text-xs text-slate-400 font-bold uppercase tracking-wider">
-                          Spell this word (Part of Speech: <strong className="text-[#fa6a8d]">{currentQuizWord.pos}</strong>)
+                          Spell this word (Part of Speech: <strong className="text-[#A28C89]">{currentQuizWord.pos}</strong>)
                         </span>
                         <h2 className="text-xl font-bold tracking-widest text-emerald-600 font-mono select-none">{scrambledWord}</h2>
                       </>
                     ) : (
                       <>
                         <span className="text-xs text-slate-400 font-bold uppercase tracking-wider">
-                          Fill in the blanks (Part of Speech: <strong className="text-[#fa6a8d]">{currentQuizWord.pos}</strong>)
+                          Fill in the blanks (Part of Speech: <strong className="text-[#A28C89]">{currentQuizWord.pos}</strong>)
                         </span>
                         <h2 className="text-3xl font-extrabold tracking-widest text-slate-800 font-mono">{missingLettersHint}</h2>
                       </>
@@ -1579,12 +1579,12 @@ export default function Home() {
                             if (e.key === "Enter") checkAnswer(spellingInput);
                           }}
                           placeholder={quizMode === "spelling" ? "Type spelled word..." : "Type complete word..."}
-                          className="flex-1 bg-slate-50 border border-slate-200 focus:border-[#fa8fa6] focus:bg-white rounded-2xl px-4 py-3 text-sm text-slate-800 focus:outline-none placeholder:text-slate-400 font-semibold shadow-inner"
+                          className="flex-1 bg-slate-50 border border-slate-200 focus:border-[#B8A3A0] focus:bg-white rounded-2xl px-4 py-3 text-sm text-slate-800 focus:outline-none placeholder:text-slate-400 font-semibold shadow-inner"
                         />
                         <button
                           disabled={selectedAnswer !== null || !spellingInput.trim()}
                           onClick={() => checkAnswer(spellingInput)}
-                          className="bg-[#fa6a8d] hover:bg-[#fa8fa6] disabled:opacity-50 text-white font-extrabold text-xs px-6 rounded-2xl transition shadow-md"
+                          className="bg-[#A28C89] hover:bg-[#B8A3A0] disabled:opacity-50 text-white font-extrabold text-xs px-6 rounded-2xl transition shadow-md"
                         >
                           Submit
                         </button>
@@ -1606,7 +1606,7 @@ export default function Home() {
                   {selectedAnswer !== null && (
                     <button
                       onClick={() => startNewQuizQuestion()}
-                      className="w-full bg-gradient-to-r from-[#fa6a8d] to-[#fc8fa6] hover:from-[#fa8fa6] hover:to-[#fcb1c3] text-white font-extrabold text-sm py-4 rounded-2xl transition shadow-md duration-200"
+                      className="w-full bg-gradient-to-r from-[#A28C89] to-[#C3B3B1] hover:from-[#B8A3A0] hover:to-[#D4C9C8] text-white font-extrabold text-sm py-4 rounded-2xl transition shadow-md duration-200"
                     >
                       Next Question
                     </button>
@@ -1622,7 +1622,7 @@ export default function Home() {
         ------------------------------------------------------------------------ */}
         {activeTab === "explorer" && (
           <section className="flex flex-col gap-6 max-w-6xl mx-auto w-full">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 bg-white/90 border border-[#e8f1fc] rounded-3xl p-5 shadow-sm">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 bg-white/90 border border-[#E5E0DC] rounded-3xl p-5 shadow-sm">
               <div className="flex flex-col gap-1.5 md:col-span-2">
                 <label className="text-[10px] text-slate-500 font-bold uppercase tracking-wider pl-1">Search Word</label>
                 <div className="relative">
@@ -1631,7 +1631,7 @@ export default function Home() {
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder="Search over 1500 words..."
-                    className="w-full bg-slate-50 border border-slate-200 hover:border-pink-300 focus:border-[#fa8fa6] rounded-xl pl-10 pr-4 py-2.5 text-sm text-slate-700 focus:outline-none placeholder:text-slate-400 transition"
+                    className="w-full bg-slate-50 border border-slate-200 hover:border-[#E5DDD8] focus:border-[#B8A3A0] rounded-xl pl-10 pr-4 py-2.5 text-sm text-slate-700 focus:outline-none placeholder:text-slate-400 transition"
                   />
                   <svg className="absolute left-3.5 top-3.5 w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -1644,7 +1644,7 @@ export default function Home() {
                 <select
                   value={explorerPosFilter}
                   onChange={(e) => setExplorerPosFilter(e.target.value)}
-                  className="bg-slate-50 border border-slate-200 hover:border-pink-300 text-slate-700 text-sm font-semibold rounded-xl px-4 py-2.5 focus:outline-none focus:border-[#fa8fa6] transition"
+                  className="bg-slate-50 border border-slate-200 hover:border-[#E5DDD8] text-slate-700 text-sm font-semibold rounded-xl px-4 py-2.5 focus:outline-none focus:border-[#B8A3A0] transition"
                 >
                   <option value="all">All POS</option>
                   {posList.map((pos) => <option key={pos} value={pos}>{pos}</option>)}
@@ -1656,7 +1656,7 @@ export default function Home() {
                 <select
                   value={explorerStatusFilter}
                   onChange={(e) => setExplorerStatusFilter(e.target.value as any)}
-                  className="bg-slate-50 border border-slate-200 hover:border-pink-300 text-slate-700 text-sm font-semibold rounded-xl px-4 py-2.5 focus:outline-none focus:border-[#fa8fa6] transition"
+                  className="bg-slate-50 border border-slate-200 hover:border-[#E5DDD8] text-slate-700 text-sm font-semibold rounded-xl px-4 py-2.5 focus:outline-none focus:border-[#B8A3A0] transition"
                 >
                   <option value="all">All Statuses</option>
                   <option value="learning">Need to Study</option>
@@ -1672,7 +1672,7 @@ export default function Home() {
             </div>
 
             {pagedWords.length === 0 ? (
-              <div className="bg-white/90 border border-[#e8f1fc] rounded-3xl p-12 text-center flex flex-col gap-3 items-center shadow-sm">
+              <div className="bg-white/90 border border-[#E5E0DC] rounded-3xl p-12 text-center flex flex-col gap-3 items-center shadow-sm">
                 <h3 className="text-sm font-bold text-slate-700">No words found matching the criteria</h3>
               </div>
             ) : (
@@ -1686,7 +1686,7 @@ export default function Home() {
                       <div
                         key={wordObj.id}
                         className={`bg-white border rounded-2xl p-4.5 flex flex-col justify-between gap-4 transition group shadow-sm ${
-                          isMastered ? "border-emerald-250 bg-emerald-50/20" : "border-[#e5effa] hover:border-[#ffdbe3]"
+                          isMastered ? "border-emerald-250 bg-emerald-50/20" : "border-[#E5E0DC] hover:border-[#EBE3DE]"
                         }`}
                       >
                         <div className="flex justify-between items-start">
@@ -1714,7 +1714,7 @@ export default function Home() {
                             onChange={() => toggleMastered(wordObj.id)}
                             className="w-4 h-4 text-emerald-600 rounded border-slate-350 focus:ring-emerald-500 focus:ring-2 cursor-pointer transition shrink-0"
                           />
-                          <h4 className="text-base font-extrabold text-slate-800 group-hover:text-[#fa6a8d] transition">{wordObj.word}</h4>
+                          <h4 className="text-base font-extrabold text-slate-800 group-hover:text-[#A28C89] transition">{wordObj.word}</h4>
                         </div>
 
                         {progress.notes[wordObj.id] && (
@@ -1740,7 +1740,7 @@ export default function Home() {
                             }}
                             className={`text-[10px] font-extrabold uppercase px-2.5 py-1.5 rounded-lg border transition ${
                               reviewWords.some(rw => rw.word.toLowerCase() === wordObj.word.toLowerCase())
-                                ? "bg-rose-50 border-rose-200 text-[#fa6a8d] hover:bg-rose-100"
+                                ? "bg-rose-50 border-rose-200 text-[#A28C89] hover:bg-rose-100"
                                 : "bg-slate-50 border-slate-200 text-slate-500 hover:bg-slate-100"
                             }`}
                           >
@@ -1770,7 +1770,7 @@ export default function Home() {
         ------------------------------------------------------------------------ */}
         {activeTab === "review" && (
           <section className="flex flex-col gap-6 max-w-5xl mx-auto w-full">
-            <div className="bg-white border border-[#e8f1fc] rounded-3xl p-6 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
+            <div className="bg-white border border-[#E5E0DC] rounded-3xl p-6 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
               <div>
                 <h2 className="text-xl font-bold text-slate-800">คลังคำศัพท์สำหรับทบทวน (Review Deck)</h2>
                 <p className="text-xs text-slate-500 font-medium">ทบทวนคำศัพท์ที่ยังจำไม่ได้ หรือคำศัพท์เพิ่มเติมที่คุณเพิ่มเข้ามาด้วยตัวเอง</p>
@@ -1783,7 +1783,7 @@ export default function Home() {
                       openTranslationModal(word.trim());
                     }
                   }}
-                  className="bg-[#fa6a8d] hover:bg-[#fa8fa6] text-white font-extrabold text-xs px-4 py-2.5 rounded-xl transition flex items-center gap-1.5 shadow-sm font-sans"
+                  className="bg-[#A28C89] hover:bg-[#B8A3A0] text-white font-extrabold text-xs px-4 py-2.5 rounded-xl transition flex items-center gap-1.5 shadow-sm font-sans"
                 >
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
@@ -1793,7 +1793,7 @@ export default function Home() {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 bg-white/90 border border-[#e8f1fc] rounded-3xl p-5 shadow-sm">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 bg-white/90 border border-[#E5E0DC] rounded-3xl p-5 shadow-sm">
               <div className="flex flex-col gap-1.5 md:col-span-2">
                 <label className="text-[10px] text-slate-500 font-bold uppercase tracking-wider pl-1">ค้นหาคำศัพท์ทวน</label>
                 <div className="relative">
@@ -1802,7 +1802,7 @@ export default function Home() {
                     value={reviewSearchQuery}
                     onChange={(e) => setReviewSearchQuery(e.target.value)}
                     placeholder="ค้นหาคำศัพท์ในคลังทบทวน..."
-                    className="w-full bg-slate-55 border border-slate-200 hover:border-pink-300 focus:border-[#fa8fa6] rounded-xl pl-10 pr-4 py-2 text-sm text-slate-700 focus:outline-none transition"
+                    className="w-full bg-slate-55 border border-slate-200 hover:border-[#E5DDD8] focus:border-[#B8A3A0] rounded-xl pl-10 pr-4 py-2 text-sm text-slate-700 focus:outline-none transition"
                   />
                   <svg className="absolute left-3.5 top-3 w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -1819,7 +1819,7 @@ export default function Home() {
                       onClick={() => setReviewFilter(type)}
                       className={`flex-1 text-xs font-bold py-2 rounded-xl border transition ${
                         reviewFilter === type
-                          ? "bg-[#ffedf1] border-[#ffdee5] text-[#fa6a8d]"
+                          ? "bg-[#F5F1EE] border-[#E5DDD8] text-[#A28C89]"
                           : "bg-slate-50 border-slate-200 text-slate-500 hover:bg-slate-100"
                       }`}
                     >
@@ -1832,7 +1832,7 @@ export default function Home() {
 
             {/* List of Review Words */}
             {filteredReviewWords.length === 0 ? (
-              <div className="bg-white/90 border border-[#e8f1fc] rounded-3xl p-12 text-center flex flex-col gap-3 items-center shadow-sm">
+              <div className="bg-white/90 border border-[#E5E0DC] rounded-3xl p-12 text-center flex flex-col gap-3 items-center shadow-sm">
                 <svg className="w-12 h-12 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
                 </svg>
@@ -1844,7 +1844,7 @@ export default function Home() {
                 {filteredReviewWords.map((rw) => (
                   <div
                     key={rw.id}
-                    className="bg-white border border-[#e5effa] hover:border-pink-300 rounded-2xl p-4.5 flex flex-col justify-between gap-4 transition group shadow-sm"
+                    className="bg-white border border-[#E5E0DC] hover:border-[#E5DDD8] rounded-2xl p-4.5 flex flex-col justify-between gap-4 transition group shadow-sm"
                   >
                     <div className="flex justify-between items-start">
                       <span className={`text-[9px] uppercase tracking-wider font-extrabold px-2.5 py-0.5 rounded-full ${getPosBadgeColor(rw.pos)}`}>
@@ -1869,7 +1869,7 @@ export default function Home() {
                               updateReviewWordsInDb(updated);
                             }
                           }}
-                          className="text-slate-400 hover:text-[#fa6a8d] transition"
+                          className="text-slate-400 hover:text-[#A28C89] transition"
                           title="แก้ไขคำแปล"
                         >
                           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
@@ -1896,7 +1896,7 @@ export default function Home() {
 
                     <div>
                       <h4 className="text-base font-extrabold text-slate-800">{rw.word}</h4>
-                      <p className="text-xs font-bold text-[#fa6a8d] mt-1">แปล: {rw.translation}</p>
+                      <p className="text-xs font-bold text-[#A28C89] mt-1">แปล: {rw.translation}</p>
                       <p className="text-[10px] text-slate-400 mt-2">
                         ประเภท: {rw.isCustom ? "เพิ่มเอง/จากประโยค" : "ศัพท์หลักจาก 3440 คำ"}
                       </p>
@@ -1932,7 +1932,7 @@ export default function Home() {
         ------------------------------------------------------------------------ */}
         {activeTab === "notes" && (
           <section className="flex flex-col gap-6 max-w-5xl mx-auto w-full">
-            <div className="bg-white border border-[#e8f1fc] rounded-3xl p-6 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
+            <div className="bg-white border border-[#E5E0DC] rounded-3xl p-6 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
               <div>
                 <h2 className="text-xl font-bold text-slate-800">โน๊ตความรู้เพิ่มเติม (Knowledge Notes)</h2>
                 <p className="text-xs text-slate-500 font-medium">บันทึกทริคการจำ ไวยากรณ์ หรือความรู้อื่นๆ ที่คุณพบนอกบทเรียน</p>
@@ -1943,7 +1943,7 @@ export default function Home() {
                   setNoteTitleInput("");
                   setNoteContentInput("");
                 }}
-                className="bg-[#fa6a8d] hover:bg-[#fa8fa6] text-white font-extrabold text-xs px-4 py-2.5 rounded-xl transition flex items-center gap-1.5 shadow-sm font-sans"
+                className="bg-[#A28C89] hover:bg-[#B8A3A0] text-white font-extrabold text-xs px-4 py-2.5 rounded-xl transition flex items-center gap-1.5 shadow-sm font-sans"
               >
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
@@ -1954,7 +1954,7 @@ export default function Home() {
 
             {noteEditId !== null ? (
               // Notebook Editor View
-              <div className="bg-white border border-[#e5effa] rounded-3xl p-6 shadow-md flex flex-col gap-4">
+              <div className="bg-white border border-[#E5E0DC] rounded-3xl p-6 shadow-md flex flex-col gap-4">
                 <h3 className="text-base font-bold text-slate-800">
                   {noteEditId === "new" ? "เขียนโน๊ตความรู้ชิ้นใหม่" : "แก้ไขโน๊ตความรู้"}
                 </h3>
@@ -1965,7 +1965,7 @@ export default function Home() {
                     value={noteTitleInput}
                     onChange={(e) => setNoteTitleInput(e.target.value)}
                     placeholder="เช่น หลักการจำการใช้ S+V+IO+DO, ทริคจำคำศัพท์..."
-                    className="bg-slate-50 border border-slate-200 focus:border-[#fa8fa6] focus:bg-white rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-800 focus:outline-none"
+                    className="bg-slate-50 border border-slate-200 focus:border-[#B8A3A0] focus:bg-white rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-800 focus:outline-none"
                   />
                 </div>
                 <div className="flex flex-col gap-1.5">
@@ -1975,7 +1975,7 @@ export default function Home() {
                     onChange={(e) => setNoteContentInput(e.target.value)}
                     placeholder="พิมพ์รายละเอียดเนื้อหา ทริค หรือเกร็ดความรู้ของคุณลงที่นี่..."
                     rows={10}
-                    className="bg-slate-50 border border-slate-200 focus:border-[#fa8fa6] focus:bg-white rounded-xl px-4 py-3 text-sm text-slate-700 focus:outline-none resize-none font-sans"
+                    className="bg-slate-50 border border-slate-200 focus:border-[#B8A3A0] focus:bg-white rounded-xl px-4 py-3 text-sm text-slate-700 focus:outline-none resize-none font-sans"
                   />
                 </div>
                 <div className="flex gap-3 justify-end mt-2">
@@ -2009,7 +2009,7 @@ export default function Home() {
                       setNoteEditId(null);
                     }}
                     disabled={!noteTitleInput.trim() || !noteContentInput.trim()}
-                    className="bg-[#fa6a8d] hover:bg-[#fa8fa6] disabled:opacity-50 text-white font-extrabold text-xs px-5 py-2.5 rounded-xl transition shadow-md"
+                    className="bg-[#A28C89] hover:bg-[#B8A3A0] disabled:opacity-50 text-white font-extrabold text-xs px-5 py-2.5 rounded-xl transition shadow-md"
                   >
                     บันทึกโน๊ต
                   </button>
@@ -2024,7 +2024,7 @@ export default function Home() {
                     value={noteSearchQuery}
                     onChange={(e) => setNoteSearchQuery(e.target.value)}
                     placeholder="ค้นหาโน๊ต..."
-                    className="w-full bg-white border border-[#e8f1fc] hover:border-pink-300 focus:border-[#fa8fa6] rounded-xl pl-10 pr-4 py-2 text-sm text-slate-700 focus:outline-none shadow-sm"
+                    className="w-full bg-white border border-[#E5E0DC] hover:border-[#E5DDD8] focus:border-[#B8A3A0] rounded-xl pl-10 pr-4 py-2 text-sm text-slate-700 focus:outline-none shadow-sm"
                   />
                   <svg className="absolute left-3.5 top-3 w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -2032,7 +2032,7 @@ export default function Home() {
                 </div>
 
                 {filteredGeneralNotes.length === 0 ? (
-                  <div className="bg-white/90 border border-[#e8f1fc] rounded-3xl p-12 text-center flex flex-col gap-3 items-center shadow-sm">
+                  <div className="bg-white/90 border border-[#E5E0DC] rounded-3xl p-12 text-center flex flex-col gap-3 items-center shadow-sm">
                     <svg className="w-12 h-12 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
                     </svg>
@@ -2042,7 +2042,7 @@ export default function Home() {
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {filteredGeneralNotes.map((note) => (
-                      <div key={note.id} className="bg-white border border-[#e5effa] rounded-3xl p-6 shadow-sm flex flex-col justify-between gap-4">
+                      <div key={note.id} className="bg-white border border-[#E5E0DC] rounded-3xl p-6 shadow-sm flex flex-col justify-between gap-4">
                         <div>
                           <div className="flex justify-between items-start gap-4">
                             <h3 className="text-base font-extrabold text-slate-800 line-clamp-1">{note.title}</h3>
@@ -2062,7 +2062,7 @@ export default function Home() {
                               setNoteTitleInput(note.title);
                               setNoteContentInput(note.content);
                             }}
-                            className="text-xs font-bold text-[#fa6a8d] hover:text-[#fa8fa6] transition"
+                            className="text-xs font-bold text-[#A28C89] hover:text-[#B8A3A0] transition"
                           >
                             แก้ไข
                           </button>
@@ -2105,7 +2105,7 @@ export default function Home() {
 
             {translationLoading ? (
               <div className="py-8 flex flex-col items-center gap-3">
-                <div className="w-8 h-8 border-3 border-[#fa8fa6] border-t-transparent rounded-full animate-spin" />
+                <div className="w-8 h-8 border-3 border-[#B8A3A0] border-t-transparent rounded-full animate-spin" />
                 <span className="text-xs text-slate-500 font-extrabold uppercase tracking-wider">กำลังแปลคำศัพท์ด้วย AI...</span>
               </div>
             ) : (
@@ -2116,7 +2116,7 @@ export default function Home() {
                     type="text"
                     value={customWordInput}
                     onChange={(e) => setCustomWordInput(e.target.value)}
-                    className="bg-slate-50 border border-slate-200 focus:border-[#fa8fa6] focus:bg-white rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-800 focus:outline-none"
+                    className="bg-slate-50 border border-slate-200 focus:border-[#B8A3A0] focus:bg-white rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-800 focus:outline-none"
                   />
                 </div>
 
@@ -2126,7 +2126,7 @@ export default function Home() {
                     <select
                       value={customWordPos}
                       onChange={(e) => setCustomWordPos(e.target.value)}
-                      className="bg-slate-50 border border-slate-200 hover:border-pink-300 text-slate-700 text-sm font-semibold rounded-xl px-4 py-2.5 focus:outline-none focus:border-[#fa8fa6] transition"
+                      className="bg-slate-50 border border-slate-200 hover:border-[#E5DDD8] text-slate-700 text-sm font-semibold rounded-xl px-4 py-2.5 focus:outline-none focus:border-[#B8A3A0] transition"
                     >
                       <option value="n.">Noun (n.)</option>
                       <option value="v.">Verb (v.)</option>
@@ -2156,7 +2156,7 @@ export default function Home() {
                     value={customWordTranslation}
                     onChange={(e) => setCustomWordTranslation(e.target.value)}
                     placeholder="เช่น โอกาส, การช่วยเหลือ"
-                    className="bg-slate-50 border border-slate-200 focus:border-[#fa8fa6] focus:bg-white rounded-xl px-4 py-2.5 text-sm text-slate-800 focus:outline-none font-semibold"
+                    className="bg-slate-50 border border-slate-200 focus:border-[#B8A3A0] focus:bg-white rounded-xl px-4 py-2.5 text-sm text-slate-800 focus:outline-none font-semibold"
                   />
                 </div>
 
@@ -2168,7 +2168,7 @@ export default function Home() {
                     }
                   }}
                   disabled={!customWordInput.trim() || !customWordTranslation.trim()}
-                  className="w-full bg-gradient-to-r from-[#fa6a8d] to-[#fc8fa6] hover:from-[#fa8fa6] hover:to-[#fcb1c3] disabled:opacity-50 text-white font-extrabold text-sm py-4 rounded-2xl transition shadow-md duration-200 mt-2"
+                  className="w-full bg-gradient-to-r from-[#A28C89] to-[#C3B3B1] hover:from-[#B8A3A0] hover:to-[#D4C9C8] disabled:opacity-50 text-white font-extrabold text-sm py-4 rounded-2xl transition shadow-md duration-200 mt-2"
                 >
                   บันทึกเข้าคลังทบทวน
                 </button>
