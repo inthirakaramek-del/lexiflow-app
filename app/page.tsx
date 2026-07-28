@@ -399,7 +399,6 @@ export default function Home() {
         return data as CardData;
       })
       .then((data) => {
-        addCardToCache(currentWordObj.id, data);
         setActiveCardData(data);
       })
       .catch((err) => {
@@ -407,7 +406,6 @@ export default function Home() {
         setApiError(err.message || "Unknown API Error");
         // Fallback generator
         const fallback = generateFallbackCard(currentWordObj);
-        addCardToCache(currentWordObj.id, fallback);
         setActiveCardData(fallback);
       })
       .finally(() => {
@@ -1080,6 +1078,9 @@ export default function Home() {
                                 if (progress.masteredIds.includes(currentWordObj.id)) {
                                   toggleMastered(currentWordObj.id);
                                 }
+                                if (activeCardData) {
+                                  addCardToCache(currentWordObj.id, activeCardData);
+                                }
                               }}
                               className={`transition flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-lg border ${
                                 reviewWords.some(rw => rw.word.toLowerCase() === currentWordObj.word.toLowerCase())
@@ -1214,6 +1215,9 @@ export default function Home() {
                                 if (progress.masteredIds.includes(currentWordObj.id)) {
                                   toggleMastered(currentWordObj.id);
                                 }
+                                if (activeCardData) {
+                                  addCardToCache(currentWordObj.id, activeCardData);
+                                }
                               }}
                               className={`transition flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-lg border ${
                                 reviewWords.some(rw => rw.word.toLowerCase() === currentWordObj.word.toLowerCase())
@@ -1331,6 +1335,9 @@ export default function Home() {
                       onClick={() => {
                         const isMastered = progress.masteredIds.includes(currentWordObj.id);
                         if (!isMastered) toggleMastered(currentWordObj.id);
+                        if (activeCardData) {
+                          addCardToCache(currentWordObj.id, activeCardData);
+                        }
                         handleCardNext("swipe-right");
                       }}
                       className={`flex-1 py-3 rounded-2xl text-xs font-extrabold text-white transition flex items-center justify-center gap-2 shadow-md ${
