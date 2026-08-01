@@ -6,8 +6,8 @@ import { Word, UserProgress, ReviewWord, GeneralNote } from "./types";
 import { CardData, generateFallbackCard } from "./utils/fallbackGenerator";
 
 export default function Home() {
-  // Tab state: 'dashboard' | 'flashcards' | 'quiz' | 'explorer' | 'review' | 'notes'
-  const [activeTab, setActiveTab] = useState<"dashboard" | "flashcards" | "quiz" | "explorer" | "review" | "notes">("dashboard");
+  // Tab state: 'dashboard' | 'flashcards' | 'quiz' | 'explorer' | 'review' | 'notes' | 'customWords'
+  const [activeTab, setActiveTab] = useState<"dashboard" | "flashcards" | "quiz" | "explorer" | "review" | "notes" | "customWords">("dashboard");
 
   // Global Progress State
   const [progress, setProgress] = useState<UserProgress>({
@@ -56,6 +56,7 @@ export default function Home() {
   // Review filters
   const [reviewFilter, setReviewFilter] = useState<"all" | "base" | "custom">("all");
   const [reviewSearchQuery, setReviewSearchQuery] = useState("");
+  const [customSearchQuery, setCustomSearchQuery] = useState("");
 
   // Load progress, cache, review words, and notes from server DB, with localStorage fallback
   useEffect(() => {
@@ -338,18 +339,19 @@ export default function Home() {
 
   const filteredReviewWords = useMemo(() => {
     return reviewWords.filter((rw) => {
-      const matchesSearch = rw.word.toLowerCase().includes(reviewSearchQuery.toLowerCase()) || 
+      if (rw.isCustom) return false;
+      return rw.word.toLowerCase().includes(reviewSearchQuery.toLowerCase()) || 
         rw.translation.toLowerCase().includes(reviewSearchQuery.toLowerCase());
-      
-      let matchesFilter = true;
-      if (reviewFilter === "base") {
-        matchesFilter = !rw.isCustom;
-      } else if (reviewFilter === "custom") {
-        matchesFilter = rw.isCustom;
-      }
-      return matchesSearch && matchesFilter;
     });
-  }, [reviewWords, reviewFilter, reviewSearchQuery]);
+  }, [reviewWords, reviewSearchQuery]);
+
+  const filteredCustomWords = useMemo(() => {
+    return reviewWords.filter((rw) => {
+      if (!rw.isCustom) return false;
+      return rw.word.toLowerCase().includes(customSearchQuery.toLowerCase()) || 
+        rw.translation.toLowerCase().includes(customSearchQuery.toLowerCase());
+    });
+  }, [reviewWords, customSearchQuery]);
 
   const filteredGeneralNotes = useMemo(() => {
     return generalNotes.filter((note) => {
@@ -821,7 +823,21 @@ export default function Home() {
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
               </svg>
-              Review Deck ({reviewWords.length})
+              Review Deck ({reviewWords.filter(rw => !rw.isCustom).length})
+            </button>
+
+            <button
+              onClick={() => setActiveTab("customWords")}
+              className={`flex items-center gap-4 px-4 py-3.5 rounded-xl text-sm font-bold transition-all duration-200 group ${
+                activeTab === "customWords"
+                  ? "bg-[#F5F1EE] text-[#A28C89] border border-[#E5DDD8] shadow-sm"
+                  : "text-slate-500 hover:text-slate-800 hover:bg-slate-50 border border-transparent"
+              }`}
+            >
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+              </svg>
+              Custom Words ({reviewWords.filter(rw => rw.isCustom).length})
             </button>
 
             <button
@@ -905,6 +921,7 @@ export default function Home() {
             <option value="dashboard">Dashboard</option>
             <option value="flashcards">Grammar Cards</option>
             <option value="review">Review Deck</option>
+            <option value="customWords">Custom Words</option>
             <option value="quiz">Quiz Arena</option>
             <option value="explorer">Word Explorer</option>
             <option value="notes">Knowledge Notes</option>
@@ -1844,31 +1861,13 @@ export default function Home() {
         ------------------------------------------------------------------------ */}
         {activeTab === "review" && (
           <section className="flex flex-col gap-6 max-w-5xl mx-auto w-full">
-            <div className="bg-white border border-[#E5E0DC] rounded-3xl p-6 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
-              <div>
-                <h2 className="text-xl font-bold text-slate-800">คลังคำศัพท์สำหรับทบทวน (Review Deck)</h2>
-                <p className="text-xs text-slate-500 font-medium">ทบทวนคำศัพท์ที่ยังจำไม่ได้ หรือคำศัพท์เพิ่มเติมที่คุณเพิ่มเข้ามาด้วยตัวเอง</p>
-              </div>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => {
-                    const word = prompt("ใส่คำศัพท์ภาษาอังกฤษที่ต้องการเพิ่ม:");
-                    if (word) {
-                      openTranslationModal(word.trim());
-                    }
-                  }}
-                  className="bg-[#A28C89] hover:bg-[#B8A3A0] text-white font-extrabold text-xs px-4 py-2.5 rounded-xl transition flex items-center gap-1.5 shadow-sm font-sans"
-                >
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-                  </svg>
-                  เพิ่มคำศัพท์ทวนเอง
-                </button>
-              </div>
+            <div className="bg-white border border-[#E5E0DC] rounded-3xl p-6 shadow-sm">
+              <h2 className="text-xl font-bold text-slate-800">คลังทบทวนศัพท์หลัก (Review Deck - 3,440 คำ)</h2>
+              <p className="text-xs text-slate-500 font-medium">คำศัพท์หลักจากพจนานุกรมที่คุณใส่เข้ามาเพิ่มเติมเพื่อฝึกฝนและทบทวนเพิ่มเติม</p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 bg-white/90 border border-[#E5E0DC] rounded-3xl p-5 shadow-sm">
-              <div className="flex flex-col gap-1.5 md:col-span-2">
+            <div className="bg-white/90 border border-[#E5E0DC] rounded-3xl p-5 shadow-sm">
+              <div className="flex flex-col gap-1.5 w-full">
                 <label className="text-[10px] text-slate-500 font-bold uppercase tracking-wider pl-1">ค้นหาคำศัพท์ทวน</label>
                 <div className="relative">
                   <input
@@ -1883,25 +1882,6 @@ export default function Home() {
                   </svg>
                 </div>
               </div>
-
-              <div className="flex flex-col gap-1.5 md:col-span-2">
-                <label className="text-[10px] text-slate-500 font-bold uppercase tracking-wider pl-1">ประเภทคำศัพท์</label>
-                <div className="flex gap-2">
-                  {(["all", "base", "custom"] as const).map((type) => (
-                    <button
-                      key={type}
-                      onClick={() => setReviewFilter(type)}
-                      className={`flex-1 text-xs font-bold py-2 rounded-xl border transition ${
-                        reviewFilter === type
-                          ? "bg-[#F5F1EE] border-[#E5DDD8] text-[#A28C89]"
-                          : "bg-slate-50 border-slate-200 text-slate-500 hover:bg-slate-100"
-                      }`}
-                    >
-                      {type === "all" ? "ทั้งหมด" : type === "base" ? "จาก 3,440 คำ" : "เพิ่มเอง/จากประโยค"}
-                    </button>
-                  ))}
-                </div>
-              </div>
             </div>
 
             {/* List of Review Words */}
@@ -1911,7 +1891,7 @@ export default function Home() {
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
                 </svg>
                 <h3 className="text-sm font-bold text-slate-700">ไม่มีคำศัพท์ในรายการนี้</h3>
-                <p className="text-xs text-slate-400">เมื่อคุณเจอศัพท์ที่ยังจำไม่ได้ หรือกดคำศัพท์จากประโยค ตัวเลือกนั้นจะถูกบันทึกไว้ที่นี่</p>
+                <p className="text-xs text-slate-400">เมื่อคุณเล่นการ์ดและใส่คำศัพท์หลักเข้ามาทวน รายการคำศัพท์จะปรากฏที่นี่</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
@@ -1971,9 +1951,6 @@ export default function Home() {
                     <div>
                       <h4 className="text-base font-extrabold text-slate-800">{rw.word}</h4>
                       <p className="text-xs font-bold text-[#A28C89] mt-1">แปล: {rw.translation}</p>
-                      <p className="text-[10px] text-slate-400 mt-2">
-                        ประเภท: {rw.isCustom ? "เพิ่มเอง/จากประโยค" : "ศัพท์หลักจาก 3440 คำ"}
-                      </p>
                     </div>
 
                     <div className="border-t border-slate-100 pt-2.5 mt-1 flex justify-between items-center">
@@ -1982,9 +1959,143 @@ export default function Home() {
                       </span>
                       <button
                         onClick={() => {
-                          if (!rw.isCustom && rw.sourceWordId) {
+                          if (rw.sourceWordId) {
                             toggleMastered(rw.sourceWordId);
                           }
+                          const updated = reviewWords.filter(item => item.id !== rw.id);
+                          setReviewWords(updated);
+                          updateReviewWordsInDb(updated);
+                        }}
+                        className="bg-emerald-50 border border-emerald-200 text-emerald-600 text-[10px] font-extrabold uppercase px-2.5 py-1 rounded-lg hover:bg-emerald-500 hover:text-white transition"
+                      >
+                        จำได้แล้ว
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
+        )}
+
+        {activeTab === "customWords" && (
+          <section className="flex flex-col gap-6 max-w-5xl mx-auto w-full">
+            <div className="bg-white border border-[#E5E0DC] rounded-3xl p-6 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
+              <div>
+                <h2 className="text-xl font-bold text-slate-800">คำศัพท์เพิ่มเติมที่เพิ่มเอง (Custom Vocabulary)</h2>
+                <p className="text-xs text-slate-500 font-medium">คำศัพท์เสริมอื่นๆ ที่คุณเพิ่มขึ้นมาด้วยตัวเอง หรือกดคำใหม่จากในประโยคตัวอย่างเพื่อแปล</p>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => {
+                    const word = prompt("ใส่คำศัพท์ภาษาอังกฤษที่ต้องการเพิ่ม:");
+                    if (word) {
+                      openTranslationModal(word.trim());
+                    }
+                  }}
+                  className="bg-[#A28C89] hover:bg-[#B8A3A0] text-white font-extrabold text-xs px-4 py-2.5 rounded-xl transition flex items-center gap-1.5 shadow-sm font-sans"
+                >
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+                  </svg>
+                  เพิ่มคำศัพท์ทวนเอง
+                </button>
+              </div>
+            </div>
+
+            <div className="bg-white/90 border border-[#E5E0DC] rounded-3xl p-5 shadow-sm">
+              <div className="flex flex-col gap-1.5 w-full">
+                <label className="text-[10px] text-slate-500 font-bold uppercase tracking-wider pl-1">ค้นหาคำศัพท์เพิ่มเอง</label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={customSearchQuery}
+                    onChange={(e) => setCustomSearchQuery(e.target.value)}
+                    placeholder="ค้นหาคำศัพท์ที่คุณเพิ่มเอง..."
+                    className="w-full bg-slate-55 border border-slate-200 hover:border-[#E5DDD8] focus:border-[#B8A3A0] rounded-xl pl-10 pr-4 py-2 text-sm text-slate-700 focus:outline-none transition"
+                  />
+                  <svg className="absolute left-3.5 top-3 w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+            {/* List of Custom Words */}
+            {filteredCustomWords.length === 0 ? (
+              <div className="bg-white/90 border border-[#E5E0DC] rounded-3xl p-12 text-center flex flex-col gap-3 items-center shadow-sm">
+                <svg className="w-12 h-12 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+                </svg>
+                <h3 className="text-sm font-bold text-slate-700">ไม่มีคำศัพท์ในรายการนี้</h3>
+                <p className="text-xs text-slate-400">เมื่อคุณกดเพิ่มคำศัพท์เอง หรือกดวิเคราะห์คำเสริมจากหน้าประโยคตัวอย่าง คำศัพท์จะโผล่ที่นี่</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                {filteredCustomWords.map((rw) => (
+                  <div
+                    key={rw.id}
+                    className="bg-white border border-[#E5E0DC] hover:border-[#E5DDD8] rounded-2xl p-4.5 flex flex-col justify-between gap-4 transition group shadow-sm"
+                  >
+                    <div className="flex justify-between items-start">
+                      <span className={`text-[9px] uppercase tracking-wider font-extrabold px-2.5 py-0.5 rounded-full ${getPosBadgeColor(rw.pos)}`}>
+                        {rw.pos}
+                      </span>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => speakWord(rw.word)}
+                          className="text-slate-400 hover:text-slate-700 transition"
+                          title="ออกเสียง"
+                        >
+                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+                          </svg>
+                        </button>
+                        <button
+                          onClick={() => {
+                            const newTranslation = prompt("แก้ไขคำแปล:", rw.translation);
+                            if (newTranslation !== null) {
+                              const updated = reviewWords.map(item => item.id === rw.id ? { ...item, translation: newTranslation } : item);
+                              setReviewWords(updated);
+                              updateReviewWordsInDb(updated);
+                            }
+                          }}
+                          className="text-slate-400 hover:text-[#A28C89] transition"
+                          title="แก้ไขคำแปล"
+                        >
+                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                          </svg>
+                        </button>
+                        <button
+                          onClick={() => {
+                            if (confirm(`คุณต้องการลบคำว่า "${rw.word}" ออกจากคลังเพิ่มเอง?`)) {
+                              const updated = reviewWords.filter(item => item.id !== rw.id);
+                              setReviewWords(updated);
+                              updateReviewWordsInDb(updated);
+                            }
+                          }}
+                          className="text-slate-455 hover:text-rose-500 transition"
+                          title="ลบคำศัพท์"
+                        >
+                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                        </button>
+                      </div>
+                    </div>
+
+                    <div>
+                      <h4 className="text-base font-extrabold text-slate-800">{rw.word}</h4>
+                      <p className="text-xs font-bold text-[#A28C89] mt-1">แปล: {rw.translation}</p>
+                    </div>
+
+                    <div className="border-t border-slate-100 pt-2.5 mt-1 flex justify-between items-center">
+                      <span className="text-[10px] text-slate-400">
+                        เพิ่มเมื่อ: {new Date(rw.addedAt).toLocaleDateString("th-TH")}
+                      </span>
+                      <button
+                        onClick={() => {
                           const updated = reviewWords.filter(item => item.id !== rw.id);
                           setReviewWords(updated);
                           updateReviewWordsInDb(updated);
