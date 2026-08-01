@@ -472,38 +472,44 @@ export default function Home() {
     setActiveCardData(null);
     setActiveCardId(null);
 
-    // Call the serverless Gemini endpoint
-    fetch("/api/generate", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ word: currentWordObj.word, pos: currentWordObj.pos })
-    })
-      .then(async (res) => {
-        if (!res.ok) {
-          const errData = await res.json().catch(() => ({}));
-          throw new Error(errData.error || `HTTP ${res.status}`);
-        }
-        const data = await res.json();
-        if (data.error) throw new Error(data.error);
-        return data as CardData;
+    // Debounce API calls by 1.2 seconds to prevent rate-limiting when skipping cards rapidly
+    const timer = setTimeout(() => {
+      fetch("/api/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ word: currentWordObj.word, pos: currentWordObj.pos })
       })
-      .then((data) => {
-        addCardToCache(currentWordObj.id, data);
-        setActiveCardData(data);
-        setActiveCardId(currentWordObj.id);
-      })
-      .catch((err) => {
-        console.warn("API generate failed, loading client-side fallback sentences.", err);
-        setApiError(err.message || "Unknown API Error");
-        // Fallback generator
-        const fallback = generateFallbackCard(currentWordObj);
-        addCardToCache(currentWordObj.id, fallback);
-        setActiveCardData(fallback);
-        setActiveCardId(currentWordObj.id);
-      })
-      .finally(() => {
-        setLoadingAI(false);
-      });
+        .then(async (res) => {
+          if (!res.ok) {
+            const errData = await res.json().catch(() => ({}));
+            throw new Error(errData.error || `HTTP ${res.status}`);
+          }
+          const data = await res.json();
+          if (data.error) throw new Error(data.error);
+          return data as CardData;
+        })
+        .then((data) => {
+          addCardToCache(currentWordObj.id, data);
+          setActiveCardData(data);
+          setActiveCardId(currentWordObj.id);
+        })
+        .catch((err) => {
+          console.warn("API generate failed, loading client-side fallback sentences.", err);
+          setApiError(err.message || "Unknown API Error");
+          // Fallback generator
+          const fallback = generateFallbackCard(currentWordObj);
+          addCardToCache(currentWordObj.id, fallback);
+          setActiveCardData(fallback);
+          setActiveCardId(currentWordObj.id);
+        })
+        .finally(() => {
+          setLoadingAI(false);
+        });
+    }, 1200);
+
+    return () => {
+      clearTimeout(timer);
+    };
   }, [currentWordObj, cardCache, activeCardId]);
 
   const regenerateCard = () => {
