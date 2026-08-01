@@ -60,6 +60,31 @@ export default function Home() {
 
   // Load progress, cache, review words, and notes from server DB, with localStorage fallback
   useEffect(() => {
+    // One-time self-healing database migration to clear old corrupted/overlapping caches
+    if (typeof window !== "undefined") {
+      try {
+        if (!localStorage.getItem("lexiflow_db_reset_v1")) {
+          localStorage.clear();
+          localStorage.setItem("lexiflow_db_reset_v1", "true");
+          fetch("/api/db", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              progress: { masteredIds: [], starredIds: [], notes: {} },
+              cardCache: {},
+              generalNotes: [],
+              reviewWords: []
+            })
+          }).then(() => {
+            window.location.reload();
+          });
+          return;
+        }
+      } catch (e) {
+        console.error("Self-healing DB migration failed", e);
+      }
+    }
+
     // 1. Restore deck settings and session
     try {
       const savedDeckType = localStorage.getItem("lexiflow_deck_type");
