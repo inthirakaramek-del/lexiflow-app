@@ -25,6 +25,7 @@ export default function Home() {
 
   // Active card data for flashcards
   const [activeCardData, setActiveCardData] = useState<CardData | null>(null);
+  const [activeCardId, setActiveCardId] = useState<string | null>(null);
   const [loadingAI, setLoadingAI] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
 
@@ -58,6 +59,7 @@ export default function Home() {
 
   // Load progress, cache, review words, and notes from server DB, with localStorage fallback
   useEffect(() => {
+    // 1. Restore deck settings and session
     try {
       const savedDeckType = localStorage.getItem("lexiflow_deck_type");
       if (savedDeckType) {
@@ -71,6 +73,39 @@ export default function Home() {
       console.error("Failed to restore initial session settings", e);
     }
 
+    // 2. Load from localStorage first to prevent UI delay and ensure no data is lost
+    let localProgress: UserProgress = { masteredIds: [], starredIds: [], notes: {} };
+    let localCache: Record<string, CardData> = {};
+    let localReview: ReviewWord[] = [];
+    let localNotes: GeneralNote[] = [];
+
+    try {
+      const savedProgress = localStorage.getItem("lexiflow_progress");
+      const savedCache = localStorage.getItem("lexiflow_card_cache");
+      const savedReview = localStorage.getItem("lexiflow_review_words");
+      const savedNotes = localStorage.getItem("lexiflow_general_notes");
+
+      if (savedProgress) {
+        localProgress = JSON.parse(savedProgress);
+        setProgress(localProgress);
+      }
+      if (savedCache) {
+        localCache = JSON.parse(savedCache);
+        setCardCache(localCache);
+      }
+      if (savedReview) {
+        localReview = JSON.parse(savedReview);
+        setReviewWords(localReview);
+      }
+      if (savedNotes) {
+        localNotes = JSON.parse(savedNotes);
+        setGeneralNotes(localNotes);
+      }
+    } catch (e) {
+      console.error("Failed to load initial localStorage state", e);
+    }
+
+    // 3. Fetch from DB and MERGE (so we don't wipe out any local changes)
     fetch("/api/db")
       .then((res) => {
         if (!res.ok) throw new Error("Failed to load backend database");
@@ -82,31 +117,49 @@ export default function Home() {
         const dbReviewWords = data.reviewWords || [];
         const dbGeneralNotes = data.generalNotes || [];
 
-        setProgress(dbProgress);
-        setCardCache(dbCache);
-        setReviewWords(dbReviewWords);
-        setGeneralNotes(dbGeneralNotes);
+        // MERGE LOGIC: Combine unique IDs and keys
+        const mergedMastered = Array.from(new Set([...(localProgress.masteredIds || []), ...(dbProgress.masteredIds || [])]));
+        const mergedStarred = Array.from(new Set([...(localProgress.starredIds || []), ...(dbProgress.starredIds || [])]));
+        const mergedNotes = { ...(dbProgress.notes || {}), ...(localProgress.notes || {}) };
 
-        localStorage.setItem("lexiflow_progress", JSON.stringify(dbProgress));
-        localStorage.setItem("lexiflow_card_cache", JSON.stringify(dbCache));
-        localStorage.setItem("lexiflow_review_words", JSON.stringify(dbReviewWords));
-        localStorage.setItem("lexiflow_general_notes", JSON.stringify(dbGeneralNotes));
+        const mergedProgress = {
+          masteredIds: mergedMastered,
+          starredIds: mergedStarred,
+          notes: mergedNotes
+        };
+
+        const mergedCache = { ...dbCache, ...localCache };
+
+        // Merge review words by unique word name
+        const reviewMap = new Map<string, ReviewWord>();
+        dbReviewWords.forEach((rw: ReviewWord) => reviewMap.set(rw.word.toLowerCase(), rw));
+        localReview.forEach((rw: ReviewWord) => reviewMap.set(rw.word.toLowerCase(), rw));
+        const mergedReviewWords = Array.from(reviewMap.values()).sort(
+          (a, b) => new Date(b.addedAt).getTime() - new Date(a.addedAt).getTime()
+        );
+
+        // Merge general notes by ID
+        const notesMap = new Map<string, GeneralNote>();
+        dbGeneralNotes.forEach((n: GeneralNote) => notesMap.set(n.id, n));
+        localNotes.forEach((n: GeneralNote) => notesMap.set(n.id, n));
+        const mergedGeneralNotes = Array.from(notesMap.values()).sort(
+          (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+        );
+
+        // Update states
+        setProgress(mergedProgress);
+        setCardCache(mergedCache);
+        setReviewWords(mergedReviewWords);
+        setGeneralNotes(mergedGeneralNotes);
+
+        // Save back to localStorage
+        localStorage.setItem("lexiflow_progress", JSON.stringify(mergedProgress));
+        localStorage.setItem("lexiflow_card_cache", JSON.stringify(mergedCache));
+        localStorage.setItem("lexiflow_review_words", JSON.stringify(mergedReviewWords));
+        localStorage.setItem("lexiflow_general_notes", JSON.stringify(mergedGeneralNotes));
       })
       .catch((err) => {
-        console.warn("Failed to fetch data from server DB, falling back to localStorage", err);
-        try {
-          const savedProgress = localStorage.getItem("lexiflow_progress");
-          const savedCache = localStorage.getItem("lexiflow_card_cache");
-          const savedReview = localStorage.getItem("lexiflow_review_words");
-          const savedNotes = localStorage.getItem("lexiflow_general_notes");
-          
-          if (savedProgress) setProgress(JSON.parse(savedProgress));
-          if (savedCache) setCardCache(JSON.parse(savedCache));
-          if (savedReview) setReviewWords(JSON.parse(savedReview));
-          if (savedNotes) setGeneralNotes(JSON.parse(savedNotes));
-        } catch (e) {
-          console.error("Failed to load fallback localStorage state", e);
-        }
+        console.warn("Failed to fetch data from server DB, using local state", err);
       });
   }, []);
 
@@ -327,7 +380,8 @@ export default function Home() {
     }
 
     return list;
-  }, [flashcardDeckType, progress, flashcardSearchQuery]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [flashcardDeckType, flashcardSearchQuery, activeTab]);
 
   const currentWordObj = flashcardWords[currentCardIndex] || null;
 
@@ -367,13 +421,20 @@ export default function Home() {
   useEffect(() => {
     if (!currentWordObj) {
       setActiveCardData(null);
+      setActiveCardId(null);
       setApiError(null);
+      return;
+    }
+
+    if (activeCardId === currentWordObj.id) {
+      // Already loaded!
       return;
     }
 
     // Check database cache first
     if (cardCache[currentWordObj.id]) {
       setActiveCardData(cardCache[currentWordObj.id]);
+      setActiveCardId(currentWordObj.id);
       setApiError(null);
       return;
     }
@@ -382,6 +443,7 @@ export default function Home() {
     setLoadingAI(true);
     setApiError(null);
     setActiveCardData(null);
+    setActiveCardId(null);
 
     // Call the serverless Gemini endpoint
     fetch("/api/generate", {
@@ -399,19 +461,23 @@ export default function Home() {
         return data as CardData;
       })
       .then((data) => {
+        addCardToCache(currentWordObj.id, data);
         setActiveCardData(data);
+        setActiveCardId(currentWordObj.id);
       })
       .catch((err) => {
         console.warn("API generate failed, loading client-side fallback sentences.", err);
         setApiError(err.message || "Unknown API Error");
         // Fallback generator
         const fallback = generateFallbackCard(currentWordObj);
+        addCardToCache(currentWordObj.id, fallback);
         setActiveCardData(fallback);
+        setActiveCardId(currentWordObj.id);
       })
       .finally(() => {
         setLoadingAI(false);
       });
-  }, [currentWordObj, cardCache]);
+  }, [currentWordObj, cardCache, activeCardId]);
 
   const regenerateCard = () => {
     if (!currentWordObj) return;
@@ -437,6 +503,7 @@ export default function Home() {
       .then((data) => {
         addCardToCache(currentWordObj.id, data);
         setActiveCardData(data);
+        setActiveCardId(currentWordObj.id);
       })
       .catch((err) => {
         console.error("API regeneration failed", err);
@@ -1342,22 +1409,29 @@ export default function Home() {
                     <button
                       onClick={() => {
                         const isMastered = progress.masteredIds.includes(currentWordObj.id);
-                        if (!isMastered) toggleMastered(currentWordObj.id);
-                        if (activeCardData) {
-                          addCardToCache(currentWordObj.id, activeCardData);
+                        if (!isMastered) {
+                          toggleMastered(currentWordObj.id);
+                          if (activeCardData) {
+                            addCardToCache(currentWordObj.id, activeCardData);
+                          }
+                        } else {
+                          handleCardNext("swipe-right");
                         }
-                        handleCardNext("swipe-right");
                       }}
                       className={`flex-1 py-3 rounded-2xl text-xs font-extrabold text-white transition flex items-center justify-center gap-2 shadow-md ${
                         progress.masteredIds.includes(currentWordObj.id)
-                          ? "bg-slate-200 border border-slate-300/40 cursor-not-allowed text-slate-400 shadow-none"
+                          ? "bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 shadow-emerald-100/50"
                           : "bg-gradient-to-r from-emerald-400 to-teal-400 hover:from-emerald-500 hover:to-teal-500 shadow-emerald-100/50"
                       }`}
                     >
                       <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                        {progress.masteredIds.includes(currentWordObj.id) ? (
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                        ) : (
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                        )}
                       </svg>
-                      Mastered
+                      {progress.masteredIds.includes(currentWordObj.id) ? "Next Card" : "Mastered"}
                     </button>
 
                     <button
