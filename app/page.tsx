@@ -1022,8 +1022,63 @@ export default function Home() {
                     </button>
                   </div>
                 </div>
-                <div className="text-center text-[10px] text-slate-400 font-bold uppercase tracking-wider">
-                  Syncing automatically with DB
+                <div className="flex flex-col gap-2.5 items-center mt-3 pt-3 border-t border-slate-100">
+                  <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
+                    Syncing automatically with DB
+                  </span>
+                  <button
+                    onClick={async () => {
+                      if (confirm("⚠️ คุณต้องการล้างฐานข้อมูล (Reset Database) ทั้งหมดใช่หรือไม่? ประวัติการเรียนทั้งหมดและคำศัพท์แคชจะถูกรีเซ็ตใหม่")) {
+                        const defaultData = {
+                          progress: { masteredIds: [], starredIds: [], notes: {} },
+                          cardCache: {},
+                          generalNotes: [],
+                          reviewWords: []
+                        };
+                        try {
+                          // 1. Clear database on server/Supabase
+                          const res = await fetch("/api/db", {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({
+                              progress: defaultData.progress,
+                              cardCache: defaultData.cardCache,
+                              generalNotes: defaultData.generalNotes,
+                              reviewWords: defaultData.reviewWords
+                            })
+                          });
+                          if (!res.ok) throw new Error("Failed to clear backend database");
+                          
+                          // 2. Clear browser localStorage
+                          localStorage.removeItem("lexiflow_progress");
+                          localStorage.removeItem("lexiflow_card_cache");
+                          localStorage.removeItem("lexiflow_review_words");
+                          localStorage.removeItem("lexiflow_general_notes");
+                          localStorage.removeItem("lexiflow_last_word_id");
+                          
+                          // 3. Reset states immediately
+                          setProgress(defaultData.progress);
+                          setCardCache(defaultData.cardCache);
+                          setReviewWords(defaultData.reviewWords);
+                          setGeneralNotes(defaultData.generalNotes);
+                          setActiveCardData(null);
+                          setActiveCardId(null);
+                          
+                          alert("ล้างฐานข้อมูลสำเร็จเรียบร้อยแล้ว!");
+                          window.location.reload();
+                        } catch (err: any) {
+                          console.error(err);
+                          alert("เกิดข้อผิดพลาดในการล้างฐานข้อมูล: " + err.message);
+                        }
+                      }
+                    }}
+                    className="text-[10px] font-extrabold uppercase px-3 py-1.5 rounded-lg border border-red-200 bg-red-50 text-red-650 hover:bg-red-500 hover:text-white transition flex items-center gap-1 shadow-sm"
+                  >
+                    <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                    ล้างประวัติ & รีเซ็ตฐานข้อมูล
+                  </button>
                 </div>
               </div>
             </div>

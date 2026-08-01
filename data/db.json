@@ -2,21 +2,9 @@
   "progress": {
     "notes": {},
     "starredIds": [],
-    "masteredIds": [
-      "w-0"
-    ]
+    "masteredIds": []
   },
   "cardCache": {},
   "generalNotes": [],
-  "reviewWords": [
-    {
-      "id": "rw-1785253082625-543",
-      "word": "a couple",
-      "pos": "det.",
-      "translation": "สองสาม, ไม่กี่, สองคน",
-      "addedAt": "2026-07-28T15:38:02.625Z",
-      "isCustom": false,
-      "sourceWordId": "w-1"
-    }
-  ]
+  "reviewWords": []
 }
