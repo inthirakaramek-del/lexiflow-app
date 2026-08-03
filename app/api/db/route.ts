@@ -34,17 +34,21 @@ async function ensureLocalDb() {
   try {
     await fs.access(DB_FILE);
   } catch (e) {
-    const defaultData = {
-      progress: {
-        masteredIds: [],
-        starredIds: [],
-        notes: {}
-      },
-      cardCache: {},
-      generalNotes: [],
-      reviewWords: []
-    };
-    await fs.writeFile(DB_FILE, JSON.stringify(defaultData, null, 2), "utf-8");
+    try {
+      const defaultData = {
+        progress: {
+          masteredIds: [],
+          starredIds: [],
+          notes: {}
+        },
+        cardCache: {},
+        generalNotes: [],
+        reviewWords: []
+      };
+      await fs.writeFile(DB_FILE, JSON.stringify(defaultData, null, 2), "utf-8");
+    } catch (writeErr) {
+      // Ignore write errors (e.g. read-only filesystem on Vercel)
+    }
   }
 }
 
@@ -88,9 +92,22 @@ async function readData() {
 }
 
 async function readLocalData() {
-  await ensureLocalDb();
-  const fileContent = await fs.readFile(DB_FILE, "utf-8");
-  return JSON.parse(fileContent);
+  try {
+    await ensureLocalDb();
+    const fileContent = await fs.readFile(DB_FILE, "utf-8");
+    return JSON.parse(fileContent);
+  } catch (e) {
+    return {
+      progress: {
+        masteredIds: [],
+        starredIds: [],
+        notes: {}
+      },
+      cardCache: {},
+      generalNotes: [],
+      reviewWords: []
+    };
+  }
 }
 
 async function writeToSupabase(data: any) {
@@ -163,8 +180,12 @@ export async function POST(request: Request) {
       }
 
       // Always write to local file as backup or if Supabase write fails
-      await ensureLocalDb();
-      await fs.writeFile(DB_FILE, JSON.stringify(updatedData, null, 2), "utf-8");
+      try {
+        await ensureLocalDb();
+        await fs.writeFile(DB_FILE, JSON.stringify(updatedData, null, 2), "utf-8");
+      } catch (err) {
+        console.warn("Failed to write local backup DB (normal on read-only serverless hosts):", err);
+      }
 
       return NextResponse.json({
         success: true,
