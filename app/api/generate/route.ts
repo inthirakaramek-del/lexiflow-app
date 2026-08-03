@@ -21,7 +21,7 @@ Return the result as a raw JSON object with the following schema:
 Return ONLY valid JSON.`;
 
       const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${apiKey}`,
         {
           method: "POST",
           headers: {
@@ -83,7 +83,7 @@ Return the result as a raw JSON object with the following schema:
 Return ONLY valid JSON.`;
 
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${apiKey}`,
       {
         method: "POST",
         headers: {
