@@ -474,8 +474,9 @@ export default function Home() {
     }
 
     // Check database cache first
-    if (cardCache[currentWordObj.id]) {
-      setActiveCardData(cardCache[currentWordObj.id]);
+    const cached = cardCache[currentWordObj.id];
+    if (cached && Array.isArray(cached.sentences) && cached.sentences.length > 0) {
+      setActiveCardData(cached);
       setActiveCardId(currentWordObj.id);
       setApiError(null);
       return;
