@@ -31,6 +31,8 @@ export default function Home() {
 
   // States for restoring session and search in card section
   const [lastWordIdToRestore, setLastWordIdToRestore] = useState<string | null>(null);
+  const [hasLoadedSession, setHasLoadedSession] = useState(false);
+  const isRestoringRef = useRef(true);
   const [flashcardSearchQuery, setFlashcardSearchQuery] = useState("");
 
   // Quiz pool type: 'unmastered' | 'mastered'
@@ -94,9 +96,14 @@ export default function Home() {
       const savedLastWordId = localStorage.getItem("lexiflow_last_word_id");
       if (savedLastWordId) {
         setLastWordIdToRestore(savedLastWordId);
+      } else {
+        isRestoringRef.current = false;
       }
     } catch (e) {
       console.error("Failed to restore initial session settings", e);
+      isRestoringRef.current = false;
+    } finally {
+      setHasLoadedSession(true);
     }
 
     // 2. Load from localStorage first to prevent UI delay and ensure no data is lost
@@ -414,23 +421,28 @@ export default function Home() {
 
   // Save current word ID to localStorage to restore later
   useEffect(() => {
-    if (currentWordObj) {
+    if (currentWordObj && hasLoadedSession && !lastWordIdToRestore) {
       localStorage.setItem("lexiflow_last_word_id", currentWordObj.id);
     }
-  }, [currentWordObj]);
+  }, [currentWordObj, hasLoadedSession, lastWordIdToRestore]);
 
   // Restore the index of the last viewed word once the deck is ready
   useEffect(() => {
-    if (lastWordIdToRestore) {
+    if (lastWordIdToRestore && hasLoadedSession) {
       if (flashcardWords.length > 0) {
         const idx = flashcardWords.findIndex((w) => w.id === lastWordIdToRestore);
         if (idx !== -1) {
           setCurrentCardIndex(idx);
         }
+        setLastWordIdToRestore(null);
+        isRestoringRef.current = false;
+      } else {
+        // Stop trying to restore if the loaded list is empty
+        setLastWordIdToRestore(null);
+        isRestoringRef.current = false;
       }
-      setLastWordIdToRestore(null);
     }
-  }, [flashcardWords, lastWordIdToRestore]);
+  }, [flashcardWords, lastWordIdToRestore, hasLoadedSession]);
 
   // Reset card index if deck or search changes (only when not restoring)
   const isInitialMount = useRef(true);
@@ -439,9 +451,12 @@ export default function Home() {
       isInitialMount.current = false;
       return;
     }
-    setCurrentCardIndex(0);
-    setIsFlipped(false);
-    setActiveCardData(null);
+    // Only reset index when not in the process of restoring the session
+    if (!isRestoringRef.current) {
+      setCurrentCardIndex(0);
+      setIsFlipped(false);
+      setActiveCardData(null);
+    }
   }, [flashcardDeckType, flashcardSearchQuery]);
 
   // Fetch or generate sentence structures when current card changes

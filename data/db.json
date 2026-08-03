@@ -94,46 +94,130 @@
       "thaiPronunciation": "อะ คัพเพิล"
     },
     "w-2": {
+      "trick": "คำว่า 'a few' มีความหมายว่า 'สองสาม...' หรือ 'พอมีอยู่บ้างเล็กน้อย' มีกฎเหล็กคือต้องใช้คู่กับคำนามนับได้พหูพจน์ (Plural Countable Nouns) เสมอ เช่น a few books, a few days ข้อควรระวัง: อย่าสับสนกับ 'few' (ไม่มี a) เพราะ 'few' จะแปลว่า 'แทบจะไม่มีเลย' (เชิงปฏิเสธ) ในขณะที่ 'a few' จะมีความหมายเชิงบวกว่ายังมีอยู่บ้าง",
+      "sentences": [
+        {
+          "grammar": "S (A few options: ตัวเลือกสองสามทาง) + V (remain: ยังคงเหลืออยู่)",
+          "sentence": "A few options remain.",
+          "structure": "S + V",
+          "translation": "ตัวเลือกสองสามทางยังคงเหลืออยู่",
+          "thaiPronunciation": "อะ ฟิว ออพชันส์ รีเมน"
+        },
+        {
+          "grammar": "S (She: เธอ) + V (invited: ได้เชิญ) + O (a few friends: เพื่อนสองสามคน)",
+          "sentence": "She invited a few friends.",
+          "structure": "S + V + O",
+          "translation": "เธอได้เชิญเพื่อนสองสามคน",
+          "thaiPronunciation": "ชี อินไวทิด อะ ฟิว เฟรนส์"
+        },
+        {
+          "grammar": "S (The winners: ผู้ชนะ) + V (were: คือ) + C (a few teenagers: วัยรุ่นสองสามคน)",
+          "sentence": "The winners were a few teenagers.",
+          "structure": "S + V + C",
+          "translation": "ผู้ชนะคือวัยรุ่นสองสามคน",
+          "thaiPronunciation": "เดอะ วินเนอร์ส เวอ อะ ฟิว ทีเนเจอร์ส"
+        },
+        {
+          "grammar": "S (He: เขา) + V (showed: แสดงให้ดู) + IO (me: ฉัน) + DO (a few photos: รูปภาพสองสามรูป)",
+          "sentence": "He showed me a few photos.",
+          "structure": "S + V + IO + DO",
+          "translation": "เขาได้แสดงรูปภาพสองสามรูปให้ฉันดู",
+          "thaiPronunciation": "ฮี โชว์ด มี อะ ฟิว โฟโทส์"
+        },
+        {
+          "grammar": "S (The manager: ผู้จัดการ) + V (made: ทำให้) + O (a few tasks: งานสองสามอย่าง) + C (urgent: กลายเป็นเรื่องเร่งด่วน)",
+          "sentence": "The manager made a few tasks urgent.",
+          "structure": "S + V + O + C",
+          "translation": "ผู้จัดการทำให้งานสองสามอย่างกลายเป็นเรื่องเร่งด่วน",
+          "thaiPronunciation": "เดอะ แมนิจเจอร์ เมด อะ ฟิว ทาสก์ส์ เออร์เจินท์"
+        }
+      ],
       "wordTranslation": "สองสาม, เล็กน้อย (ใช้กับนามนับได้พหูพจน์)",
-      "thaiPronunciation": "อะ ฟิว",
+      "thaiPronunciation": "อะ ฟิว"
+    },
+    "w-3": {
+      "trick": "คำว่า 'a little' เมื่อทำหน้าที่เป็น determiner (คำบ่งชี้ปริมาณ) จะต้องใช้นำหน้า 'คำนามที่นับไม่ได้' (Uncountable Nouns) เสมอ เช่น time, water, money, soup, progress โดยมีความหมายในเชิงบวกว่า 'มีอยู่บ้างเล็กน้อย' (ต่างจาก 'little' ที่ไม่มี 'a' ซึ่งจะให้ความหมายเชิงลบว่า 'แทบไม่มี')ภายนอกดูเหมือนว่าแทบจะไม่มีเลย",
+      "sentences": [
+        {
+          "grammar": "S (A little snow: หิมะเล็กน้อย) + V (fell: ตกลงมา)",
+          "sentence": "A little snow fell.",
+          "structure": "S + V",
+          "translation": "หิมะเล็กน้อยตกลงมา",
+          "thaiPronunciation": "อะ ลิตเทิล สโนว์ เฟล"
+        },
+        {
+          "grammar": "S (They: พวกเขา) + V (need: ต้องการ) + O (a little time: เวลาเล็กน้อย)",
+          "sentence": "They need a little time.",
+          "structure": "S + V + O",
+          "translation": "พวกเขาต้องการเวลาเล็กน้อย",
+          "thaiPronunciation": "เด นีด อะ ลิตเทิล ไทม์"
+        },
+        {
+          "grammar": "S (This: นี่) + V (is: คือ) + C (a little help: ความช่วยเหลือเล็กน้อย)",
+          "sentence": "This is a little help.",
+          "structure": "S + V + C",
+          "translation": "นี่คือความช่วยเหลือเล็กน้อย",
+          "thaiPronunciation": "ดิส อิส อะ ลิตเทิล เฮลป์"
+        },
+        {
+          "grammar": "S (She: เธอ) + V (brought: นำมาให้) + IO (me: ฉัน) + DO (a little soup: ซุปเล็กน้อย)",
+          "sentence": "She brought me a little soup.",
+          "structure": "S + V + IO + DO",
+          "translation": "เธอนำซุปเล็กน้อยมาให้ฉัน",
+          "thaiPronunciation": "ชี บรอท มี อะ ลิตเทิล ซุป"
+        },
+        {
+          "grammar": "S (We: พวกเรา) + V (consider: ถือว่า) + O (this: สิ่งนี้) + C (a little progress: ความก้าวหน้าเล็กน้อย)",
+          "sentence": "We consider this a little progress.",
+          "structure": "S + V + O + C",
+          "translation": "พวกเราถือว่าสิ่งนี้เป็นความก้าวหน้าเล็กน้อย",
+          "thaiPronunciation": "วี คอนซิเดอร์ ดิส อะ ลิตเทิล พร็อกเกรส"
+        }
+      ],
+      "wordTranslation": "เล็กน้อย / นิดหน่อย",
+      "thaiPronunciation": "อะ ลิตเทิล"
+    },
+    "w-4": {
+      "wordTranslation": "คำแปลของคำว่า \"a lot\"",
+      "thaiPronunciation": "แอนลอท",
       "sentences": [
         {
           "structure": "S + V",
-          "sentence": "A few options remain.",
-          "translation": "ตัวเลือกสองสามทางยังคงเหลืออยู่",
-          "thaiPronunciation": "อะ ฟิว ออพชันส์ รีเมน",
-          "grammar": "S (A few options: ตัวเลือกสองสามทาง) + V (remain: ยังคงเหลืออยู่)"
+          "sentence": "The team acted a lot.",
+          "translation": "ทีมงาน ได้ปฏิบัติอย่างมีระดับ (a lot)",
+          "grammar": "S (The team: ประธาน) + V (acted: ปฏิบัติ/แสดงออก) + M (a lot: อย่างa lot)",
+          "thaiPronunciation": "เดอะ ทีม แอนคทด์ อะ ลอท"
         },
         {
           "structure": "S + V + O",
-          "sentence": "She invited a few friends.",
-          "translation": "เธอได้เชิญเพื่อนสองสามคน",
-          "thaiPronunciation": "ชี อินไวทิด อะ ฟิว เฟรนส์",
-          "grammar": "S (She: เธอ) + V (invited: ได้เชิญ) + O (a few friends: เพื่อนสองสามคน)"
+          "sentence": "We understood a new idea a lot.",
+          "translation": "พวกเราเข้าใจความคิดใหม่ในรูปแบบ (a lot)",
+          "grammar": "S (We: พวกเรา) + V (understood: เข้าใจ) + O (a new idea: ความคิดใหม่) + M (a lot: อย่างa lot)",
+          "thaiPronunciation": "วี อันเดอร์สทูด อะ นิว ไอเดีย อะ ลอท"
         },
         {
           "structure": "S + V + C",
-          "sentence": "The winners were a few teenagers.",
-          "translation": "ผู้ชนะคือวัยรุ่นสองสามคน",
-          "thaiPronunciation": "เดอะ วินเนอร์ส เวอ อะ ฟิว ทีเนเจอร์ส",
-          "grammar": "S (The winners: ผู้ชนะ) + V (were: คือ) + C (a few teenagers: วัยรุ่นสองสามคน)"
+          "sentence": "The presentation was a lot exciting.",
+          "translation": "การนำเสนอผลงานนั้นมีความน่าตื่นเต้นในระดับ (a lot)",
+          "grammar": "S (The presentation: การนำเสนอ) + V (was: เป็น/คือ) + C (exciting: น่าตื่นเต้น) + M (a lot: อย่างa lot)",
+          "thaiPronunciation": "เดอะ พรีเซนเทชัน วอส อะ ลอท อิกไซทิง"
         },
         {
           "structure": "S + V + IO + DO",
-          "sentence": "He showed me a few photos.",
-          "translation": "เขาได้แสดงรูปภาพสองสามรูปให้ฉันดู",
-          "thaiPronunciation": "ฮี โชว์ด มี อะ ฟิว โฟโทส์",
-          "grammar": "S (He: เขา) + V (showed: แสดงให้ดู) + IO (me: ฉัน) + DO (a few photos: รูปภาพสองสามรูป)"
+          "sentence": "She gave them a a lot clear answer.",
+          "translation": "เธอตอบคำถามให้พวกเขากระจ่างชัดเจนแบบ (a lot)",
+          "grammar": "S (She: เธอ) + V (gave: ให้) + IO (them: พวกเขา) + DO (a a lot clear answer: คำตอบที่ขยายความ (a lot))",
+          "thaiPronunciation": "ชี เกฟ ทฮเอม อะ อะ ลอท เคลียร์ แอนเซอร์"
         },
         {
           "structure": "S + V + O + C",
-          "sentence": "The manager made a few tasks urgent.",
-          "translation": "ผู้จัดการทำให้งานสองสามอย่างกลายเป็นเรื่องเร่งด่วน",
-          "thaiPronunciation": "เดอะ แมนิจเจอร์ เมด อะ ฟิว ทาสก์ส์ เออร์เจินท์",
-          "grammar": "S (The manager: ผู้จัดการ) + V (made: ทำให้) + O (a few tasks: งานสองสามอย่าง) + C (urgent: กลายเป็นเรื่องเร่งด่วน)"
+          "sentence": "We consider the task a lot completed.",
+          "translation": "พวกเราถือว่าภารกิจนั้นสมบูรณ์แบบเรียบร้อย (a lot)",
+          "grammar": "S (We: พวกเรา) + V (consider: ถือว่า) + O (the task: ภารกิจ) + C (completed: เสร็จสิ้น) + M (a lot: อย่างa lot)",
+          "thaiPronunciation": "วี คอนซิเดอร์ เดอะ ทาสก์ อะ ลอท คอมพลเอทด์"
         }
       ],
-      "trick": "คำว่า 'a few' มีความหมายว่า 'สองสาม...' หรือ 'พอมีอยู่บ้างเล็กน้อย' มีกฎเหล็กคือต้องใช้คู่กับคำนามนับได้พหูพจน์ (Plural Countable Nouns) เสมอ เช่น a few books, a few days ข้อควรระวัง: อย่าสับสนกับ 'few' (ไม่มี a) เพราะ 'few' จะแปลว่า 'แทบจะไม่มีเลย' (เชิงปฏิเสธ) ในขณะที่ 'a few' จะมีความหมายเชิงบวกว่ายังมีอยู่บ้าง"
+      "trick": "คำว่า \"a lot\" เป็นคำขยาย ให้ลองจับคู่เข้ากับกริยาหรือคุณศัพท์ที่เห็นบ่อยๆ"
     }
   },
   "generalNotes": [],
