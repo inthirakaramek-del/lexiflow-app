@@ -102,8 +102,6 @@ export default function Home() {
     } catch (e) {
       console.error("Failed to restore initial session settings", e);
       isRestoringRef.current = false;
-    } finally {
-      setHasLoadedSession(true);
     }
 
     // 2. Load from localStorage first to prevent UI delay and ensure no data is lost
@@ -193,6 +191,9 @@ export default function Home() {
       })
       .catch((err) => {
         console.warn("Failed to fetch data from server DB, using local state", err);
+      })
+      .finally(() => {
+        setHasLoadedSession(true);
       });
   }, []);
 
@@ -461,6 +462,10 @@ export default function Home() {
 
   // Fetch or generate sentence structures when current card changes
   useEffect(() => {
+    if (!hasLoadedSession) {
+      return;
+    }
+
     if (!currentWordObj) {
       setActiveCardData(null);
       setActiveCardId(null);
@@ -522,7 +527,7 @@ export default function Home() {
       .finally(() => {
         setLoadingAI(false);
       });
-  }, [currentWordObj, cardCache, activeCardId]);
+  }, [currentWordObj, cardCache, activeCardId, hasLoadedSession]);
 
   const regenerateCard = () => {
     if (!currentWordObj) return;
