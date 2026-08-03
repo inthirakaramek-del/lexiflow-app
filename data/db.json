@@ -178,46 +178,88 @@
       "thaiPronunciation": "อะ ลิตเทิล"
     },
     "w-4": {
-      "wordTranslation": "คำแปลของคำว่า \"a lot\"",
-      "thaiPronunciation": "แอนลอท",
+      "trick": "คำว่า \"a lot\" เป็นคำขยาย ให้ลองจับคู่เข้ากับกริยาหรือคุณศัพท์ที่เห็นบ่อยๆ",
       "sentences": [
         {
-          "structure": "S + V",
-          "sentence": "The team acted a lot.",
-          "translation": "ทีมงาน ได้ปฏิบัติอย่างมีระดับ (a lot)",
           "grammar": "S (The team: ประธาน) + V (acted: ปฏิบัติ/แสดงออก) + M (a lot: อย่างa lot)",
+          "sentence": "The team acted a lot.",
+          "structure": "S + V",
+          "translation": "ทีมงาน ได้ปฏิบัติอย่างมีระดับ (a lot)",
           "thaiPronunciation": "เดอะ ทีม แอนคทด์ อะ ลอท"
         },
         {
-          "structure": "S + V + O",
-          "sentence": "We understood a new idea a lot.",
-          "translation": "พวกเราเข้าใจความคิดใหม่ในรูปแบบ (a lot)",
           "grammar": "S (We: พวกเรา) + V (understood: เข้าใจ) + O (a new idea: ความคิดใหม่) + M (a lot: อย่างa lot)",
+          "sentence": "We understood a new idea a lot.",
+          "structure": "S + V + O",
+          "translation": "พวกเราเข้าใจความคิดใหม่ในรูปแบบ (a lot)",
           "thaiPronunciation": "วี อันเดอร์สทูด อะ นิว ไอเดีย อะ ลอท"
         },
         {
-          "structure": "S + V + C",
-          "sentence": "The presentation was a lot exciting.",
-          "translation": "การนำเสนอผลงานนั้นมีความน่าตื่นเต้นในระดับ (a lot)",
           "grammar": "S (The presentation: การนำเสนอ) + V (was: เป็น/คือ) + C (exciting: น่าตื่นเต้น) + M (a lot: อย่างa lot)",
+          "sentence": "The presentation was a lot exciting.",
+          "structure": "S + V + C",
+          "translation": "การนำเสนอผลงานนั้นมีความน่าตื่นเต้นในระดับ (a lot)",
           "thaiPronunciation": "เดอะ พรีเซนเทชัน วอส อะ ลอท อิกไซทิง"
         },
         {
-          "structure": "S + V + IO + DO",
-          "sentence": "She gave them a a lot clear answer.",
-          "translation": "เธอตอบคำถามให้พวกเขากระจ่างชัดเจนแบบ (a lot)",
           "grammar": "S (She: เธอ) + V (gave: ให้) + IO (them: พวกเขา) + DO (a a lot clear answer: คำตอบที่ขยายความ (a lot))",
+          "sentence": "She gave them a a lot clear answer.",
+          "structure": "S + V + IO + DO",
+          "translation": "เธอตอบคำถามให้พวกเขากระจ่างชัดเจนแบบ (a lot)",
           "thaiPronunciation": "ชี เกฟ ทฮเอม อะ อะ ลอท เคลียร์ แอนเซอร์"
         },
         {
-          "structure": "S + V + O + C",
-          "sentence": "We consider the task a lot completed.",
-          "translation": "พวกเราถือว่าภารกิจนั้นสมบูรณ์แบบเรียบร้อย (a lot)",
           "grammar": "S (We: พวกเรา) + V (consider: ถือว่า) + O (the task: ภารกิจ) + C (completed: เสร็จสิ้น) + M (a lot: อย่างa lot)",
+          "sentence": "We consider the task a lot completed.",
+          "structure": "S + V + O + C",
+          "translation": "พวกเราถือว่าภารกิจนั้นสมบูรณ์แบบเรียบร้อย (a lot)",
           "thaiPronunciation": "วี คอนซิเดอร์ เดอะ ทาสก์ อะ ลอท คอมพลเอทด์"
         }
       ],
-      "trick": "คำว่า \"a lot\" เป็นคำขยาย ให้ลองจับคู่เข้ากับกริยาหรือคุณศัพท์ที่เห็นบ่อยๆ"
+      "wordTranslation": "คำแปลของคำว่า \"a lot\"",
+      "thaiPronunciation": "แอนลอท"
+    },
+    "w-3439": {
+      "wordTranslation": "สวนสัตว์",
+      "thaiPronunciation": "ซู",
+      "sentences": [
+        {
+          "structure": "S + V",
+          "sentence": "The zoo closed.",
+          "translation": "สวนสัตว์ปิดทำการแล้ว",
+          "thaiPronunciation": "เดอะ ซู โคลสท์",
+          "grammar": "S (The zoo: สวนสัตว์) + V (closed: ปิดทำการ)"
+        },
+        {
+          "structure": "S + V + O",
+          "sentence": "We visited the zoo.",
+          "translation": "พวกเราได้ไปเที่ยวสวนสัตว์",
+          "thaiPronunciation": "วี วิสิเทิด เดอะ ซู",
+          "grammar": "S (We: พวกเรา) + V (visited: ไปเที่ยว) + O (the zoo: สวนสัตว์)"
+        },
+        {
+          "structure": "S + V + C",
+          "sentence": "The zoo is clean.",
+          "translation": "สวนสัตว์แห่งนี้สะอาด",
+          "thaiPronunciation": "เดอะ ซู อีส คลีน",
+          "grammar": "S (The zoo: สวนสัตว์) + V (is: เป็น/คือ) + C (clean: สะอาด)"
+        },
+        {
+          "structure": "S + V + IO + DO",
+          "sentence": "The donor bought the zoo a panda.",
+          "translation": "ผู้บริจาคได้ซื้อหมีแพนด้าให้แก่สวนสัตว์",
+          "thaiPronunciation": "เดอะ โดเนอร์ บอท เดอะ ซู อะ แพนด้า",
+          "grammar": "S (The donor: ผู้บริจาค) + V (bought: ซื้อ) + IO (the zoo: สวนสัตว์) + DO (a panda: หมีแพนด้าตัวหนึ่ง)"
+        },
+        {
+          "structure": "S + V + O + C",
+          "sentence": "We found the zoo wonderful.",
+          "translation": "พวกเราพบว่าสวนสัตว์นั้นยอดเยี่ยมมาก",
+          "thaiPronunciation": "วี ฟาวนด์ เดอะ ซู วันเดอร์ฟูล",
+          "grammar": "S (We: พวกเรา) + V (found: พบว่า/รู้สึกว่า) + O (the zoo: สวนสัตว์) + C (wonderful: ยอดเยี่ยมมาก)"
+        }
+      ],
+      "trick": "คำว่า 'zoo' เป็นคำนาม แปลว่า 'สวนสัตว์' มักใช้คู่กับคำบุพบท 'at' หรือ 'to' เช่น 'at the zoo' (ที่สวนสัตว์) หรือ 'go to the zoo' (ไปสวนสัตว์) นอกจากนี้ในภาษาพูดแบบไม่เป็นทางการ 'zoo' ยังสามารถใช้เปรียบเทียบถึงสถานที่ที่มีความวุ่นวายสับสนอลหม่านได้อีกด้วย เช่น 'This office is a zoo.' (ออฟฟิศนี้วุ่นวายโกลาหลมาก)"
     }
   },
   "generalNotes": [],
