@@ -26,11 +26,21 @@ Return ONLY valid JSON.`;
           method: "POST",
           headers: {
             "Content-Type": "application/json",
+            "User-Agent": "aistudio-build",
           },
           body: JSON.stringify({
             contents: [{ parts: [{ text: prompt }] }],
             generationConfig: {
               responseMimeType: "application/json",
+              responseSchema: {
+                type: "OBJECT",
+                properties: {
+                  translation: { type: "STRING" },
+                  thaiPronunciation: { type: "STRING" },
+                  pos: { type: "STRING" }
+                },
+                required: ["translation", "thaiPronunciation", "pos"]
+              }
             },
           }),
         }
@@ -88,11 +98,35 @@ Return ONLY valid JSON.`;
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "User-Agent": "aistudio-build",
         },
         body: JSON.stringify({
           contents: [{ parts: [{ text: prompt }] }],
           generationConfig: {
             responseMimeType: "application/json",
+            responseSchema: {
+              type: "OBJECT",
+              properties: {
+                wordTranslation: { type: "STRING" },
+                thaiPronunciation: { type: "STRING" },
+                sentences: {
+                  type: "ARRAY",
+                  items: {
+                    type: "OBJECT",
+                    properties: {
+                      structure: { type: "STRING" },
+                      sentence: { type: "STRING" },
+                      translation: { type: "STRING" },
+                      thaiPronunciation: { type: "STRING" },
+                      grammar: { type: "STRING" }
+                    },
+                    required: ["structure", "sentence", "translation", "thaiPronunciation", "grammar"]
+                  }
+                },
+                trick: { type: "STRING" }
+              },
+              required: ["wordTranslation", "thaiPronunciation", "sentences", "trick"]
+            }
           },
         }),
       }

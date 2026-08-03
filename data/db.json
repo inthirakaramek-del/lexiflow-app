@@ -2,9 +2,140 @@
   "progress": {
     "notes": {},
     "starredIds": [],
-    "masteredIds": []
+    "masteredIds": [
+      "w-0",
+      "w-1",
+      "w-2"
+    ]
   },
-  "cardCache": {},
+  "cardCache": {
+    "w-0": {
+      "trick": "คำว่า 'a bit' ทำหน้าที่เป็นคำกริยาวิเศษณ์ (adverb) แปลว่า 'นิดหน่อย/เล็กน้อย' มักใช้วางหน้าคำคุณศัพท์ (adjective) เพื่อลดความรุนแรงของความหมาย เช่น 'a bit tired' (เหนื่อยนิดหน่อย) หรือใช้วางท้ายประโยคเพื่อขยายคำกริยา หากต้องการใช้หน้าคำนามที่นับไม่ได้ จะต้องเปลี่ยนรูปเป็น 'a bit of' เสมอ เช่น 'a bit of water' (น้ำนิดหน่อย)",
+      "sentences": [
+        {
+          "grammar": "S (The baby: ทารก) + V (slept: นอนหลับ) + M (a bit: นิดหน่อย)",
+          "sentence": "The baby slept a bit.",
+          "structure": "S + V",
+          "translation": "ทารกนอนหลับไปนิดหน่อย",
+          "thaiPronunciation": "เดอะ เบบี้ สเลปต์ อะ บิท"
+        },
+        {
+          "grammar": "S (She: เธอ) + V (cleaned: ทำความสะอาด) + O (the room: ห้อง) + M (a bit: เล็กน้อย)",
+          "sentence": "She cleaned the room a bit.",
+          "structure": "S + V + O",
+          "translation": "เธอทำความสะอาดห้องเล็กน้อย",
+          "thaiPronunciation": "ชี คลีนด์ เดอะ รูม อะ บิท"
+        },
+        {
+          "grammar": "S (The soup: ซุปนี้) + V (tastes: มีรสชาติ) + C (a bit salty: เค็มไปนิดหน่อย)",
+          "sentence": "The soup tastes a bit salty.",
+          "structure": "S + V + C",
+          "translation": "ซุปนี้มีรสเค็มไปนิดหน่อย",
+          "thaiPronunciation": "เดอะ ซุป เทสท์ส อะ บิท ซอลที"
+        },
+        {
+          "grammar": "S (She: เธอ) + V (gave: ให้) + IO (me: ฉัน) + DO (a bit of advice: คำแนะนำเล็กน้อย)",
+          "sentence": "She gave me a bit of advice.",
+          "structure": "S + V + IO + DO",
+          "translation": "เธอให้คำแนะนำแก่ฉันเล็กน้อย",
+          "thaiPronunciation": "ชี เกฟ มี อะ บิท ออฟ แอดไวส์"
+        },
+        {
+          "grammar": "S (The news: ข่าวนั้น) + V (made: ทำให้) + O (him: เขา) + C (a bit sad: เศร้าใจเล็กน้อย)",
+          "sentence": "The news made him a bit sad.",
+          "structure": "S + V + O + C",
+          "translation": "ข่าวนั้นทำให้เขาเศร้าใจเล็กน้อย",
+          "thaiPronunciation": "เดอะ นิวส์ เมด ฮิม อะ บิท แซด"
+        }
+      ],
+      "wordTranslation": "นิดหน่อย / เล็กน้อย / ค่อนข้าง",
+      "thaiPronunciation": "อะ บิท"
+    },
+    "w-1": {
+      "trick": "คำว่า 'a couple' เมื่อทำหน้าที่เป็นคำนำหน้านาม (determiner) เพื่อบอกปริมาณ มักจะใช้ในรูป 'a couple of' แล้วตามด้วยคำนามพหูพจน์เสมอ (เช่น a couple of days, a couple of people) แปลว่า 'สองสาม...' (ประมาณ 2-3 อย่าง/คน/วัน) ในภาษาพูดแบบไม่เป็นทางการ บางครั้งฝรั่งอาจจะละคำว่า 'of' เหลือเพียง 'a couple' แล้วตามด้วยนามพหูพจน์ได้เลย เช่น a couple days",
+      "sentences": [
+        {
+          "grammar": "S (A couple of friends: เพื่อนสองสามคน) + V (arrived: มาถึง)",
+          "sentence": "A couple of friends arrived.",
+          "structure": "S + V",
+          "translation": "เพื่อนสองสามคนมาถึงแล้ว",
+          "thaiPronunciation": "อะ คัพเพิล ออฟ เฟรนส์ อะไรฟ์ดึ"
+        },
+        {
+          "grammar": "S (I: ฉัน) + V (bought: ซื้อ) + O (a couple of apples: แอปเปิ้ลสองสามลูก)",
+          "sentence": "I bought a couple of apples.",
+          "structure": "S + V + O",
+          "translation": "ฉันซื้อแอปเปิ้ลสองสามลูก",
+          "thaiPronunciation": "ไอ บอท อะ คัพเพิล ออฟ แอปเปิ้ลส์"
+        },
+        {
+          "grammar": "S (These: เหล่านี้) + V (are: คือ) + C (a couple of examples: ตัวอย่างสองสามข้อ)",
+          "sentence": "These are a couple of examples.",
+          "structure": "S + V + C",
+          "translation": "เหล่านี้คือตัวอย่างสองสามข้อ",
+          "thaiPronunciation": "ดีส อาร์ อะ คัพเพิล ออฟ อิกแซมเพิลส์"
+        },
+        {
+          "grammar": "S (She: เธอ) + V (gave: ให้) + IO (me: ฉัน) + DO (a couple of books: หนังสือสองสามเล่ม)",
+          "sentence": "She gave me a couple of books.",
+          "structure": "S + V + IO + DO",
+          "translation": "เธอให้หนังสือฉันสองสามเล่ม",
+          "thaiPronunciation": "ชี เกฟ มี อะ คัพเพิล ออฟ บุ๊คส์"
+        },
+        {
+          "grammar": "S (We: พวกเรา) + V (found: พบว่า) + O (a couple of ideas: ความคิดสองสามข้อ) + C (useful: มีประโยชน์)",
+          "sentence": "We found a couple of ideas useful.",
+          "structure": "S + V + O + C",
+          "translation": "พวกเราพบว่าความคิดสองสามข้อนั้นมีประโยชน์",
+          "thaiPronunciation": "วี เฟานด์ อะ คัพเพิล ออฟ ไอเดียส ยูสฟูล"
+        }
+      ],
+      "wordTranslation": "สองสาม, สองสามอย่าง (บอกปริมาณเล็กน้อย)",
+      "thaiPronunciation": "อะ คัพเพิล"
+    },
+    "w-2": {
+      "wordTranslation": "สองสาม, เล็กน้อย (ใช้กับนามนับได้พหูพจน์)",
+      "thaiPronunciation": "อะ ฟิว",
+      "sentences": [
+        {
+          "structure": "S + V",
+          "sentence": "A few options remain.",
+          "translation": "ตัวเลือกสองสามทางยังคงเหลืออยู่",
+          "thaiPronunciation": "อะ ฟิว ออพชันส์ รีเมน",
+          "grammar": "S (A few options: ตัวเลือกสองสามทาง) + V (remain: ยังคงเหลืออยู่)"
+        },
+        {
+          "structure": "S + V + O",
+          "sentence": "She invited a few friends.",
+          "translation": "เธอได้เชิญเพื่อนสองสามคน",
+          "thaiPronunciation": "ชี อินไวทิด อะ ฟิว เฟรนส์",
+          "grammar": "S (She: เธอ) + V (invited: ได้เชิญ) + O (a few friends: เพื่อนสองสามคน)"
+        },
+        {
+          "structure": "S + V + C",
+          "sentence": "The winners were a few teenagers.",
+          "translation": "ผู้ชนะคือวัยรุ่นสองสามคน",
+          "thaiPronunciation": "เดอะ วินเนอร์ส เวอ อะ ฟิว ทีเนเจอร์ส",
+          "grammar": "S (The winners: ผู้ชนะ) + V (were: คือ) + C (a few teenagers: วัยรุ่นสองสามคน)"
+        },
+        {
+          "structure": "S + V + IO + DO",
+          "sentence": "He showed me a few photos.",
+          "translation": "เขาได้แสดงรูปภาพสองสามรูปให้ฉันดู",
+          "thaiPronunciation": "ฮี โชว์ด มี อะ ฟิว โฟโทส์",
+          "grammar": "S (He: เขา) + V (showed: แสดงให้ดู) + IO (me: ฉัน) + DO (a few photos: รูปภาพสองสามรูป)"
+        },
+        {
+          "structure": "S + V + O + C",
+          "sentence": "The manager made a few tasks urgent.",
+          "translation": "ผู้จัดการทำให้งานสองสามอย่างกลายเป็นเรื่องเร่งด่วน",
+          "thaiPronunciation": "เดอะ แมนิจเจอร์ เมด อะ ฟิว ทาสก์ส์ เออร์เจินท์",
+          "grammar": "S (The manager: ผู้จัดการ) + V (made: ทำให้) + O (a few tasks: งานสองสามอย่าง) + C (urgent: กลายเป็นเรื่องเร่งด่วน)"
+        }
+      ],
+      "trick": "คำว่า 'a few' มีความหมายว่า 'สองสาม...' หรือ 'พอมีอยู่บ้างเล็กน้อย' มีกฎเหล็กคือต้องใช้คู่กับคำนามนับได้พหูพจน์ (Plural Countable Nouns) เสมอ เช่น a few books, a few days ข้อควรระวัง: อย่าสับสนกับ 'few' (ไม่มี a) เพราะ 'few' จะแปลว่า 'แทบจะไม่มีเลย' (เชิงปฏิเสธ) ในขณะที่ 'a few' จะมีความหมายเชิงบวกว่ายังมีอยู่บ้าง"
+    }
+  },
   "generalNotes": [],
   "reviewWords": []
 }
