@@ -164,7 +164,9 @@ export default function Home() {
         for (const key in localCache) {
           const localVal = localCache[key];
           const dbVal = dbCache[key];
-          if (!dbVal || (localVal && !localVal.isFallback && dbVal.isFallback)) {
+          const isLocalFallback = localVal && (localVal.isFallback || (localVal.wordTranslation && localVal.wordTranslation.includes("คำแปลของ")));
+          const isDbFallback = dbVal && (dbVal.isFallback || (dbVal.wordTranslation && dbVal.wordTranslation.includes("คำแปลของ")));
+          if (!dbVal || (localVal && !isLocalFallback && isDbFallback)) {
             mergedCache[key] = localVal;
           }
         }
@@ -490,7 +492,8 @@ export default function Home() {
 
     // Check database cache first (ignore fallback cache so we try to heal/regenerate with real AI if online)
     const cached = cardCache[currentWordObj.id];
-    if (cached && Array.isArray(cached.sentences) && cached.sentences.length > 0 && !cached.isFallback) {
+    const isFallbackCard = cached && (cached.isFallback || (cached.wordTranslation && cached.wordTranslation.includes("คำแปลของ")));
+    if (cached && Array.isArray(cached.sentences) && cached.sentences.length > 0 && !isFallbackCard) {
       setActiveCardData(cached);
       setActiveCardId(currentWordObj.id);
       setApiError(null);
