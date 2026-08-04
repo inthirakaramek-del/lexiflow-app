@@ -11,6 +11,7 @@ export interface CardData {
     grammar: string;
   }[];
   trick: string;
+  isFallback?: boolean;
 }
 
 const WORD_MAP: Record<string, string> = {
@@ -103,6 +104,16 @@ const WORD_MAP: Record<string, string> = {
   "cold": "โคลด์",
   "money": "มันนี่",
   "completely": "คอมพลีทลี",
+  "few": "ฟิว",
+  "little": "ลิทเทิล",
+  "couple": "คัพเพิล",
+  "lot": "ล็อต",
+  "bit": "บิท",
+  "a few": "อะ ฟิว",
+  "a little": "อะ ลิทเทิล",
+  "a couple": "อะ คัพเพิล",
+  "a lot": "อะ ล็อต",
+  "a bit": "อะ บิท",
 };
 
 const THAI_SUBJECTS: Record<string, string> = {
@@ -159,22 +170,30 @@ function getThaiAdjective(adj: string): string {
 }
 
 export function transliterateWord(word: string): string {
-  const lower = word.toLowerCase().replace(/[^a-z]/g, "");
-  if (WORD_MAP[lower]) return WORD_MAP[lower];
-  
-  let result = "";
-  const map: Record<string, string> = {
-    a: "แอน", b: "บ", c: "ค", d: "ด", e: "เอ", f: "ฟ", g: "ก", h: "ฮ",
-    i: "อิ", j: "จ", k: "ค", l: "ล", m: "ม", n: "น", o: "อ", p: "พ",
-    q: "คิว", r: "ร", s: "ส", t: "ท", u: "อุ", v: "ว", w: "ว", x: "กส์",
-    y: "ย", z: "ซ"
-  };
-  
-  for (let i = 0; i < lower.length; i++) {
-    const char = lower[i];
-    result += map[char] || "";
-  }
-  return result || word;
+  // Try matching the whole phrase first (handles "a few", etc.)
+  const phraseClean = word.toLowerCase().trim();
+  if (WORD_MAP[phraseClean]) return WORD_MAP[phraseClean];
+
+  // Split into individual words
+  const words = phraseClean.split(/\s+/);
+  return words.map(w => {
+    const clean = w.replace(/[^a-z]/g, "");
+    if (WORD_MAP[clean]) return WORD_MAP[clean];
+
+    let result = "";
+    const map: Record<string, string> = {
+      a: "แ", b: "บ", c: "ค", d: "ด", e: "เอ", f: "ฟ", g: "ก", h: "ฮ",
+      i: "อิ", j: "จ", k: "ค", l: "ล", m: "ม", n: "น", o: "อ", p: "พ",
+      q: "คิว", r: "ร", s: "ส", t: "ท", u: "อุ", v: "ว", w: "ว", x: "กส์",
+      y: "ย", z: "ซ"
+    };
+
+    for (let i = 0; i < clean.length; i++) {
+      const char = clean[i];
+      result += map[char] || "";
+    }
+    return result || w;
+  }).join(" ");
 }
 
 export function englishToThaiPhonetic(sentence: string): string {
@@ -225,6 +244,7 @@ export function generateFallbackCard(wordObj: Word): CardData {
     cardData = {
       wordTranslation: mockTranslation,
       thaiPronunciation: mockPronunciation,
+      isFallback: true,
       sentences: [
         {
           structure: "S + V",
@@ -263,6 +283,7 @@ export function generateFallbackCard(wordObj: Word): CardData {
     cardData = {
       wordTranslation: mockTranslation,
       thaiPronunciation: mockPronunciation,
+      isFallback: true,
       sentences: [
         {
           structure: "S + V",
@@ -301,6 +322,7 @@ export function generateFallbackCard(wordObj: Word): CardData {
     cardData = {
       wordTranslation: mockTranslation,
       thaiPronunciation: mockPronunciation,
+      isFallback: true,
       sentences: [
         {
           structure: "S + V",
@@ -335,10 +357,50 @@ export function generateFallbackCard(wordObj: Word): CardData {
       ],
       trick: `จดจำคำคุณศัพท์ "${w}" โดยจินตนาการถึงความรู้สึกหรือลักษณะภายนอกที่เด่นชัด`
     };
+  } else if (pos === "det." || pos === "pron." || pos === "prep." || pos === "art.") {
+    cardData = {
+      wordTranslation: mockTranslation,
+      thaiPronunciation: mockPronunciation,
+      isFallback: true,
+      sentences: [
+        {
+          structure: "S + V",
+          sentence: `${w} options remain.`,
+          translation: `ตัวเลือกจำนวนหนึ่ง (${w}) ยังคงเหลืออยู่`,
+          grammar: `S (${w} options: ตัวเลือก ${w}) + V (remain: ยังเหลืออยู่)`
+        },
+        {
+          structure: "S + V + O",
+          sentence: `We selected ${w} items.`,
+          translation: `พวกเราได้เลือกรายการ (${w})`,
+          grammar: `S (We: พวกเรา) + V (selected: เลือก) + O (${w} items: รายการ ${w})`
+        },
+        {
+          structure: "S + V + C",
+          sentence: `The issues were only ${w}.`,
+          translation: `ปัญหาเหล่านั้นมีเพียงแค่ (${w})`,
+          grammar: `S (The issues: ปัญหาเหล่านั้น) + V (were: มี/เป็น) + C (only ${w}: เพียงแค่ ${w})`
+        },
+        {
+          structure: "S + V + IO + DO",
+          sentence: `She gave the students ${w} examples.`,
+          translation: `เธอได้ให้ตัวอย่างแก่หมู่นักเรียน (${w})`,
+          grammar: `S (She: เธอ) + V (gave: ให้) + IO (the students: นักเรียน) + DO (${w} examples: ตัวอย่าง ${w})`
+        },
+        {
+          structure: "S + V + O + C",
+          sentence: `We found ${w} details interesting.`,
+          translation: `พวกเราพบว่ารายละเอียดสองสามอย่าง (${w}) นั้นน่าสนใจ`,
+          grammar: `S (We: พวกเรา) + V (found: พบว่า) + O (${w} details: รายละเอียด ${w}) + C (interesting: น่าสนใจ)`
+        }
+      ],
+      trick: `คำประเภทไวยากรณ์ "${w}" สามารถใช้ประกอบเข้ากับคำนามหรือกริยาเพื่อขยายความหมายให้สมบูรณ์ขึ้น`
+    };
   } else {
     cardData = {
       wordTranslation: mockTranslation,
       thaiPronunciation: mockPronunciation,
+      isFallback: true,
       sentences: [
         {
           structure: "S + V",

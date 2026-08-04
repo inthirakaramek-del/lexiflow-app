@@ -60,12 +60,14 @@ Return ONLY valid JSON.`;
     // Normal generation route for words in the dictionary
     const { word, pos } = body;
     const prompt = `Generate 5 example sentences for the English word or phrase "${word}" (which is a ${pos}).
-Each sentence MUST strictly follow one of the 5 English sentence structures:
-1. S + V (Subject + Verb) - e.g. "He runs." (The verb must be intransitive or used intransitively)
-2. S + V + O (Subject + Verb + Object) - e.g. "She loves books." (The verb must be transitive and take an object)
-3. S + V + C (Subject + Verb + Complement) - e.g. "He is a doctor.", "She feels happy." (Complement describes the subject, usually after linking verbs like is, am, are, feel, become)
-4. S + V + IO + DO (Subject + Verb + Indirect Object + Direct Object) - e.g. "She gave him a book.", "My mother bought me a shirt."
-5. S + V + O + C (Subject + Verb + Object + Complement) - e.g. "We painted the wall green.", "The news made her sad." (Object complement describes the direct object)
+Each sentence MUST strictly follow one of the 5 English sentence structures and be 100% grammatically correct, natural, and commonly used.
+
+CRITICAL GUIDELINES FOR SENTENCE PATTERNS:
+1. S + V (Subject + Verb) - e.g. "He runs." (The verb must be intransitive. If "${word}" is not a verb, it must be integrated as part of the Subject, e.g., "${word} guests arrived" or "A few options remain.")
+2. S + V + O (Subject + Verb + Object) - e.g. "She loves books." (The verb must be transitive. If "${word}" is not a verb, it can be part of the Object, e.g., "I bought ${word} apples.")
+3. S + V + C (Subject + Verb + Complement) - e.g. "He is a doctor.", "She feels happy." (Complement describes the subject, usually after linking verbs like is, am, are, feel, become. If "${word}" is not a verb, it can be part of the Complement, e.g., "Those are ${word} suggestions.")
+4. S + V + IO + DO (Subject + Verb + Indirect Object + Direct Object) - e.g. "She gave him a book.", "My mother bought me a shirt." (If "${word}" is not a verb, it can be part of the Direct Object, e.g., "She gave me ${word} tips.")
+5. S + V + O + C (Subject + Verb + Object + Complement) - e.g. "We painted the wall green.", "The news made her sad." (Object complement describes the direct object. If "${word}" is not a verb, it can be part of the Object, e.g., "We found ${word} chairs broken.")
 
 Ensure that:
 - Every English sentence is extremely natural, modern, and practical (commonly used in daily life, work, or school). Avoid robotic or awkward phrasing.

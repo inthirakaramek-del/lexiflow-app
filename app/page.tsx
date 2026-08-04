@@ -159,7 +159,15 @@ export default function Home() {
           notes: mergedNotes
         };
 
-        const mergedCache = { ...dbCache, ...localCache };
+        // Merge cache: Local cache takes priority unless local cache has a fallback card and DB has a real AI card
+        const mergedCache: Record<string, CardData> = { ...dbCache };
+        for (const key in localCache) {
+          const localVal = localCache[key];
+          const dbVal = dbCache[key];
+          if (!dbVal || (localVal && !localVal.isFallback && dbVal.isFallback)) {
+            mergedCache[key] = localVal;
+          }
+        }
 
         // Merge review words by unique word name
         const reviewMap = new Map<string, ReviewWord>();
@@ -480,9 +488,9 @@ export default function Home() {
       return;
     }
 
-    // Check database cache first
+    // Check database cache first (ignore fallback cache so we try to heal/regenerate with real AI if online)
     const cached = cardCache[currentWordObj.id];
-    if (cached && Array.isArray(cached.sentences) && cached.sentences.length > 0) {
+    if (cached && Array.isArray(cached.sentences) && cached.sentences.length > 0 && !cached.isFallback) {
       setActiveCardData(cached);
       setActiveCardId(currentWordObj.id);
       setApiError(null);
