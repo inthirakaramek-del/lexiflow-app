@@ -422,9 +422,9 @@ export function generateFallbackCard(wordObj: Word): CardData {
         },
         {
           structure: "S + V + IO + DO",
-          sentence: `She gave them a ${w} clear answer.`,
+          sentence: `She gave them ${w.toLowerCase().startsWith("a ") ? "" : "a "}${w} clear answer.`,
           translation: `เธอตอบคำถามให้พวกเขากระจ่างชัดเจนแบบ (${w})`,
-          grammar: `S (She: เธอ) + V (gave: ให้) + IO (them: พวกเขา) + DO (a ${w} clear answer: คำตอบที่ขยายความ (${w}))`
+          grammar: `S (She: เธอ) + V (gave: ให้) + IO (them: พวกเขา) + DO (${w.toLowerCase().startsWith("a ") ? "" : "a "}${w} clear answer: คำตอบที่ขยายความ (${w}))`
         },
         {
           structure: "S + V + O + C",
