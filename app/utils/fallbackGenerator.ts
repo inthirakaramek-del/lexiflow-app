@@ -233,8 +233,8 @@ export function generateFallbackCard(wordObj: Word): CardData {
   const { word, pos } = wordObj;
   const w = word.split(",")[0].replace(/-$/, "").trim();
 
-  const mockTranslation = `คำแปลของ "${w}"`;
-  const mockPronunciation = transliterateWord(w);
+  const mockTranslation = wordObj.meaning || `คำแปลของ "${w}"`;
+  const mockPronunciation = wordObj.pronunciation || transliterateWord(w);
 
   let articleTitle = `A Story with "${w}"`;
   let fullArticleThai = "";

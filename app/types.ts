@@ -2,6 +2,10 @@ export interface Word {
   id: string;
   word: string;
   pos: string; // Part of speech, e.g., 'n.', 'v.', 'adj.'
+  level?: string; // 'A1', 'A2', 'B1', 'B2'
+  meaning?: string; // Thai translation from Oxford 3000
+  pronunciation?: string; // Thai pronunciation from Oxford 3000
+  ipa?: string; // IPA phonetics
 }
 
 export interface UserProgress {
@@ -27,4 +31,3 @@ export interface GeneralNote {
   content: string;
   updatedAt: string; // ISO string
 }
-

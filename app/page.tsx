@@ -406,7 +406,7 @@ export default function Home() {
   // ----------------------------------------------------
   // FLASHCARDS STATE
   // ----------------------------------------------------
-  const [flashcardDeckType, setFlashcardDeckType] = useState<"all" | "learning" | "starred">("all");
+  const [flashcardDeckType, setFlashcardDeckType] = useState<"all" | "learning" | "starred" | "A1" | "A2" | "B1" | "B2">("all");
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
   const [cardTransition, setCardTransition] = useState<"none" | "swipe-left" | "swipe-right">("none");
@@ -420,6 +420,8 @@ export default function Home() {
       list = VOCAB.filter((w) => progress.starredIds.includes(w.id));
     } else if (flashcardDeckType === "learning") {
       list = VOCAB.filter((w) => !progress.masteredIds.includes(w.id));
+    } else if (["A1", "A2", "B1", "B2"].includes(flashcardDeckType)) {
+      list = VOCAB.filter((w) => w.level === flashcardDeckType);
     }
 
     if (flashcardSearchQuery.trim()) {
@@ -514,7 +516,7 @@ export default function Home() {
     fetch("/api/generate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ word: currentWordObj.word, pos: currentWordObj.pos })
+      body: JSON.stringify({ word: currentWordObj.word, pos: currentWordObj.pos, meaning: currentWordObj.meaning, pronunciation: currentWordObj.pronunciation })
     })
       .then(async (res) => {
         if (!res.ok) {
@@ -1278,9 +1280,16 @@ export default function Home() {
                       <div className="absolute inset-0 card-face w-full h-full bg-white/95 rounded-3xl p-3.5 sm:p-6 md:p-8 flex flex-col justify-between shadow-sm overflow-y-auto">
                         <div className="w-full flex justify-between items-center border-b border-slate-100 pb-2 sm:pb-3">
                           <div className="flex items-center gap-2">
-                            <span className={`text-[8.5px] sm:text-[10px] uppercase tracking-wider font-extrabold px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full ${getPosBadgeColor(currentWordObj.pos)}`}>
-                              {currentWordObj.pos}
-                            </span>
+                            <div className="flex items-center gap-1.5">
+                              {currentWordObj.level && (
+                                <span className="text-[8.5px] sm:text-[10px] uppercase tracking-wider font-black px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                  {currentWordObj.level}
+                                </span>
+                              )}
+                              <span className={`text-[8.5px] sm:text-[10px] uppercase tracking-wider font-extrabold px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full ${getPosBadgeColor(currentWordObj.pos)}`}>
+                                {currentWordObj.pos}
+                              </span>
+                            </div>
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
@@ -1354,11 +1363,16 @@ export default function Home() {
                               </svg>
                             </button>
                           </h3>
-                          {activeCardData?.thaiPronunciation && (
-                            <p className="text-xs sm:text-sm text-[#A28C89] font-bold tracking-wide mt-1">
-                              [{activeCardData.thaiPronunciation}] · {activeCardData.wordTranslation}
+                          <div className="flex flex-col items-center gap-1 mt-1">
+                            <p className="text-xs sm:text-sm text-[#A28C89] font-bold tracking-wide">
+                              [{currentWordObj.pronunciation || activeCardData?.thaiPronunciation}] · {currentWordObj.meaning || activeCardData?.wordTranslation}
                             </p>
-                          )}
+                            {currentWordObj.ipa && (
+                              <p className="text-[11px] text-slate-400 font-mono tracking-wide">
+                                /{currentWordObj.ipa}/
+                              </p>
+                            )}
+                          </div>
                         </div>
 
                         {/* UNIFIED 1-ARTICLE PASSAGE (บทความเดียวเชื่อมโยง 5 โครงสร้าง) */}
