@@ -384,6 +384,8 @@ export default function Home() {
   const [flashcardDeckType, setFlashcardDeckType] = useState<"all" | "learning" | "starred" | "A1" | "A2" | "B1" | "B2">("all");
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
+  const touchStartPos = useRef<{ x: number; y: number } | null>(null);
+  const isTouchDragging = useRef(false);
   const [cardTransition, setCardTransition] = useState<"none" | "swipe-left" | "swipe-right">("none");
   const [showPronunciationFront, setShowPronunciationFront] = useState(true);
   const [showBackTranslation, setShowBackTranslation] = useState(true);
@@ -801,6 +803,14 @@ export default function Home() {
           overflow-y: auto;
           -webkit-overflow-scrolling: touch;
           touch-action: pan-y;
+          overscroll-behavior-y: contain;
+        }
+        .card-face::-webkit-scrollbar {
+          width: 5px;
+        }
+        .card-face::-webkit-scrollbar-thumb {
+          background: #cbd5e1;
+          border-radius: 9999px;
         }
         .card-back {
           transform: rotateY(180deg);
@@ -1238,17 +1248,31 @@ export default function Home() {
 
                   {/* Outer Flip Card Container */}
                   <div
+                    onTouchStart={(e) => {
+                      touchStartPos.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+                      isTouchDragging.current = false;
+                    }}
+                    onTouchMove={(e) => {
+                      if (!touchStartPos.current) return;
+                      const dx = Math.abs(e.touches[0].clientX - touchStartPos.current.x);
+                      const dy = Math.abs(e.touches[0].clientY - touchStartPos.current.y);
+                      if (dx > 8 || dy > 8) {
+                        isTouchDragging.current = true;
+                      }
+                    }}
                     onClick={(e) => {
-                      // Prevent flip if the click target is a scrollable card-face that was scrolled
+                      if (isTouchDragging.current) {
+                        isTouchDragging.current = false;
+                        return;
+                      }
                       const target = e.target as HTMLElement;
-                      const face = target.closest(".card-face") as HTMLElement | null;
-                      if (face && face.scrollTop > 0) return;
+                      if (target.closest("button") || target.closest("input") || target.closest("textarea")) return;
                       if (!loadingAI) setIsFlipped((prev) => !prev);
                     }}
-                    className="w-full max-w-3xl min-h-[420px] sm:min-h-[500px] cursor-pointer card-perspective"
+                    className="w-full max-w-3xl h-[520px] sm:h-[550px] cursor-pointer card-perspective"
                   >
                     <div
-                      className={`w-full min-h-[420px] sm:min-h-[500px] relative card-inner rounded-3xl border border-[#E5E0DC] shadow-lg shadow-stone-200/30 ${
+                      className={`w-full h-[520px] sm:h-[550px] relative card-inner rounded-3xl border border-[#E5E0DC] shadow-lg shadow-stone-200/30 ${
                         isFlipped ? "card-flipped" : ""
                       } ${
                         cardTransition === "swipe-left"
@@ -1368,11 +1392,8 @@ export default function Home() {
                             </div>
                           ) : activeCardData ? (
                             <div
-                              className="bg-[#f8faff] border border-slate-100 rounded-2xl p-4 sm:p-5 max-w-2xl mx-auto w-full text-left shadow-xs overflow-y-auto max-h-[52vh] sm:max-h-[44vh]"
-                              onTouchStart={(e) => e.stopPropagation()}
-                              onTouchMove={(e) => e.stopPropagation()}
+                              className="bg-[#f8faff] border border-slate-100 rounded-2xl p-4 sm:p-5 max-w-2xl mx-auto w-full text-left shadow-xs"
                               onClick={(e) => e.stopPropagation()}
-                              onWheel={(e) => e.stopPropagation()}
                             >
                               {/* Article Header Controls */}
                               <div className="flex items-center justify-between gap-2 border-b border-slate-100 pb-2.5 mb-3">
@@ -1446,7 +1467,7 @@ export default function Home() {
                         </div>
 
                         {/* Flip Hint */}
-                        <div className="flex justify-center mt-2">
+                        <div className="flex justify-center mt-2 pb-6">
                           <span className="text-[9px] sm:text-[10px] text-slate-400 font-bold uppercase tracking-widest text-center animate-pulse leading-snug">
                             🔄 คลิกที่การ์ดเพื่อพลิกดูคำแปลบทความและถอดโครงสร้างทั้ง 5 ประโยค
                           </span>
