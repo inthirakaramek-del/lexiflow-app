@@ -1303,7 +1303,7 @@ export default function Home() {
                             </button>
                           </div>
                           <div className="flex items-center gap-2">
-                            <span className="text-[8.5px] sm:text-[10px] text-slate-400 uppercase tracking-widest font-bold">Front: 5 English Structures</span>
+                            <span className="text-[8.5px] sm:text-[10px] text-slate-400 uppercase tracking-widest font-bold">Front: Article (5 Structures)</span>
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
@@ -1328,7 +1328,7 @@ export default function Home() {
                         </div>
 
                         {/* Title Word */}
-                        <div className="my-4 sm:my-6 text-center">
+                        <div className="my-3 sm:my-4 text-center">
                           <h3 className="text-2xl xs:text-3xl md:text-4xl font-black tracking-tight text-slate-800 inline-flex items-center gap-2.5 sm:gap-3 justify-center">
                             {currentWordObj.word}
                             <button
@@ -1344,10 +1344,15 @@ export default function Home() {
                               </svg>
                             </button>
                           </h3>
+                          {activeCardData?.thaiPronunciation && (
+                            <p className="text-xs sm:text-sm text-[#A28C89] font-bold tracking-wide mt-1">
+                              [{activeCardData.thaiPronunciation}] · {activeCardData.wordTranslation}
+                            </p>
+                          )}
                         </div>
 
-                        {/* 5 English Example Sentences */}
-                        <div className="flex-1 flex flex-col gap-2.5 justify-center">
+                        {/* Article: All 5 Sentences as a unified passage */}
+                        <div className="flex-1 flex flex-col gap-2 justify-center">
                           {loadingAI ? (
                             <div className="flex flex-col items-center gap-3">
                               <div className="w-7 h-7 border-3 border-[#B8A3A0] border-t-transparent rounded-full animate-spin" />
@@ -1356,45 +1361,52 @@ export default function Home() {
                               </span>
                             </div>
                           ) : activeCardData ? (
-                            <div className="flex flex-col gap-1.5 xs:gap-2 max-w-2xl mx-auto w-full text-left">
-                              {activeCardData.sentences.map((s, idx) => (
-                                <div key={idx} className="bg-[#f8faff] border border-slate-100 rounded-xl px-2.5 py-1.5 xs:px-3 xs:py-2 flex items-center justify-between gap-2.5 hover:border-[#EBE3DE] hover:bg-[#fffcfd] transition">
-                                  <div className="flex items-start gap-2.5 flex-1 text-left">
-                                    <span className="text-[8.5px] xs:text-[9.5px] sm:text-[10px] font-extrabold bg-[#e6f4ff] text-[#0958d9] border border-[#d2e9ff] px-1.5 py-0.5 rounded min-w-[48px] sm:min-w-[70px] text-center shrink-0 mt-0.5">
-                                      {s.structure}
-                                    </span>
-                                    <div className="flex-1">
-                                      <p className="text-[11px] xs:text-xs sm:text-sm font-semibold text-slate-700 leading-snug">
-                                        {renderInteractiveSentence(s.sentence)}
-                                      </p>
-                                      {s.thaiPronunciation && (
-                                        <p className="text-[9.5px] sm:text-[10px] text-[#A28C89]/80 font-semibold tracking-wide mt-0.5">
-                                          อ่าน: {s.thaiPronunciation}
-                                        </p>
-                                      )}
+                            <div className="bg-[#f8faff] border border-slate-100 rounded-2xl px-3.5 py-3 xs:px-4 xs:py-3.5 max-w-2xl mx-auto w-full text-left">
+                              <div className="flex flex-col gap-3">
+                                {activeCardData.sentences.map((s, idx) => (
+                                  <div key={idx} className="flex flex-col gap-0.5">
+                                    <div className="flex items-start gap-2">
+                                      <span className="text-[8px] xs:text-[9px] font-extrabold bg-[#e6f4ff] text-[#0958d9] border border-[#d2e9ff] px-1.5 py-0.5 rounded shrink-0 mt-0.5 min-w-[44px] text-center">
+                                        {s.structure}
+                                      </span>
+                                      <div className="flex-1 flex items-start justify-between gap-2">
+                                        <div className="flex-1">
+                                          <p className="text-[11.5px] xs:text-xs sm:text-sm font-semibold text-slate-800 leading-snug">
+                                            {renderInteractiveSentence(s.sentence)}
+                                          </p>
+                                          {s.thaiPronunciation && (
+                                            <p className="text-[9px] sm:text-[10px] text-[#A28C89]/80 font-semibold tracking-wide mt-0.5 leading-snug">
+                                              อ่าน: {s.thaiPronunciation}
+                                            </p>
+                                          )}
+                                        </div>
+                                        <button
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            speakWord(s.sentence);
+                                          }}
+                                          className="bg-white hover:bg-sky-50 p-1.5 rounded-lg text-slate-400 hover:text-sky-600 border border-slate-200 transition shrink-0"
+                                          title="Listen"
+                                        >
+                                          <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+                                          </svg>
+                                        </button>
+                                      </div>
                                     </div>
+                                    {idx < activeCardData.sentences.length - 1 && (
+                                      <div className="h-px bg-slate-100 mt-1.5 ml-[52px]" />
+                                    )}
                                   </div>
-                                  <button
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      speakWord(s.sentence);
-                                    }}
-                                    className="bg-white hover:bg-slate-50 p-1.5 rounded-lg text-slate-400 hover:text-sky-600 border border-slate-200 transition shrink-0"
-                                    title="Listen"
-                                  >
-                                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-                                      <path strokeLinecap="round" strokeLinejoin="round" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
-                                    </svg>
-                                  </button>
-                                </div>
-                              ))}
+                                ))}
+                              </div>
                             </div>
                           ) : (
                             <p className="text-xs text-slate-400 text-center">Failed to load structure cards.</p>
                           )}
                         </div>
 
-                        <div className="flex justify-center mt-3">
+                        <div className="flex justify-center mt-2">
                           <span className="text-[9px] sm:text-[10px] text-slate-400 font-bold uppercase tracking-widest text-center animate-pulse leading-snug">
                             Click card to flip and view translations / grammar structures
                           </span>
@@ -1441,51 +1453,58 @@ export default function Home() {
                           </div>
                         </div>
 
-                        {/* Translation List */}
-                        <div className="flex-1 flex flex-col gap-2.5 justify-center py-2">
+                        {/* Translation List — Unified Article */}
+                        <div className="flex-1 flex flex-col gap-2 justify-center py-2">
                           {activeCardData && (
-                            <div className="flex flex-col gap-1.5 xs:gap-2 max-w-2xl mx-auto w-full text-left">
-                              {activeCardData.sentences.map((s, idx) => (
-                                <div key={idx} className="bg-[#f8faff] border border-slate-100 rounded-xl p-2.5 flex flex-col gap-1.5 hover:border-[#EBE3DE] transition">
-                                  <div className="flex items-start justify-between gap-2 text-[10px] sm:text-xs">
-                                    <div className="flex items-start gap-2.5 text-left flex-1">
-                                      <span className="font-extrabold bg-[#e6f4ff] text-[#0958d9] border border-[#d2e9ff] px-1.5 py-0.5 rounded text-[8.5px] xs:text-[9.5px] shrink-0 mt-0.5 min-w-[48px] sm:min-w-[55px] text-center">
+                            <div className="bg-[#f8faff] border border-slate-100 rounded-2xl px-3.5 py-3 xs:px-4 xs:py-3.5 max-w-2xl mx-auto w-full text-left">
+                              <div className="flex flex-col gap-3">
+                                {activeCardData.sentences.map((s, idx) => (
+                                  <div key={idx} className="flex flex-col gap-1.5">
+                                    {/* Sentence row */}
+                                    <div className="flex items-start gap-2">
+                                      <span className="text-[8px] xs:text-[9px] font-extrabold bg-[#e6f4ff] text-[#0958d9] border border-[#d2e9ff] px-1.5 py-0.5 rounded shrink-0 mt-0.5 min-w-[44px] text-center">
                                         {s.structure}
                                       </span>
-                                      <div className="flex-1">
-                                        <p className="text-slate-700 font-semibold text-[11px] xs:text-xs leading-snug">
-                                          {renderInteractiveSentence(s.sentence)}
-                                        </p>
-                                        {s.thaiPronunciation && (
-                                          <p className="text-[9px] sm:text-[10px] text-[#A28C89]/80 font-semibold tracking-wide mt-0.5">
-                                            อ่าน: {s.thaiPronunciation}
+                                      <div className="flex-1 flex items-start justify-between gap-2">
+                                        <div className="flex-1">
+                                          <p className="text-[11.5px] xs:text-xs sm:text-sm font-semibold text-slate-800 leading-snug">
+                                            {renderInteractiveSentence(s.sentence)}
                                           </p>
-                                        )}
+                                          {s.thaiPronunciation && (
+                                            <p className="text-[9px] sm:text-[10px] text-[#A28C89]/80 font-semibold tracking-wide mt-0.5 leading-snug">
+                                              อ่าน: {s.thaiPronunciation}
+                                            </p>
+                                          )}
+                                        </div>
+                                        <button
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            speakWord(s.sentence);
+                                          }}
+                                          className="bg-white hover:bg-sky-50 p-1.5 rounded-lg text-slate-400 hover:text-sky-600 border border-slate-200 transition shrink-0"
+                                          title="Listen"
+                                        >
+                                          <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+                                          </svg>
+                                        </button>
                                       </div>
                                     </div>
-                                    <button
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        speakWord(s.sentence);
-                                      }}
-                                      className="bg-white hover:bg-slate-50 p-1.5 rounded-lg text-slate-400 hover:text-sky-600 border border-slate-200 transition shrink-0"
-                                      title="Listen"
-                                    >
-                                      <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-                                        <path strokeLinecap="round" strokeLinejoin="round" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
-                                      </svg>
-                                    </button>
+                                    {/* Translation + Grammar */}
+                                    <div className="ml-[52px] pl-2.5 border-l-2 border-[#EBE3DE] flex flex-col gap-0.5">
+                                      <p className="text-[10.5px] xs:text-[11px] sm:text-xs font-bold text-[#A28C89] leading-snug">
+                                        แปล: {s.translation}
+                                      </p>
+                                      <p className="text-[9px] sm:text-[10px] text-slate-500 font-semibold leading-normal">
+                                        โครงสร้าง: {s.grammar}
+                                      </p>
+                                    </div>
+                                    {idx < activeCardData.sentences.length - 1 && (
+                                      <div className="h-px bg-slate-100 mt-0.5 ml-[52px]" />
+                                    )}
                                   </div>
-                                  <div className="pl-1.5 flex flex-col gap-0.5 border-l border-slate-200 ml-1">
-                                    <p className="text-[11px] xs:text-xs sm:text-sm font-bold text-[#A28C89]">
-                                      แปล: {s.translation}
-                                    </p>
-                                    <p className="text-[9.5px] sm:text-[11px] text-slate-500 font-semibold leading-normal font-sans">
-                                      โครงสร้าง: {s.grammar}
-                                    </p>
-                                  </div>
-                                </div>
-                              ))}
+                                ))}
+                              </div>
                             </div>
                           )}
                         </div>
