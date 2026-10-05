@@ -1,6 +1,8 @@
 import { Word } from "../types";
 
 export interface CardData {
+  articleTitle?: string;
+  fullArticleThai?: string;
   wordTranslation: string;
   thaiPronunciation?: string;
   sentences: {
@@ -231,216 +233,147 @@ export function generateFallbackCard(wordObj: Word): CardData {
   const { word, pos } = wordObj;
   const w = word.split(",")[0].replace(/-$/, "").trim();
 
-  const subj = getRandom(SUBJECTS);
-  const obj = getRandom(OBJECTS);
-  const adj = getRandom(ADJECTIVES);
-
-  const mockTranslation = `คำแปลของคำว่า "${w}"`;
+  const mockTranslation = `คำแปลของ "${w}"`;
   const mockPronunciation = transliterateWord(w);
 
-  let cardData: CardData;
+  let articleTitle = `A Story with "${w}"`;
+  let fullArticleThai = "";
+  let sentences: CardData["sentences"] = [];
+  let trick = "";
 
   if (pos === "v.") {
-    cardData = {
-      wordTranslation: mockTranslation,
-      thaiPronunciation: mockPronunciation,
-      isFallback: true,
-      sentences: [
-        {
-          structure: "S + V",
-          sentence: `${subj} ${w}ed yesterday.`,
-          translation: `${getThaiSubject(subj)} ได้ทำงาน (${w}) เมื่อวานนี้`,
-          grammar: `S (${subj}: ประธาน) + V (${w}ed: ดำเนินงาน (${w}))`
-        },
-        {
-          structure: "S + V + O",
-          sentence: `They will ${w} ${obj}.`,
-          translation: `พวกเขาจะทำการ (${w}) สำหรับ${getThaiObject(obj)}`,
-          grammar: `S (They: พวกเขา) + V (will ${w}: จะทำ (${w})) + O (${obj}: ${getThaiObject(obj)})`
-        },
-        {
-          structure: "S + V + C",
-          sentence: `To ${w} is ${adj}.`,
-          translation: `การเรียนรู้ (${w}) นั้นเป็นเรื่องที่${getThaiAdjective(adj)}`,
-          grammar: `S (To ${w}: การศึกษา (${w})) + V (is: เป็น/คือ) + C (${adj}: ${getThaiAdjective(adj)})`
-        },
-        {
-          structure: "S + V + IO + DO",
-          sentence: `He gave the ${w}ed team a reward.`,
-          translation: `เขาได้มอบรางวัลให้แก่ทีมที่เกี่ยวข้อง (${w})`,
-          grammar: `S (He: เขา) + V (gave: มอบให้) + IO (the ${w}ed team: ทีมที่เกี่ยวกับ (${w})) + DO (a reward: รางวัล)`
-        },
-        {
-          structure: "S + V + O + C",
-          sentence: `We found the plan completely ${w}ed.`,
-          translation: `พวกเราพบว่าแผนงานเกี่ยวกับ (${w}) นั้นเสร็จสมบูรณ์เรียบร้อย`,
-          grammar: `S (We: พวกเรา) + V (found: พบว่า) + O (the plan: แผนการ) + C (completely ${w}ed: เสร็จสิ้นเกี่ยวเนื่องกับ (${w}))`
-        }
-      ],
-      trick: `เมื่อเห็นคำกริยา "${w}" ให้จินตนาการถึงการกระทำและนำไปฝึกแต่งประโยคสั้นๆ เพื่อให้จำได้ง่ายขึ้น`
-    };
+    articleTitle = `The New Challenge: ${w}`;
+    sentences = [
+      {
+        structure: "S + V",
+        sentence: "Our team arrived early.",
+        translation: "ทีมงานของเราได้เดินทางมาถึงแต่เช้า",
+        thaiPronunciation: englishToThaiPhonetic("Our team arrived early."),
+        grammar: "S (Our team: ทีมงานของเรา) + V (arrived early: เดินทางมาถึงแต่เช้า)"
+      },
+      {
+        structure: "S + V + O",
+        sentence: `We will ${w} the project today.`,
+        translation: `พวกเราจะดำเนินงาน (${w}) โครงการนี้ในวันนี้`,
+        thaiPronunciation: englishToThaiPhonetic(`We will ${w} the project today.`),
+        grammar: `S (We: พวกเรา) + V (will ${w}: จะทำ (${w})) + O (the project: โครงการ) + M (today: วันนี้)`
+      },
+      {
+        structure: "S + V + C",
+        sentence: "The plan feels exciting.",
+        translation: "แผนการนี้รู้สึกน่าตื่นเต้นมาก",
+        thaiPronunciation: englishToThaiPhonetic("The plan feels exciting."),
+        grammar: "S (The plan: แผนการ) + V (feels: รู้สึก) + C (exciting: น่าตื่นเต้น)"
+      },
+      {
+        structure: "S + V + IO + DO",
+        sentence: "The mentor gave us great advice.",
+        translation: "อาจารย์ที่ปรึกษาได้ให้คำแนะนำที่ดีเยี่ยมแก่พวกเรา",
+        thaiPronunciation: englishToThaiPhonetic("The mentor gave us great advice."),
+        grammar: "S (The mentor: อาจารย์ที่ปรึกษา) + V (gave: ให้) + IO (us: แก่พวกเรา) + DO (great advice: คำแนะนำที่ดีเยี่ยม)"
+      },
+      {
+        structure: "S + V + O + C",
+        sentence: "Everyone found the entire experience useful.",
+        translation: "ทุกคนพบว่าประสบการณ์ทั้งหมดมีประโยชน์อย่างยิ่ง",
+        thaiPronunciation: englishToThaiPhonetic("Everyone found the entire experience useful."),
+        grammar: "S (Everyone: ทุกคน) + V (found: พบว่า) + O (the entire experience: ประสบการณ์ทั้งหมด) + C (useful: มีประโยชน์)"
+      }
+    ];
+    fullArticleThai = "ทีมงานของเราได้เดินทางมาถึงแต่เช้า พวกเราจะดำเนินงานโครงการนี้ในวันนี้ แผนการนี้รู้สึกน่าตื่นเต้นมาก อาจารย์ที่ปรึกษาได้ให้คำแนะนำที่ดีเยี่ยมแก่พวกเรา และทุกคนพบว่าประสบการณ์ทั้งหมดมีประโยชน์อย่างยิ่ง";
+    trick = `คำกริยา "${w}" ให้นึกถึงการกระทำและนำไปฝึกเชื่อมโยงเป็นเรื่องราวสั้นๆ จะช่วยให้จดจำได้แม่นยำยิ่งขึ้น`;
   } else if (pos === "n.") {
-    cardData = {
-      wordTranslation: mockTranslation,
-      thaiPronunciation: mockPronunciation,
-      isFallback: true,
-      sentences: [
-        {
-          structure: "S + V",
-          sentence: `The ${w} arrived safely.`,
-          translation: `ข้อมูล (${w}) ได้ถูกอัปเดตอย่างปลอดภัยแล้ว`,
-          grammar: `S (The ${w}: ${w}) + V (arrived: มาถึง)`
-        },
-        {
-          structure: "S + V + O",
-          sentence: `${subj} bought a new ${w}.`,
-          translation: `${getThaiSubject(subj)} ได้เตรียมการพัฒนา (${w}) อันใหม่มา`,
-          grammar: `S (${subj}: ประธาน) + V (bought: จัดหา) + O (a new ${w}: ${w} อันใหม่)`
-        },
-        {
-          structure: "S + V + C",
-          sentence: `This item is a beautiful ${w}.`,
-          translation: `หัวข้อตัวอย่างนี้เป็นเรื่องเกี่ยวกับ (${w}) ที่สวยงาม`,
-          grammar: `S (This item: รายการตัวอย่างนี้) + V (is: คือ/เป็น) + C (a beautiful ${w}: ${w} ที่สวยงาม)`
-        },
-        {
-          structure: "S + V + IO + DO",
-          sentence: `She gave the ${w} a quick clean.`,
-          translation: `เธอจัดทำระบบการเรียนรู้ (${w}) อย่างรวดเร็ว`,
-          grammar: `S (She: เธอ) + V (gave: จัดให้) + IO (the ${w}: ${w}) + DO (a quick clean: ทำความสะอาดรวดเร็ว)`
-        },
-        {
-          structure: "S + V + O + C",
-          sentence: `They made this ${w} their top priority.`,
-          translation: `พวกเขาทำให้หัวข้อ (${w}) นี้เป็นสิ่งที่สำคัญที่สุด`,
-          grammar: `S (They: พวกเขา) + V (made: กำหนดให้) + O (this ${w}: ${w} นี้) + C (their top priority: งานสำคัญที่สุดของพวกเขา)`
-        }
-      ],
-      trick: `คำนาม "${w}" สามารถจดจำโดยการผูกเข้ากับภาพสิ่งของหรือวาดภาพลงในโน้ตสมอง`
-    };
-  } else if (pos === "adj.") {
-    cardData = {
-      wordTranslation: mockTranslation,
-      thaiPronunciation: mockPronunciation,
-      isFallback: true,
-      sentences: [
-        {
-          structure: "S + V",
-          sentence: `${subj} feels ${w}.`,
-          translation: `${getThaiSubject(subj)} รู้สึกมีลักษณะแบบ (${w})`,
-          grammar: `S (${subj}: ประธาน) + V (feels: รู้สึก) + C (${w}: ${w})`
-        },
-        {
-          structure: "S + V + O",
-          sentence: `She bought some ${w} gifts.`,
-          translation: `เธอซื้อของขวัญที่มีความพิเศษ (${w}) มาหลายชิ้น`,
-          grammar: `S (She: เธอ) + V (bought: ซื้อ) + O (some ${w} gifts: ของขวัญที่${w})`
-        },
-        {
-          structure: "S + V + C",
-          sentence: `The current project is ${w}.`,
-          translation: `โครงการในปัจจุบันนี้อยู่ในเกณฑ์ (${w})`,
-          grammar: `S (The current project: โครงการปัจจุบัน) + V (is: เป็น/คือ) + C (${w}: ${w})`
-        },
-        {
-          structure: "S + V + IO + DO",
-          sentence: `He bought the ${w} student a book.`,
-          translation: `เขาซื้อหนังสือการศึกษา (${w}) ให้กับนักเรียนคนนั้น`,
-          grammar: `S (He: เขา) + V (bought: ซื้อ) + IO (the ${w} student: นักเรียนที่${w}) + DO (a book: หนังสือ)`
-        },
-        {
-          structure: "S + V + O + C",
-          sentence: `The manager made the staff ${w}.`,
-          translation: `ผู้จัดการทำให้พนักงานรู้สึก (${w})`,
-          grammar: `S (The manager: ผู้จัดการ) + V (made: ทำให้) + O (the staff: พนักงาน) + C (${w}: ${w})`
-        }
-      ],
-      trick: `จดจำคำคุณศัพท์ "${w}" โดยจินตนาการถึงความรู้สึกหรือลักษณะภายนอกที่เด่นชัด`
-    };
-  } else if (pos === "det." || pos === "pron." || pos === "prep." || pos === "art.") {
-    cardData = {
-      wordTranslation: mockTranslation,
-      thaiPronunciation: mockPronunciation,
-      isFallback: true,
-      sentences: [
-        {
-          structure: "S + V",
-          sentence: `${w} options remain.`,
-          translation: `ตัวเลือกจำนวนหนึ่ง (${w}) ยังคงเหลืออยู่`,
-          grammar: `S (${w} options: ตัวเลือก ${w}) + V (remain: ยังเหลืออยู่)`
-        },
-        {
-          structure: "S + V + O",
-          sentence: `We selected ${w} items.`,
-          translation: `พวกเราได้เลือกรายการ (${w})`,
-          grammar: `S (We: พวกเรา) + V (selected: เลือก) + O (${w} items: รายการ ${w})`
-        },
-        {
-          structure: "S + V + C",
-          sentence: `The issues were only ${w}.`,
-          translation: `ปัญหาเหล่านั้นมีเพียงแค่ (${w})`,
-          grammar: `S (The issues: ปัญหาเหล่านั้น) + V (were: มี/เป็น) + C (only ${w}: เพียงแค่ ${w})`
-        },
-        {
-          structure: "S + V + IO + DO",
-          sentence: `She gave the students ${w} examples.`,
-          translation: `เธอได้ให้ตัวอย่างแก่หมู่นักเรียน (${w})`,
-          grammar: `S (She: เธอ) + V (gave: ให้) + IO (the students: นักเรียน) + DO (${w} examples: ตัวอย่าง ${w})`
-        },
-        {
-          structure: "S + V + O + C",
-          sentence: `We found ${w} details interesting.`,
-          translation: `พวกเราพบว่ารายละเอียดสองสามอย่าง (${w}) นั้นน่าสนใจ`,
-          grammar: `S (We: พวกเรา) + V (found: พบว่า) + O (${w} details: รายละเอียด ${w}) + C (interesting: น่าสนใจ)`
-        }
-      ],
-      trick: `คำประเภทไวยากรณ์ "${w}" สามารถใช้ประกอบเข้ากับคำนามหรือกริยาเพื่อขยายความหมายให้สมบูรณ์ขึ้น`
-    };
+    articleTitle = `Discovering the ${w}`;
+    sentences = [
+      {
+        structure: "S + V",
+        sentence: `A new ${w} arrived.`,
+        translation: `${w} อันใหม่ได้มาถึงแล้ว`,
+        thaiPronunciation: englishToThaiPhonetic(`A new ${w} arrived.`),
+        grammar: `S (A new ${w}: ${w} อันใหม่) + V (arrived: มาถึงแล้ว)`
+      },
+      {
+        structure: "S + V + O",
+        sentence: `Our students tested the ${w}.`,
+        translation: `นักเรียนของเราได้ทำการทดสอบ ${w}`,
+        thaiPronunciation: englishToThaiPhonetic(`Our students tested the ${w}.`),
+        grammar: `S (Our students: นักเรียนของเรา) + V (tested: ทดสอบ) + O (the ${w}: ${w})`
+      },
+      {
+        structure: "S + V + C",
+        sentence: "The design was very impressive.",
+        translation: "การออกแบบนั้นน่าประทับใจเป็นอย่างยิ่ง",
+        thaiPronunciation: englishToThaiPhonetic("The design was very impressive."),
+        grammar: "S (The design: การออกแบบ) + V (was: เป็น/คือ) + C (very impressive: น่าประทับใจมาก)"
+      },
+      {
+        structure: "S + V + IO + DO",
+        sentence: "The teacher showed them a special feature.",
+        translation: "คุณครูได้แสดงฟีเจอร์พิเศษให้พวกเขาได้เห็น",
+        thaiPronunciation: englishToThaiPhonetic("The teacher showed them a special feature."),
+        grammar: "S (The teacher: คุณครู) + V (showed: แสดงให้เห็น) + IO (them: พวกเขา) + DO (a special feature: คุณลักษณะพิเศษ)"
+      },
+      {
+        structure: "S + V + O + C",
+        sentence: `Everyone declared the ${w} a great success.`,
+        translation: `ทุกคนประกาศว่า ${w} ชิ้นนี้ประสบความสำเร็จอย่างงดงาม`,
+        thaiPronunciation: englishToThaiPhonetic(`Everyone declared the ${w} a great success.`),
+        grammar: `S (Everyone: ทุกคน) + V (declared: ประกาศว่า) + O (the ${w}: ${w}) + C (a great success: ความสำเร็จอย่างงดงาม)`
+      }
+    ];
+    fullArticleThai = `${w} อันใหม่ได้มาถึงแล้ว นักเรียนของเราได้ทำการทดสอบ ${w} การออกแบบนั้นน่าประทับใจเป็นอย่างยิ่ง คุณครูได้แสดงฟีเจอร์พิเศษให้พวกเขาได้เห็น และทุกคนประกาศว่า ${w} ชิ้นนี้ประสบความสำเร็จอย่างงดงาม`;
+    trick = `คำนาม "${w}" ให้จินตนาการถึงภาพวัตถุหรือบริบทการใช้งานจริงในชีวิตประจำวันเพื่อความจำที่ยาวนาน`;
   } else {
-    cardData = {
-      wordTranslation: mockTranslation,
-      thaiPronunciation: mockPronunciation,
-      isFallback: true,
-      sentences: [
-        {
-          structure: "S + V",
-          sentence: `${subj} acted ${w}.`,
-          translation: `${getThaiSubject(subj)} ได้ปฏิบัติอย่างมีระดับ (${w})`,
-          grammar: `S (${subj}: ประธาน) + V (acted: ปฏิบัติ/แสดงออก) + M (${w}: อย่าง${w})`
-        },
-        {
-          structure: "S + V + O",
-          sentence: `We understood ${obj} ${w}.`,
-          translation: `พวกเราเข้าใจ${getThaiObject(obj)}ในรูปแบบ (${w})`,
-          grammar: `S (We: พวกเรา) + V (understood: เข้าใจ) + O (${obj}: ${getThaiObject(obj)}) + M (${w}: อย่าง${w})`
-        },
-        {
-          structure: "S + V + C",
-          sentence: `The presentation was ${w} ${adj}.`,
-          translation: `การนำเสนอผลงานนั้นมีความ${getThaiAdjective(adj)}ในระดับ (${w})`,
-          grammar: `S (The presentation: การนำเสนอ) + V (was: เป็น/คือ) + C (${adj}: ${getThaiAdjective(adj)}) + M (${w}: อย่าง${w})`
-        },
-        {
-          structure: "S + V + IO + DO",
-          sentence: `She gave them ${w.toLowerCase().startsWith("a ") ? "" : "a "}${w} clear answer.`,
-          translation: `เธอตอบคำถามให้พวกเขากระจ่างชัดเจนแบบ (${w})`,
-          grammar: `S (She: เธอ) + V (gave: ให้) + IO (them: พวกเขา) + DO (${w.toLowerCase().startsWith("a ") ? "" : "a "}${w} clear answer: คำตอบที่ขยายความ (${w}))`
-        },
-        {
-          structure: "S + V + O + C",
-          sentence: `We consider the task ${w} completed.`,
-          translation: `พวกเราถือว่าภารกิจนั้นสมบูรณ์แบบเรียบร้อย (${w})`,
-          grammar: `S (We: พวกเรา) + V (consider: ถือว่า) + O (the task: ภารกิจ) + C (completed: เสร็จสิ้น) + M (${w}: อย่าง${w})`
-        }
-      ],
-      trick: `คำว่า "${w}" เป็นคำขยาย ให้ลองจับคู่เข้ากับกริยาหรือคุณศัพท์ที่เห็นบ่อยๆ`
-    };
+    // adj., det., adv., prep., etc. (e.g. "a couple", "a few", "a bit")
+    articleTitle = `A Pleasant Gathering: ${w}`;
+    sentences = [
+      {
+        structure: "S + V",
+        sentence: `${w.charAt(0).toUpperCase() + w.slice(1)} of guests arrived.`,
+        translation: `แขกสองสามคนได้เดินทางมาถึง`,
+        thaiPronunciation: englishToThaiPhonetic(`${w} of guests arrived.`),
+        grammar: `S (${w} of guests: แขกกลุ่มหนึ่ง) + V (arrived: เดินทางมาถึง)`
+      },
+      {
+        structure: "S + V + O",
+        sentence: `They brought ${w} small gifts.`,
+        translation: `พวกเขาได้นำของขวัญเล็กๆ น้อยๆ มาด้วย`,
+        thaiPronunciation: englishToThaiPhonetic(`They brought ${w} small gifts.`),
+        grammar: `S (They: พวกเขา) + V (brought: นำมา) + O (${w} small gifts: ของขวัญเล็กน้อย)`
+      },
+      {
+        structure: "S + V + C",
+        sentence: "The atmosphere became very warm.",
+        translation: "บรรยากาศเริ่มอบอุ่นขึ้นเป็นอย่างมาก",
+        thaiPronunciation: englishToThaiPhonetic("The atmosphere became very warm."),
+        grammar: "S (The atmosphere: บรรยากาศ) + V (became: กลายเป็น) + C (very warm: อบอุ่นมาก)"
+      },
+      {
+        structure: "S + V + IO + DO",
+        sentence: "The host served everyone hot tea.",
+        translation: "เจ้าบ้านได้เสิร์ฟชาร้อนให้แก่ทุกคน",
+        thaiPronunciation: englishToThaiPhonetic("The host served everyone hot tea."),
+        grammar: "S (The host: เจ้าบ้าน) + V (served: เสิร์ฟ) + IO (everyone: แก่ทุกคน) + DO (hot tea: ชาร้อน)"
+      },
+      {
+        structure: "S + V + O + C",
+        sentence: "All guests called the gathering wonderful.",
+        translation: "แขกทุกคนกล่าวว่าการพบปะครั้งนี้ยอดเยี่ยมมาก",
+        thaiPronunciation: englishToThaiPhonetic("All guests called the gathering wonderful."),
+        grammar: "S (All guests: แขกทุกคน) + V (called: กล่าวว่า) + O (the gathering: การพบปะ) + C (wonderful: ยอดเยี่ยม)"
+      }
+    ];
+    fullArticleThai = "แขกสองสามคนได้เดินทางมาถึง พวกเขาได้นำของขวัญเล็กๆ น้อยๆ มาด้วย บรรยากาศเริ่มอบอุ่นขึ้นเป็นอย่างมาก เจ้าบ้านได้เสิร์ฟชาร้อนให้แก่ทุกคน และแขกทุกคนกล่าวว่าการพบปะครั้งนี้ยอดเยี่ยมมาก";
+    trick = `คำว่า "${w}" เมื่อนำมาใช้ผสมผสานในเรื่องราวบทความสั้น จะช่วยให้เห็นภาพการใช้งานในโครงสร้างประโยคได้อย่างเป็นธรรมชาติ`;
   }
 
-  cardData.sentences = cardData.sentences.map(s => ({
-    ...s,
-    thaiPronunciation: englishToThaiPhonetic(s.sentence)
-  }));
-
-  return cardData;
+  return {
+    wordTranslation: mockTranslation,
+    thaiPronunciation: mockPronunciation,
+    articleTitle,
+    fullArticleThai,
+    sentences,
+    trick,
+    isFallback: true
+  };
 }

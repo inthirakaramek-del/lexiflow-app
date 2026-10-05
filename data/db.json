@@ -5,261 +5,184 @@
     "masteredIds": [
       "w-0",
       "w-1",
-      "w-2"
+      "w-2",
+      "w-3",
+      "w-4"
     ]
   },
   "cardCache": {
     "w-0": {
-      "trick": "คำว่า 'a bit' ทำหน้าที่เป็นคำกริยาวิเศษณ์ (adverb) แปลว่า 'นิดหน่อย/เล็กน้อย' มักใช้วางหน้าคำคุณศัพท์ (adjective) เพื่อลดความรุนแรงของความหมาย เช่น 'a bit tired' (เหนื่อยนิดหน่อย) หรือใช้วางท้ายประโยคเพื่อขยายคำกริยา หากต้องการใช้หน้าคำนามที่นับไม่ได้ จะต้องเปลี่ยนรูปเป็น 'a bit of' เสมอ เช่น 'a bit of water' (น้ำนิดหน่อย)",
+      "trick": "ใช้ 'a bit' เพื่อลดความรุนแรงของคำคุณศัพท์หรือกริยาวิเศษณ์ ให้ความรู้สึกว่า 'เล็กน้อย' 'นิดหน่อย' หรือ 'ค่อนข้าง' มักใช้ในบริบทที่ไม่เป็นทางการ สามารถใช้แทน 'a little' ได้ เช่น 'I'm a bit tired' (ฉันเหนื่อยเล็กน้อย) หรือ 'It's a bit cold today' (วันนี้ค่อนข้างหนาว) ใช้ได้ทั้งกับความรู้สึก สภาพอากาศ หรือลักษณะของสิ่งต่างๆ",
       "sentences": [
         {
-          "grammar": "S (The baby: ทารก) + V (slept: นอนหลับ) + M (a bit: นิดหน่อย)",
-          "sentence": "The baby slept a bit.",
+          "grammar": "S (I: ฉัน) + V (worried: กังวล)",
+          "sentence": "Before the important presentation, I worried a bit.",
           "structure": "S + V",
-          "translation": "ทารกนอนหลับไปนิดหน่อย",
-          "thaiPronunciation": "เดอะ เบบี้ สเลปต์ อะ บิท"
+          "translation": "ก่อนการนำเสนอที่สำคัญ ฉันรู้สึกกังวลเล็กน้อย",
+          "thaiPronunciation": "บีฟอร์ เดอะ อิมพอร์แทนท์ พรีเซนเทชัน ไอ วอร์ริด อะ บิท"
         },
         {
-          "grammar": "S (She: เธอ) + V (cleaned: ทำความสะอาด) + O (the room: ห้อง) + M (a bit: เล็กน้อย)",
-          "sentence": "She cleaned the room a bit.",
+          "grammar": "S (I: ฉัน) + V (checked: ตรวจทาน) + O (my notes: บันทึกของฉัน)",
+          "sentence": "I checked my notes one last time.",
           "structure": "S + V + O",
-          "translation": "เธอทำความสะอาดห้องเล็กน้อย",
-          "thaiPronunciation": "ชี คลีนด์ เดอะ รูม อะ บิท"
+          "translation": "ฉันตรวจทานบันทึกของฉันเป็นครั้งสุดท้าย",
+          "thaiPronunciation": "ไอ เช็คด์ มาย โน้ทส์ วัน ลาสท์ ไทม์"
         },
         {
-          "grammar": "S (The soup: ซุปนี้) + V (tastes: มีรสชาติ) + C (a bit salty: เค็มไปนิดหน่อย)",
-          "sentence": "The soup tastes a bit salty.",
+          "grammar": "S (The large auditorium: ห้องประชุมขนาดใหญ่) + V (seemed: ดูเหมือน) + C (intimidating: น่าเกรงขาม)",
+          "sentence": "The large auditorium seemed a bit intimidating.",
           "structure": "S + V + C",
-          "translation": "ซุปนี้มีรสเค็มไปนิดหน่อย",
-          "thaiPronunciation": "เดอะ ซุป เทสท์ส อะ บิท ซอลที"
+          "translation": "ห้องประชุมขนาดใหญ่ดูน่าเกรงขามเล็กน้อย",
+          "thaiPronunciation": "เดอะ ลาร์จ ออดิทอเรียม ซีมด์ อะ บิท อินทิมิเดทิง"
         },
         {
-          "grammar": "S (She: เธอ) + V (gave: ให้) + IO (me: ฉัน) + DO (a bit of advice: คำแนะนำเล็กน้อย)",
-          "sentence": "She gave me a bit of advice.",
+          "grammar": "S (My professor: อาจารย์ของฉัน) + V (offered: มอบให้) + IO (me: ฉัน) + DO (a reassuring smile: รอยยิ้มที่ทำให้มั่นใจ)",
+          "sentence": "My professor then offered me a reassuring smile.",
           "structure": "S + V + IO + DO",
-          "translation": "เธอให้คำแนะนำแก่ฉันเล็กน้อย",
-          "thaiPronunciation": "ชี เกฟ มี อะ บิท ออฟ แอดไวส์"
+          "translation": "จากนั้นอาจารย์ของฉันก็มอบรอยยิ้มที่ทำให้ฉันอุ่นใจ",
+          "thaiPronunciation": "มาย โปรเฟสเซอร์ เดน ออฟเฟอร์ด มี อะ รีแอชเชอริง สไมล์"
         },
         {
-          "grammar": "S (The news: ข่าวนั้น) + V (made: ทำให้) + O (him: เขา) + C (a bit sad: เศร้าใจเล็กน้อย)",
-          "sentence": "The news made him a bit sad.",
+          "grammar": "S (His encouragement: กำลังใจของท่าน) + V (made: ทำให้) + O (the whole experience: ประสบการณ์ทั้งหมด) + C (less stressful: ผ่อนคลายลง)",
+          "sentence": "His encouragement made the whole experience a bit less stressful.",
           "structure": "S + V + O + C",
-          "translation": "ข่าวนั้นทำให้เขาเศร้าใจเล็กน้อย",
-          "thaiPronunciation": "เดอะ นิวส์ เมด ฮิม อะ บิท แซด"
+          "translation": "กำลังใจของท่านทำให้ประสบการณ์ทั้งหมดผ่อนคลายลงเล็กน้อย",
+          "thaiPronunciation": "ฮิส เอ็นเคอเรจเม้นท์ เมด เดอะ โฮล เอ็กซ์พีเรียนซ์ อะ บิท เลส สเตรสฟูล"
         }
       ],
-      "wordTranslation": "นิดหน่อย / เล็กน้อย / ค่อนข้าง",
+      "articleTitle": "A Bit of Encouragement",
+      "fullArticleThai": "ก่อนการนำเสนอที่สำคัญ ฉันรู้สึกกังวลเล็กน้อย ฉันตรวจทานบันทึกของฉันเป็นครั้งสุดท้าย ห้องประชุมขนาดใหญ่ดูน่าเกรงขามเล็กน้อย จากนั้นอาจารย์ของฉันก็มอบรอยยิ้มที่ทำให้ฉันอุ่นใจ กำลังใจของท่านทำให้ประสบการณ์ทั้งหมดผ่อนคลายลงเล็กน้อย",
+      "wordTranslation": "เล็กน้อย",
       "thaiPronunciation": "อะ บิท"
     },
-    "w-1": {
-      "trick": "คำว่า 'a couple' เมื่อทำหน้าที่เป็นคำนำหน้านาม (determiner) เพื่อบอกปริมาณ มักจะใช้ในรูป 'a couple of' แล้วตามด้วยคำนามพหูพจน์เสมอ (เช่น a couple of days, a couple of people) แปลว่า 'สองสาม...' (ประมาณ 2-3 อย่าง/คน/วัน) ในภาษาพูดแบบไม่เป็นทางการ บางครั้งฝรั่งอาจจะละคำว่า 'of' เหลือเพียง 'a couple' แล้วตามด้วยนามพหูพจน์ได้เลย เช่น a couple days",
-      "sentences": [
-        {
-          "grammar": "S (A couple of friends: เพื่อนสองสามคน) + V (arrived: มาถึง)",
-          "sentence": "A couple of friends arrived.",
-          "structure": "S + V",
-          "translation": "เพื่อนสองสามคนมาถึงแล้ว",
-          "thaiPronunciation": "อะ คัพเพิล ออฟ เฟรนส์ อะไรฟ์ดึ"
-        },
-        {
-          "grammar": "S (I: ฉัน) + V (bought: ซื้อ) + O (a couple of apples: แอปเปิ้ลสองสามลูก)",
-          "sentence": "I bought a couple of apples.",
-          "structure": "S + V + O",
-          "translation": "ฉันซื้อแอปเปิ้ลสองสามลูก",
-          "thaiPronunciation": "ไอ บอท อะ คัพเพิล ออฟ แอปเปิ้ลส์"
-        },
-        {
-          "grammar": "S (These: เหล่านี้) + V (are: คือ) + C (a couple of examples: ตัวอย่างสองสามข้อ)",
-          "sentence": "These are a couple of examples.",
-          "structure": "S + V + C",
-          "translation": "เหล่านี้คือตัวอย่างสองสามข้อ",
-          "thaiPronunciation": "ดีส อาร์ อะ คัพเพิล ออฟ อิกแซมเพิลส์"
-        },
-        {
-          "grammar": "S (She: เธอ) + V (gave: ให้) + IO (me: ฉัน) + DO (a couple of books: หนังสือสองสามเล่ม)",
-          "sentence": "She gave me a couple of books.",
-          "structure": "S + V + IO + DO",
-          "translation": "เธอให้หนังสือฉันสองสามเล่ม",
-          "thaiPronunciation": "ชี เกฟ มี อะ คัพเพิล ออฟ บุ๊คส์"
-        },
-        {
-          "grammar": "S (We: พวกเรา) + V (found: พบว่า) + O (a couple of ideas: ความคิดสองสามข้อ) + C (useful: มีประโยชน์)",
-          "sentence": "We found a couple of ideas useful.",
-          "structure": "S + V + O + C",
-          "translation": "พวกเราพบว่าความคิดสองสามข้อนั้นมีประโยชน์",
-          "thaiPronunciation": "วี เฟานด์ อะ คัพเพิล ออฟ ไอเดียส ยูสฟูล"
-        }
-      ],
-      "wordTranslation": "สองสาม, สองสามอย่าง (บอกปริมาณเล็กน้อย)",
-      "thaiPronunciation": "อะ คัพเพิล"
-    },
-    "w-2": {
-      "trick": "คำว่า 'a few' มีความหมายว่า 'สองสาม...' หรือ 'พอมีอยู่บ้างเล็กน้อย' มีกฎเหล็กคือต้องใช้คู่กับคำนามนับได้พหูพจน์ (Plural Countable Nouns) เสมอ เช่น a few books, a few days ข้อควรระวัง: อย่าสับสนกับ 'few' (ไม่มี a) เพราะ 'few' จะแปลว่า 'แทบจะไม่มีเลย' (เชิงปฏิเสธ) ในขณะที่ 'a few' จะมีความหมายเชิงบวกว่ายังมีอยู่บ้าง",
-      "sentences": [
-        {
-          "grammar": "S (A few options: ตัวเลือกสองสามทาง) + V (remain: ยังคงเหลืออยู่)",
-          "sentence": "A few options remain.",
-          "structure": "S + V",
-          "translation": "ตัวเลือกสองสามทางยังคงเหลืออยู่",
-          "thaiPronunciation": "อะ ฟิว ออพชันส์ รีเมน"
-        },
-        {
-          "grammar": "S (She: เธอ) + V (invited: ได้เชิญ) + O (a few friends: เพื่อนสองสามคน)",
-          "sentence": "She invited a few friends.",
-          "structure": "S + V + O",
-          "translation": "เธอได้เชิญเพื่อนสองสามคน",
-          "thaiPronunciation": "ชี อินไวทิด อะ ฟิว เฟรนส์"
-        },
-        {
-          "grammar": "S (The winners: ผู้ชนะ) + V (were: คือ) + C (a few teenagers: วัยรุ่นสองสามคน)",
-          "sentence": "The winners were a few teenagers.",
-          "structure": "S + V + C",
-          "translation": "ผู้ชนะคือวัยรุ่นสองสามคน",
-          "thaiPronunciation": "เดอะ วินเนอร์ส เวอ อะ ฟิว ทีเนเจอร์ส"
-        },
-        {
-          "grammar": "S (He: เขา) + V (showed: แสดงให้ดู) + IO (me: ฉัน) + DO (a few photos: รูปภาพสองสามรูป)",
-          "sentence": "He showed me a few photos.",
-          "structure": "S + V + IO + DO",
-          "translation": "เขาได้แสดงรูปภาพสองสามรูปให้ฉันดู",
-          "thaiPronunciation": "ฮี โชว์ด มี อะ ฟิว โฟโทส์"
-        },
-        {
-          "grammar": "S (The manager: ผู้จัดการ) + V (made: ทำให้) + O (a few tasks: งานสองสามอย่าง) + C (urgent: กลายเป็นเรื่องเร่งด่วน)",
-          "sentence": "The manager made a few tasks urgent.",
-          "structure": "S + V + O + C",
-          "translation": "ผู้จัดการทำให้งานสองสามอย่างกลายเป็นเรื่องเร่งด่วน",
-          "thaiPronunciation": "เดอะ แมนิจเจอร์ เมด อะ ฟิว ทาสก์ส์ เออร์เจินท์"
-        }
-      ],
-      "wordTranslation": "สองสาม, เล็กน้อย (ใช้กับนามนับได้พหูพจน์)",
-      "thaiPronunciation": "อะ ฟิว"
-    },
     "w-3": {
-      "trick": "คำว่า 'a little' เมื่อทำหน้าที่เป็น determiner (คำบ่งชี้ปริมาณ) จะต้องใช้นำหน้า 'คำนามที่นับไม่ได้' (Uncountable Nouns) เสมอ เช่น time, water, money, soup, progress โดยมีความหมายในเชิงบวกว่า 'มีอยู่บ้างเล็กน้อย' (ต่างจาก 'little' ที่ไม่มี 'a' ซึ่งจะให้ความหมายเชิงลบว่า 'แทบไม่มี')ภายนอกดูเหมือนว่าแทบจะไม่มีเลย",
+      "wordTranslation": "นิดหน่อย, เล็กน้อย (ใช้กับคำนามนับไม่ได้ หรือใช้กับนามนับได้ในความหมายว่า 'เล็กๆ')",
+      "thaiPronunciation": "อะ-ลิท-เทิล",
       "sentences": [
         {
-          "grammar": "S (A little snow: หิมะเล็กน้อย) + V (fell: ตกลงมา)",
-          "sentence": "A little snow fell.",
           "structure": "S + V",
-          "translation": "หิมะเล็กน้อยตกลงมา",
-          "thaiPronunciation": "อะ ลิตเทิล สโนว์ เฟล"
+          "sentence": "A little time passed as Emma struggled with her complex coding assignment.",
+          "translation": "เวลาเล็กน้อยผ่านไปขณะที่เอ็มม่าพยายามอย่างหนักกับงานเขียนโค้ดที่ซับซ้อนของเธอ",
+          "thaiPronunciation": "อะ ลิท-เทิล ไทม์ พาสดฺ แอส เอ็ม-ม่า สตรัก-เกิลด์ วิธ เฮอร์ คอม-เพล็กซ์ โคด-ดิง อะ-ไซน์-เมนท์",
+          "grammar": "S (A little time: เวลาเล็กน้อย) + V (passed: ผ่านไป)"
         },
         {
-          "grammar": "S (They: พวกเขา) + V (need: ต้องการ) + O (a little time: เวลาเล็กน้อย)",
-          "sentence": "They need a little time.",
           "structure": "S + V + O",
-          "translation": "พวกเขาต้องการเวลาเล็กน้อย",
-          "thaiPronunciation": "เด นีด อะ ลิตเทิล ไทม์"
+          "sentence": "She needed a little inspiration to solve the tricky bug.",
+          "translation": "เธอต้องการแรงบันดาลใจเล็กน้อยเพื่อแก้ไขบั๊กที่ยุ่งยาก",
+          "thaiPronunciation": "ชี นีด-เดด อะ ลิท-เทิล อิน-สปิ-เร-ชั่น ทู โซลฟ์ เดอะ ทริก-กี้ บัก",
+          "grammar": "S (She: เธอ) + V (needed: ต้องการ) + O (a little inspiration: แรงบันดาลใจเล็กน้อย)"
         },
         {
-          "grammar": "S (This: นี่) + V (is: คือ) + C (a little help: ความช่วยเหลือเล็กน้อย)",
-          "sentence": "This is a little help.",
           "structure": "S + V + C",
-          "translation": "นี่คือความช่วยเหลือเล็กน้อย",
-          "thaiPronunciation": "ดิส อิส อะ ลิตเทิล เฮลป์"
+          "sentence": "The feeling of finally cracking it felt like a little miracle.",
+          "translation": "ความรู้สึกที่ในที่สุดก็แก้ปัญหานั้นได้สำเร็จให้ความรู้สึกเหมือนปาฏิหาริย์เล็กๆ",
+          "thaiPronunciation": "เดอะ ฟีล-ลิ่ง ออฟ ไฟ-นอล-ลี่ แครก-กิง อิท เฟลท์ ไลค์ อะ ลิท-เทิล มิ-รา-เคิล",
+          "grammar": "S (The feeling of finally cracking it: ความรู้สึกที่ในที่สุดก็แก้ปัญหานั้นได้สำเร็จ) + V (felt like: รู้สึกเหมือนเป็น) + C (a little miracle: ปาฏิหาริย์เล็กๆ)"
         },
         {
-          "grammar": "S (She: เธอ) + V (brought: นำมาให้) + IO (me: ฉัน) + DO (a little soup: ซุปเล็กน้อย)",
-          "sentence": "She brought me a little soup.",
           "structure": "S + V + IO + DO",
-          "translation": "เธอนำซุปเล็กน้อยมาให้ฉัน",
-          "thaiPronunciation": "ชี บรอท มี อะ ลิตเทิล ซุป"
+          "sentence": "Her mentor often gave her a little guidance whenever she faced a roadblock.",
+          "translation": "ที่ปรึกษาของเธอมักจะให้คำแนะนำเล็กน้อยแก่เธอเสมอเมื่อเธอเผชิญกับอุปสรรค",
+          "thaiPronunciation": "เฮอร์ เมน-ทอร์ ออฟ-เทน เกฟ เฮอร์ อะ ลิท-เทิล ไกด์-แดนซ์ เวน-เอฟ-เวอร์ ชี เฟซดฺ อะ โร้ด-บล็อก",
+          "grammar": "S (Her mentor: ที่ปรึกษาของเธอ) + V (gave: ให้) + IO (her: เธอ) + DO (a little guidance: คำแนะนำเล็กน้อย)"
         },
         {
-          "grammar": "S (We: พวกเรา) + V (consider: ถือว่า) + O (this: สิ่งนี้) + C (a little progress: ความก้าวหน้าเล็กน้อย)",
-          "sentence": "We consider this a little progress.",
           "structure": "S + V + O + C",
-          "translation": "พวกเราถือว่าสิ่งนี้เป็นความก้าวหน้าเล็กน้อย",
-          "thaiPronunciation": "วี คอนซิเดอร์ ดิส อะ ลิตเทิล พร็อกเกรส"
+          "sentence": "She considered every solved problem a little triumph.",
+          "translation": "เธอถือว่าทุกปัญหาที่แก้ได้เป็นชัยชนะเล็กๆ น้อยๆ",
+          "thaiPronunciation": "ชี คอน-ซิ-เดอร์ดฺ เอฟ-วรี โซลฟด์ พร็อบ-เบลม อะ ลิท-เทิล ไทร-อัมพ์",
+          "grammar": "S (She: เธอ) + V (considered: ถือว่า) + O (every solved problem: ทุกปัญหาที่แก้ได้) + C (a little triumph: ชัยชนะเล็กๆ)"
         }
       ],
-      "wordTranslation": "เล็กน้อย / นิดหน่อย",
-      "thaiPronunciation": "อะ ลิตเทิล"
+      "trick": "“a little” (det.) ใช้เพื่อระบุปริมาณที่ “เล็กน้อย” หรือ “นิดหน่อย” โดยหลักแล้วจะใช้กับคำนามนับไม่ได้ เช่น a little sugar (น้ำตาลนิดหน่อย), a little money (เงินเล็กน้อย) และ a little time (เวลานิดหน่อย) นอกจากนี้ยังสามารถใช้กับคำนามนับได้ในความหมายว่า ‘เล็กๆ’ หรือ ‘ไม่สำคัญมากนัก’ เช่น a little problem (ปัญหาเล็กๆ), a little snack (ของว่างเล็กน้อย) ตัวอย่างเช่น ‘Could I have a little water?’ (ขอน้ำนิดหน่อยได้ไหม?) หรือ ‘She made a little mistake.’ (เธอทำผิดพลาดเล็กน้อย)",
+      "articleTitle": "Emma's Little Victories",
+      "fullArticleThai": "เวลาเล็กน้อยผ่านไปขณะที่เอ็มม่าพยายามอย่างหนักกับงานเขียนโค้ดที่ซับซ้อนของเธอ เธอต้องการแรงบันดาลใจเล็กน้อยเพื่อแก้ไขบั๊กที่ยุ่งยาก ความรู้สึกที่ในที่สุดก็แก้ปัญหานั้นได้สำเร็จให้ความรู้สึกเหมือนปาฏิหาริย์เล็กๆ ที่ปรึกษาของเธอมักจะให้คำแนะนำเล็กน้อยแก่เธอเสมอเมื่อเธอเผชิญกับอุปสรรค เธอถือว่าทุกปัญหาที่แก้ได้เป็นชัยชนะเล็กๆ น้อยๆ"
     },
     "w-4": {
-      "trick": "คำว่า \"a lot\" เป็นคำขยาย ให้ลองจับคู่เข้ากับกริยาหรือคุณศัพท์ที่เห็นบ่อยๆ",
+      "trick": "a lot เป็นคำกำหนดปริมาณ (determiner) ที่ใช้ได้ทั้งกับคำนามนับได้พหูพจน์และคำนามนับไม่ได้ โดยจะต้องมีคำว่า 'of' ตามหลังเสมอ (เช่น 'a lot of people', 'a lot of water') เพื่อแสดงปริมาณว่า 'จำนวนมาก' หรือ 'มากมาย' ต่างจาก 'a lot' ที่ใช้เป็นกริยาวิเศษณ์ (adverb) โดยไม่มี 'of' ตามหลัง ซึ่งจะแปลว่า 'มาก' หรือ 'อย่างมาก' (เช่น 'I like it a lot.')",
       "sentences": [
         {
-          "grammar": "S (The team: ประธาน) + V (acted: ปฏิบัติ/แสดงออก) + M (a lot: อย่างa lot)",
-          "sentence": "The team acted a lot.",
+          "grammar": "S (A lot of things: หลายสิ่งหลายอย่าง) + V (happened: เกิดขึ้น)",
+          "sentence": "A lot of things happened.",
           "structure": "S + V",
-          "translation": "ทีมงาน ได้ปฏิบัติอย่างมีระดับ (a lot)",
-          "thaiPronunciation": "เดอะ ทีม แอนคทด์ อะ ลอท"
+          "translation": "หลายสิ่งหลายอย่างเกิดขึ้น",
+          "thaiPronunciation": "อะ ล็อท ออฟ ติงส์ แฮพเพินด์"
         },
         {
-          "grammar": "S (We: พวกเรา) + V (understood: เข้าใจ) + O (a new idea: ความคิดใหม่) + M (a lot: อย่างa lot)",
-          "sentence": "We understood a new idea a lot.",
+          "grammar": "S (She: เธอ) + V (prepared: เตรียม) + O (a lot of dishes: อาหารมากมาย)",
+          "sentence": "She prepared a lot of dishes for the party.",
           "structure": "S + V + O",
-          "translation": "พวกเราเข้าใจความคิดใหม่ในรูปแบบ (a lot)",
-          "thaiPronunciation": "วี อันเดอร์สทูด อะ นิว ไอเดีย อะ ลอท"
+          "translation": "เธอเตรียมอาหารมากมายสำหรับงานปาร์ตี้",
+          "thaiPronunciation": "ชี พรีแพร์ด อะ ล็อท ออฟ ดิชเชส ฟอร์ เดอะ ปาร์ตี้"
         },
         {
-          "grammar": "S (The presentation: การนำเสนอ) + V (was: เป็น/คือ) + C (exciting: น่าตื่นเต้น) + M (a lot: อย่างa lot)",
-          "sentence": "The presentation was a lot exciting.",
+          "grammar": "S (Those: สิ่งเหล่านั้น) + V (were: เป็น) + C (a lot of good ideas: ความคิดที่ดีจำนวนมาก)",
+          "sentence": "Those were a lot of good ideas.",
           "structure": "S + V + C",
-          "translation": "การนำเสนอผลงานนั้นมีความน่าตื่นเต้นในระดับ (a lot)",
-          "thaiPronunciation": "เดอะ พรีเซนเทชัน วอส อะ ลอท อิกไซทิง"
+          "translation": "สิ่งเหล่านั้นเป็นความคิดที่ดีจำนวนมาก",
+          "thaiPronunciation": "โธส เวอร์ อะ ล็อท ออฟ กูด ไอเดียส์"
         },
         {
-          "grammar": "S (She: เธอ) + V (gave: ให้) + IO (them: พวกเขา) + DO (a a lot clear answer: คำตอบที่ขยายความ (a lot))",
-          "sentence": "She gave them a a lot clear answer.",
+          "grammar": "S (The company: บริษัท) + V (offered: เสนอ) + IO (him: เขา) + DO (a lot of benefits: ผลประโยชน์มากมาย)",
+          "sentence": "The company offered him a lot of benefits.",
           "structure": "S + V + IO + DO",
-          "translation": "เธอตอบคำถามให้พวกเขากระจ่างชัดเจนแบบ (a lot)",
-          "thaiPronunciation": "ชี เกฟ ทฮเอม อะ อะ ลอท เคลียร์ แอนเซอร์"
+          "translation": "บริษัทเสนอผลประโยชน์มากมายให้เขา",
+          "thaiPronunciation": "เดอะ คัมพะนี ออฟเฟอร์ด ฮิม อะ ล็อท ออฟ เบเนฟิตส์"
         },
         {
-          "grammar": "S (We: พวกเรา) + V (consider: ถือว่า) + O (the task: ภารกิจ) + C (completed: เสร็จสิ้น) + M (a lot: อย่างa lot)",
-          "sentence": "We consider the task a lot completed.",
+          "grammar": "S (We: เรา) + V (found: พบ) + O (a lot of items: ของหลายรายการ) + C (missing: หายไป)",
+          "sentence": "We found a lot of items missing from the inventory.",
           "structure": "S + V + O + C",
-          "translation": "พวกเราถือว่าภารกิจนั้นสมบูรณ์แบบเรียบร้อย (a lot)",
-          "thaiPronunciation": "วี คอนซิเดอร์ เดอะ ทาสก์ อะ ลอท คอมพลเอทด์"
+          "translation": "เราพบว่ามีของหลายรายการหายไปจากคลังสินค้า",
+          "thaiPronunciation": "วี เฟาวน์ด อะ ล็อท ออฟ ไอเทมส์ มิสซิ่ง ฟรอม ดิ อินเวนทอรี่"
         }
       ],
-      "wordTranslation": "คำแปลของคำว่า \"a lot\"",
-      "thaiPronunciation": "แอนลอท"
+      "wordTranslation": "จำนวนมาก, มากมาย",
+      "thaiPronunciation": "อะ ล็อท"
     },
-    "w-3439": {
-      "wordTranslation": "สวนสัตว์",
-      "thaiPronunciation": "ซู",
+    "w-6": {
+      "trick": "คำว่า \"a.m.\" เป็นคำขยาย ให้ลองจับคู่เข้ากับกริยาหรือคุณศัพท์ที่เห็นบ่อยๆ",
       "sentences": [
         {
+          "grammar": "S (They: ประธาน) + V (acted: ปฏิบัติ/แสดงออก) + M (a.m.: อย่างa.m.)",
+          "sentence": "They acted a.m..",
           "structure": "S + V",
-          "sentence": "The zoo closed.",
-          "translation": "สวนสัตว์ปิดทำการแล้ว",
-          "thaiPronunciation": "เดอะ ซู โคลสท์",
-          "grammar": "S (The zoo: สวนสัตว์) + V (closed: ปิดทำการ)"
+          "translation": "พวกเขา ได้ปฏิบัติอย่างมีระดับ (a.m.)",
+          "thaiPronunciation": "เด แคทด์ แม"
         },
         {
+          "grammar": "S (We: พวกเรา) + V (understood: เข้าใจ) + O (their work: งานของพวกเขา) + M (a.m.: อย่างa.m.)",
+          "sentence": "We understood their work a.m..",
           "structure": "S + V + O",
-          "sentence": "We visited the zoo.",
-          "translation": "พวกเราได้ไปเที่ยวสวนสัตว์",
-          "thaiPronunciation": "วี วิสิเทิด เดอะ ซู",
-          "grammar": "S (We: พวกเรา) + V (visited: ไปเที่ยว) + O (the zoo: สวนสัตว์)"
+          "translation": "พวกเราเข้าใจงานของพวกเขาในรูปแบบ (a.m.)",
+          "thaiPronunciation": "วี อันเดอร์สทูด แดร์ เวิร์ก แม"
         },
         {
+          "grammar": "S (The presentation: การนำเสนอ) + V (was: เป็น/คือ) + C (strange: แปลก) + M (a.m.: อย่างa.m.)",
+          "sentence": "The presentation was a.m. strange.",
           "structure": "S + V + C",
-          "sentence": "The zoo is clean.",
-          "translation": "สวนสัตว์แห่งนี้สะอาด",
-          "thaiPronunciation": "เดอะ ซู อีส คลีน",
-          "grammar": "S (The zoo: สวนสัตว์) + V (is: เป็น/คือ) + C (clean: สะอาด)"
+          "translation": "การนำเสนอผลงานนั้นมีความแปลกในระดับ (a.m.)",
+          "thaiPronunciation": "เดอะ พรีเซนเทชัน วอส แม สเตรนจ์"
         },
         {
+          "grammar": "S (She: เธอ) + V (gave: ให้) + IO (them: พวกเขา) + DO (a a.m. clear answer: คำตอบที่ขยายความ (a.m.))",
+          "sentence": "She gave them a a.m. clear answer.",
           "structure": "S + V + IO + DO",
-          "sentence": "The donor bought the zoo a panda.",
-          "translation": "ผู้บริจาคได้ซื้อหมีแพนด้าให้แก่สวนสัตว์",
-          "thaiPronunciation": "เดอะ โดเนอร์ บอท เดอะ ซู อะ แพนด้า",
-          "grammar": "S (The donor: ผู้บริจาค) + V (bought: ซื้อ) + IO (the zoo: สวนสัตว์) + DO (a panda: หมีแพนด้าตัวหนึ่ง)"
+          "translation": "เธอตอบคำถามให้พวกเขากระจ่างชัดเจนแบบ (a.m.)",
+          "thaiPronunciation": "ชี เกฟ ทฮเอม อะ แม เคลียร์ แอนเซอร์"
         },
         {
+          "grammar": "S (We: พวกเรา) + V (consider: ถือว่า) + O (the task: ภารกิจ) + C (completed: เสร็จสิ้น) + M (a.m.: อย่างa.m.)",
+          "sentence": "We consider the task a.m. completed.",
           "structure": "S + V + O + C",
-          "sentence": "We found the zoo wonderful.",
-          "translation": "พวกเราพบว่าสวนสัตว์นั้นยอดเยี่ยมมาก",
-          "thaiPronunciation": "วี ฟาวนด์ เดอะ ซู วันเดอร์ฟูล",
-          "grammar": "S (We: พวกเรา) + V (found: พบว่า/รู้สึกว่า) + O (the zoo: สวนสัตว์) + C (wonderful: ยอดเยี่ยมมาก)"
+          "translation": "พวกเราถือว่าภารกิจนั้นสมบูรณ์แบบเรียบร้อย (a.m.)",
+          "thaiPronunciation": "วี คอนซิเดอร์ เดอะ ทาสก์ แม คอมพลเอทด์"
         }
       ],
-      "trick": "คำว่า 'zoo' เป็นคำนาม แปลว่า 'สวนสัตว์' มักใช้คู่กับคำบุพบท 'at' หรือ 'to' เช่น 'at the zoo' (ที่สวนสัตว์) หรือ 'go to the zoo' (ไปสวนสัตว์) นอกจากนี้ในภาษาพูดแบบไม่เป็นทางการ 'zoo' ยังสามารถใช้เปรียบเทียบถึงสถานที่ที่มีความวุ่นวายสับสนอลหม่านได้อีกด้วย เช่น 'This office is a zoo.' (ออฟฟิศนี้วุ่นวายโกลาหลมาก)"
+      "isFallback": true,
+      "wordTranslation": "คำแปลของคำว่า \"a.m.\"",
+      "thaiPronunciation": "แม"
     }
   },
   "generalNotes": [],

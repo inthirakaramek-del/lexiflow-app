@@ -59,37 +59,50 @@ Return ONLY valid JSON.`;
 
     // Normal generation route for words in the dictionary
     const { word, pos } = body;
-    const prompt = `Generate 5 example sentences for the English word or phrase "${word}" (which is a ${pos}).
-Each sentence MUST strictly follow one of the 5 English sentence structures and be 100% grammatically correct, natural, and commonly used.
+    const prompt = `You are an expert English teacher creating an engaging learning flashcard for the English vocabulary word or phrase "${word}" (part of speech: ${pos}).
 
-CRITICAL GUIDELINES FOR SENTENCE PATTERNS:
-1. S + V (Subject + Verb) - e.g. "He runs." (The verb must be intransitive. If "${word}" is not a verb, it must be integrated as part of the Subject, e.g., "${word} guests arrived" or "A few options remain.")
-2. S + V + O (Subject + Verb + Object) - e.g. "She loves books." (The verb must be transitive. If "${word}" is not a verb, it can be part of the Object, e.g., "I bought ${word} apples.")
-3. S + V + C (Subject + Verb + Complement) - e.g. "He is a doctor.", "She feels happy." (Complement describes the subject, usually after linking verbs like is, am, are, feel, become. If "${word}" is not a verb, it can be part of the Complement, e.g., "Those are ${word} suggestions.")
-4. S + V + IO + DO (Subject + Verb + Indirect Object + Direct Object) - e.g. "She gave him a book.", "My mother bought me a shirt." (If "${word}" is not a verb, it can be part of the Direct Object, e.g., "She gave me ${word} tips.")
-5. S + V + O + C (Subject + Verb + Object + Complement) - e.g. "We painted the wall green.", "The news made her sad." (Object complement describes the direct object. If "${word}" is not a verb, it can be part of the Object, e.g., "We found ${word} chairs broken.")
+CRITICAL REQUIREMENT:
+Instead of 5 isolated sentences, you MUST create ONE COHESIVE SHORT STORY / MINI-ARTICLE (1 บทความสั้นที่เป็นเรื่องราวเดียวกันต่อเนื่อง 5 ประโยค) centered around or featuring "${word}".
+All 5 sentences must flow smoothly and naturally together to form a single interesting, real-life storyline or coherent reading passage (บทความเดียวเชื่อมโยงกัน ไม่ใช่ประโยคแยกโดดเดี่ยว).
 
-Ensure that:
-- Every English sentence is extremely natural, modern, and practical (commonly used in daily life, work, or school). Avoid robotic or awkward phrasing.
-- The word "${word}" must be integrated naturally in its correct grammatical form (conjugate verbs or pluralize nouns if needed to fit the structure).
-- CRITICAL: The "translation" field for the sentence MUST be written entirely in fluent, natural, grammatically correct Thai. You MUST NOT include or leave any English words (such as "The team", "a little", "the message", etc.) in the "translation" string. All parts of the sentence must be translated into natural Thai. For example, write "ทีมงานปฏิบัติงานเล็กน้อย" instead of "The team ได้ปฏิบัติอย่าง a little".
-- The pronunciation (thaiPronunciation) for the word and the sentences must be spelled in Thai phonetics (e.g. 'เดอะ ชิลเดรน แอคทิด อะ บิท' for 'The children acted a bit').
-- The grammar breakdown MUST match the actual words in the sentence exactly and show their meaning in Thai, e.g.: 'S (The team: ทีมงาน) + V (acted: ปฏิบัติ) + M (a little: เล็กน้อย)'.
+Within this unified 5-sentence article, each sentence MUST strictly embody one of the 5 fundamental English sentence structures in sequential order:
+1. S + V (Subject + Verb) - e.g. An event begins, a character arrives, or something happens. (If "${word}" is not a verb, integrate it naturally into the Subject, e.g., "A couple of friends arrived." or "The opportunity appeared.")
+2. S + V + O (Subject + Verb + Object) - Action continues, characters do something.
+3. S + V + C (Subject + Verb + Subject Complement) - Describing the situation or character's feeling using linking verbs (is, felt, seemed, became).
+4. S + V + IO + DO (Subject + Verb + Indirect Object + Direct Object) - Someone gives, brings, shows, or tells someone something.
+5. S + V + O + C (Subject + Verb + Object + Object Complement) - A concluding action or evaluation (e.g. found it useful, called it a success, made everyone happy).
+
+GUIDELINES:
+- Flow & Narrative: Together, the 5 sentences must read like a complete mini-story or short article about a realistic situation.
+- The target word "${word}" must appear naturally in the story in its correct grammatical form.
+- "articleTitle": A catchy 2-5 word English title for this short story/article.
+- "fullArticleThai": A fluent, beautiful, and completely natural Thai translation of the ENTIRE 5-sentence story as a single paragraph. (DO NOT leave any untranslated English words in Thai translations!).
+- "sentences": Array of exactly 5 sentence objects representing sentences 1 to 5 of the story in order:
+  - "structure": Exactly "S + V", "S + V + O", "S + V + C", "S + V + IO + DO", or "S + V + O + C"
+  - "sentence": The English sentence from the story
+  - "translation": 100% natural, grammatically correct Thai translation of this specific sentence
+  - "thaiPronunciation": Thai phonetic reading of this English sentence (e.g. 'เดอะ ชิลเดรน อะไรฟด์ เซฟลี')
+  - "grammar": Exact breakdown matching the words in this sentence to their grammatical parts with Thai translations, formatted as: 'S (Word: คำแปล) + V (Word: คำแปล) + ...'
+- "wordTranslation": Natural Thai translation of "${word}" itself
+- "thaiPronunciation": Thai phonetic reading of "${word}" itself (e.g. 'อะ คัพเพิล' for 'a couple')
+- "trick": Practical usage guide and tips in Thai for using "${word}" in daily life.
 
 Return the result as a raw JSON object with the following schema:
 {
-  "wordTranslation": "Thai translation of the vocabulary word itself (e.g. 'ละทิ้ง' for 'abandon')",
-  "thaiPronunciation": "Thai phonetic pronunciation / reading of the English word itself (e.g. 'อะแบนดัน' for 'abandon')",
+  "articleTitle": "Short English Title",
+  "wordTranslation": "Thai translation of the vocabulary word",
+  "thaiPronunciation": "Thai phonetic reading of the vocabulary word",
+  "fullArticleThai": "Complete Thai translation of the whole 5-sentence story as a paragraph",
   "sentences": [
     {
       "structure": "S + V",
-      "sentence": "Example sentence using the word",
-      "translation": "Thai translation of the sentence",
-      "thaiPronunciation": "Thai phonetic pronunciation / reading of this English sentence",
-      "grammar": "Detailed breakdown matching the specific English words in the sentence to their grammatical parts with Thai translations, formatted exactly like: 'S (SubjectWord: คำแปล) + V (VerbWord: คำแปล) + ...'"
+      "sentence": "English sentence 1",
+      "translation": "Thai translation of sentence 1",
+      "thaiPronunciation": "Thai phonetic reading of sentence 1",
+      "grammar": "S (...) + V (...)"
     }
   ],
-  "trick": "A clear, practical guide on how to use this word in Thai, explaining its grammatical behavior, common collocations, prepositions it goes with, or specific context rules (e.g., 'คำนี้มักตามด้วยคำว่า...')"
+  "trick": "Practical usage tip in Thai"
 }
 
 Return ONLY valid JSON.`;
@@ -109,8 +122,10 @@ Return ONLY valid JSON.`;
             responseSchema: {
               type: "OBJECT",
               properties: {
+                articleTitle: { type: "STRING" },
                 wordTranslation: { type: "STRING" },
                 thaiPronunciation: { type: "STRING" },
+                fullArticleThai: { type: "STRING" },
                 sentences: {
                   type: "ARRAY",
                   items: {

@@ -410,6 +410,9 @@ export default function Home() {
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
   const [cardTransition, setCardTransition] = useState<"none" | "swipe-left" | "swipe-right">("none");
+  const [showPronunciationFront, setShowPronunciationFront] = useState(true);
+  const [showBackTranslation, setShowBackTranslation] = useState(true);
+  const [showBackPronunciation, setShowBackPronunciation] = useState(true);
 
   const flashcardWords = useMemo(() => {
     let list = VOCAB;
@@ -493,7 +496,8 @@ export default function Home() {
     // Check database cache first (ignore fallback cache so we try to heal/regenerate with real AI if online)
     const cached = cardCache[currentWordObj.id];
     const isFallbackCard = cached && (cached.isFallback || (cached.wordTranslation && cached.wordTranslation.includes("คำแปลของ")));
-    if (cached && Array.isArray(cached.sentences) && cached.sentences.length > 0 && !isFallbackCard) {
+    const isLegacyCard = cached && (!cached.fullArticleThai);
+    if (cached && Array.isArray(cached.sentences) && cached.sentences.length > 0 && !isFallbackCard && !isLegacyCard) {
       setActiveCardData(cached);
       setActiveCardId(currentWordObj.id);
       setApiError(null);
@@ -576,6 +580,12 @@ export default function Home() {
   };
 
   // Speak pronunciation
+  const speakFullArticle = (card: CardData | null) => {
+    if (!card || !card.sentences) return;
+    const fullText = card.sentences.map((s) => s.sentence).join(" ");
+    speakWord(fullText);
+  };
+
   const speakWord = (wordText: string) => {
     if (typeof window !== "undefined" && window.speechSynthesis) {
       window.speechSynthesis.cancel();
@@ -1328,7 +1338,7 @@ export default function Home() {
                         </div>
 
                         {/* Title Word */}
-                        <div className="my-3 sm:my-4 text-center">
+                        <div className="my-2 sm:my-3 text-center">
                           <h3 className="text-2xl xs:text-3xl md:text-4xl font-black tracking-tight text-slate-800 inline-flex items-center gap-2.5 sm:gap-3 justify-center">
                             {currentWordObj.word}
                             <button
@@ -1337,7 +1347,7 @@ export default function Home() {
                                 speakWord(currentWordObj.word);
                               }}
                               className="bg-slate-100 hover:bg-slate-200 p-1.5 sm:p-2 rounded-full text-slate-500 hover:text-slate-800 transition"
-                              title="Pronounce"
+                              title="ออกเสียงคำศัพท์"
                             >
                               <svg className="w-4 h-4 sm:w-4.5 sm:h-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
@@ -1351,67 +1361,97 @@ export default function Home() {
                           )}
                         </div>
 
-                        {/* Article: All 5 Sentences as a unified passage */}
-                        <div className="flex-1 flex flex-col gap-2 justify-center">
+                        {/* UNIFIED 1-ARTICLE PASSAGE (บทความเดียวเชื่อมโยง 5 โครงสร้าง) */}
+                        <div className="flex-1 flex flex-col justify-center my-1 sm:my-2">
                           {loadingAI ? (
-                            <div className="flex flex-col items-center gap-3">
+                            <div className="flex flex-col items-center gap-3 py-8">
                               <div className="w-7 h-7 border-3 border-[#B8A3A0] border-t-transparent rounded-full animate-spin" />
                               <span className="text-[10px] text-slate-400 font-extrabold uppercase tracking-widest">
-                                Loading sentence data (fetching AI)...
+                                กำลังสร้างบทความเชื่อมโยง 5 โครงสร้างด้วย AI...
                               </span>
                             </div>
                           ) : activeCardData ? (
-                            <div className="bg-[#f8faff] border border-slate-100 rounded-2xl px-3.5 py-3.5 xs:px-4 xs:py-4 max-w-2xl mx-auto w-full text-left">
-                              <div className="flex flex-col gap-0">
-                                {activeCardData.sentences.map((s, idx) => (
-                                  <div key={idx} className="group">
-                                    <div className="flex items-start gap-2 py-2">
-                                      <span className="text-[7.5px] xs:text-[8px] font-extrabold bg-[#e6f4ff] text-[#0958d9] border border-[#d2e9ff] px-1.5 py-0.5 rounded shrink-0 mt-0.5 min-w-[40px] text-center leading-tight">
-                                        {s.structure}
-                                      </span>
-                                      <div className="flex-1 min-w-0">
-                                        <p className="text-[11.5px] xs:text-xs sm:text-[13px] font-semibold text-slate-800 leading-snug">
-                                          {renderInteractiveSentence(s.sentence)}
-                                        </p>
-                                        {s.thaiPronunciation && (
-                                          <p className="text-[9px] sm:text-[10px] text-[#A28C89] font-semibold tracking-wide mt-0.5 leading-snug italic">
-                                            อ่าน: {s.thaiPronunciation}
-                                          </p>
-                                        )}
-                                      </div>
-                                      <button
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          speakWord(s.sentence);
-                                        }}
-                                        className="bg-white hover:bg-sky-50 p-1.5 rounded-lg text-slate-400 hover:text-sky-600 border border-slate-200 transition shrink-0 opacity-60 group-hover:opacity-100"
-                                        title="Listen"
-                                      >
-                                        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-                                          <path strokeLinecap="round" strokeLinejoin="round" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
-                                        </svg>
-                                      </button>
+                            <div className="bg-[#f8faff] border border-slate-100 rounded-2xl p-4 sm:p-5 max-w-2xl mx-auto w-full text-left shadow-xs">
+                              {/* Article Header Controls */}
+                              <div className="flex items-center justify-between gap-2 border-b border-slate-100 pb-2.5 mb-3">
+                                <div className="flex items-center gap-2">
+                                  <span className="text-[10px] sm:text-xs font-bold bg-[#e6f4ff] text-[#0958d9] border border-[#d2e9ff] px-2.5 py-0.5 rounded-full flex items-center gap-1.5 shadow-2xs">
+                                    <span>📖</span>
+                                    <span>{activeCardData.articleTitle || "บทความสั้นเชื่อมโยง 5 โครงสร้าง"}</span>
+                                  </span>
+                                </div>
+
+                                <div className="flex items-center gap-2">
+                                  {/* Audio Button: Listen to Full Article */}
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      speakFullArticle(activeCardData);
+                                    }}
+                                    className="inline-flex items-center gap-1.5 bg-white hover:bg-sky-50 text-slate-700 hover:text-sky-600 border border-slate-200 px-2.5 py-1 rounded-lg text-[10px] sm:text-[11px] font-bold transition shadow-2xs"
+                                    title="ฟังเสียงบทความทั้งเรื่อง"
+                                  >
+                                    <svg className="w-3.5 h-3.5 text-sky-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                                      <path strokeLinecap="round" strokeLinejoin="round" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+                                    </svg>
+                                    <span>ฟังบทความ</span>
+                                  </button>
+
+                                  {/* Toggle Thai Pronunciation on Front */}
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setShowPronunciationFront(!showPronunciationFront);
+                                    }}
+                                    className="inline-flex items-center gap-1 bg-white hover:bg-slate-50 text-slate-600 hover:text-slate-900 border border-slate-200 px-2 py-1 rounded-lg text-[10px] font-bold transition shadow-2xs"
+                                    title="เปิด/ปิด คำอ่าน"
+                                  >
+                                    <span>🗣️ คำอ่าน: {showPronunciationFront ? "เปิด" : "ปิด"}</span>
+                                  </button>
+                                </div>
+                              </div>
+
+                              {/* The Cohesive Article Passage */}
+                              <div className="space-y-3">
+                                {/* Continuous Story Text: Paragraph Format */}
+                                <div className="text-[13px] xs:text-sm sm:text-[15px] font-medium text-slate-800 leading-relaxed space-y-1">
+                                  {activeCardData.sentences.map((s, idx) => (
+                                    <span key={idx} className="group inline">
+                                      <span className="inline hover:bg-sky-100/70 rounded px-0.5 transition cursor-pointer">
+                                        {renderInteractiveSentence(s.sentence)}
+                                      </span>{" "}
+                                    </span>
+                                  ))}
+                                </div>
+
+                                {/* Thai Phonetic Reading: Shown directly on Front */}
+                                {showPronunciationFront && (
+                                  <div className="bg-amber-50/70 border border-amber-100 rounded-xl p-2.5 sm:p-3 mt-3">
+                                    <div className="flex items-center gap-1.5 text-[9.5px] sm:text-[10px] font-extrabold text-[#A28C89] uppercase tracking-wider mb-1">
+                                      <span>🗣️</span>
+                                      <span>คำอ่านบทความ (Thai Reading Guide):</span>
                                     </div>
-                                    {idx < activeCardData.sentences.length - 1 && (
-                                      <div className="h-px bg-slate-100/70 mx-1" />
-                                    )}
+                                    <p className="text-[11px] sm:text-xs text-[#8c6f6b] font-medium leading-relaxed">
+                                      {activeCardData.sentences.map((s) => s.thaiPronunciation).filter(Boolean).join("  •  ")}
+                                    </p>
                                   </div>
-                                ))}
+                                )}
                               </div>
                             </div>
                           ) : (
-                            <p className="text-xs text-slate-400 text-center">Failed to load structure cards.</p>
+                            <p className="text-xs text-slate-400 text-center">ไม่สามารถโหลดข้อมูลบทความได้</p>
                           )}
                         </div>
 
+                        {/* Flip Hint */}
                         <div className="flex justify-center mt-2">
                           <span className="text-[9px] sm:text-[10px] text-slate-400 font-bold uppercase tracking-widest text-center animate-pulse leading-snug">
-                            พลิกการ์ดเพื่อดูคำแปลและโครงสร้างไวยากรณ์
+                            🔄 คลิกที่การ์ดเพื่อพลิกดูคำแปลบทความและถอดโครงสร้างทั้ง 5 ประโยค
                           </span>
                         </div>
                       </div>
 
-                      {/* CARD BACK: Shows Translations, Grammar breakdowns, and Memory Trick */}
+                      {/* CARD BACK: Shows Full Story Translation, 5 Grammar Structures, and Controls */}
                       <div className="absolute inset-0 card-face card-back w-full h-full bg-white/95 rounded-3xl p-3.5 sm:p-6 md:p-8 flex flex-col justify-between shadow-sm overflow-y-auto">
                         <div className="w-full flex justify-between items-center border-b border-slate-100 pb-2 sm:pb-3">
                           <span className="text-[8.5px] sm:text-[10px] text-slate-400 uppercase tracking-widest font-bold flex items-center gap-1.5 flex-wrap">
@@ -1451,75 +1491,139 @@ export default function Home() {
                           </div>
                         </div>
 
-                         {/* Translation List — Unified Article */}
-                         <div className="flex-1 flex flex-col gap-2 justify-center py-2">
-                           {activeCardData && (
-                             <div className="bg-[#f8faff] border border-slate-100 rounded-2xl px-3.5 py-3.5 xs:px-4 xs:py-4 max-w-2xl mx-auto w-full text-left">
-                               <div className="flex flex-col gap-0">
-                                 {activeCardData.sentences.map((s, idx) => (
-                                   <div key={idx} className="group">
-                                     {/* Sentence + Translation block */}
-                                     <div className="flex items-start gap-2 pt-2 pb-1">
-                                       <span className="text-[7.5px] xs:text-[8px] font-extrabold bg-[#e6f4ff] text-[#0958d9] border border-[#d2e9ff] px-1.5 py-0.5 rounded shrink-0 mt-0.5 min-w-[40px] text-center leading-tight">
-                                         {s.structure}
-                                       </span>
-                                       <div className="flex-1 min-w-0">
-                                         <p className="text-[11.5px] xs:text-xs sm:text-[13px] font-semibold text-slate-800 leading-snug">
-                                           {renderInteractiveSentence(s.sentence)}
-                                         </p>
-                                       </div>
-                                       <button
-                                         onClick={(e) => {
-                                           e.stopPropagation();
-                                           speakWord(s.sentence);
-                                         }}
-                                         className="bg-white hover:bg-sky-50 p-1.5 rounded-lg text-slate-400 hover:text-sky-600 border border-slate-200 transition shrink-0 opacity-60 group-hover:opacity-100"
-                                         title="Listen"
-                                       >
-                                         <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-                                           <path strokeLinecap="round" strokeLinejoin="round" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
-                                         </svg>
-                                       </button>
-                                     </div>
-                                     {/* Translation + Grammar reveal */}
-                                     <div className="ml-[52px] pl-2.5 border-l-2 border-[#EBE3DE] flex flex-col gap-0.5 pb-2">
-                                       <p className="text-[10.5px] xs:text-[11px] sm:text-xs font-bold text-[#A28C89] leading-snug">
-                                         แปล: {s.translation}
-                                       </p>
-                                       <p className="text-[9px] sm:text-[10px] text-slate-500 font-semibold leading-normal">
-                                         โครงสร้าง: {s.grammar}
-                                       </p>
-                                     </div>
-                                     {idx < activeCardData.sentences.length - 1 && (
-                                       <div className="h-px bg-slate-100 mx-1" />
-                                     )}
-                                   </div>
-                                 ))}
-                               </div>
-                             </div>
-                           )}
-                         </div>
+                        {/* Back Content: Full Article Translation + 5 Structures Breakdown */}
+                        <div className="flex-1 flex flex-col gap-3 py-2">
+                          {activeCardData && (
+                            <div className="max-w-2xl mx-auto w-full space-y-3">
+                              {/* 1. Full Story Translation Block */}
+                              <div className="bg-[#f8faff] border border-slate-100 rounded-2xl p-3.5 sm:p-4 text-left">
+                                <div className="flex items-center justify-between border-b border-slate-100 pb-2 mb-2">
+                                  <span className="text-[10px] sm:text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                                    <span>📜</span>
+                                    <span>คำแปลบทความทั้งเรื่อง (Full Story Translation)</span>
+                                  </span>
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      speakFullArticle(activeCardData);
+                                    }}
+                                    className="inline-flex items-center gap-1 text-[10px] font-bold text-sky-600 hover:text-sky-800 bg-sky-50 px-2 py-0.5 rounded border border-sky-200 transition"
+                                    title="ฟังบทความทั้งเรื่อง"
+                                  >
+                                    <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                                      <path strokeLinecap="round" strokeLinejoin="round" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+                                    </svg>
+                                    <span>ฟังบทความ</span>
+                                  </button>
+                                </div>
+                                <p className="text-[12px] sm:text-[13px] text-slate-700 font-medium leading-relaxed bg-white/70 rounded-xl p-2.5 border border-slate-100">
+                                  {activeCardData.fullArticleThai || activeCardData.sentences.map((s) => s.translation).join(" ")}
+                                </p>
+                              </div>
 
-                        {/* Usage Pattern Section */}
-                        {activeCardData?.trick && (
-                          <div className="bg-indigo-50/30 border border-indigo-100 rounded-2xl p-3.5 flex gap-3 items-start mt-2">
-                            <div className="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
-                              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                              </svg>
+                              {/* 2. 5 Sentence Structures Breakdown */}
+                              <div className="bg-[#f8faff] border border-slate-100 rounded-2xl p-3.5 sm:p-4 text-left">
+                                <div className="flex items-center justify-between border-b border-slate-100 pb-2 mb-3">
+                                  <span className="text-[10px] sm:text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                                    <span>🧩</span>
+                                    <span>ถอดโครงสร้างทั้ง 5 ประโยคในบทความ</span>
+                                  </span>
+
+                                  {/* Quick Toggles: Open Pronunciation & Translation */}
+                                  <div className="flex items-center gap-1.5">
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setShowBackTranslation(!showBackTranslation);
+                                      }}
+                                      className={`text-[9px] font-bold px-2 py-0.5 rounded border transition ${
+                                        showBackTranslation ? "bg-amber-100 text-amber-900 border-amber-200" : "bg-white text-slate-500 border-slate-200"
+                                      }`}
+                                      title="เปิด/ปิด คำแปล"
+                                    >
+                                      👁️ คำแปล: {showBackTranslation ? "เปิด" : "ปิด"}
+                                    </button>
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setShowBackPronunciation(!showBackPronunciation);
+                                      }}
+                                      className={`text-[9px] font-bold px-2 py-0.5 rounded border transition ${
+                                        showBackPronunciation ? "bg-emerald-100 text-emerald-900 border-emerald-200" : "bg-white text-slate-500 border-slate-200"
+                                      }`}
+                                      title="เปิด/ปิด คำอ่าน"
+                                    >
+                                      🗣️ คำอ่าน: {showBackPronunciation ? "เปิด" : "ปิด"}
+                                    </button>
+                                  </div>
+                                </div>
+
+                                <div className="flex flex-col gap-2.5">
+                                  {activeCardData.sentences.map((s, idx) => (
+                                    <div key={idx} className="bg-white/80 border border-slate-100/90 rounded-xl p-2.5 flex flex-col gap-1.5">
+                                      <div className="flex items-start justify-between gap-2">
+                                        <div className="flex items-start gap-2 flex-1 min-w-0">
+                                          <span className="text-[8px] xs:text-[8.5px] font-extrabold bg-[#e6f4ff] text-[#0958d9] border border-[#d2e9ff] px-1.5 py-0.5 rounded shrink-0 mt-0.5 min-w-[42px] text-center leading-tight">
+                                            {s.structure}
+                                          </span>
+                                          <div className="flex-1 min-w-0">
+                                            <p className="text-[11.5px] xs:text-xs sm:text-[13px] font-semibold text-slate-800 leading-snug">
+                                              {renderInteractiveSentence(s.sentence)}
+                                            </p>
+                                            {showBackPronunciation && s.thaiPronunciation && (
+                                              <p className="text-[9.5px] sm:text-[10px] text-[#A28C89] font-medium tracking-wide mt-0.5 leading-snug">
+                                                อ่าน: {s.thaiPronunciation}
+                                              </p>
+                                            )}
+                                          </div>
+                                        </div>
+                                        <button
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            speakWord(s.sentence);
+                                          }}
+                                          className="bg-slate-50 hover:bg-sky-50 p-1.5 rounded-lg text-slate-400 hover:text-sky-600 border border-slate-200 transition shrink-0"
+                                          title="ฟังประโยคนี้"
+                                        >
+                                          <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+                                          </svg>
+                                        </button>
+                                      </div>
+
+                                      {/* Translation & Grammar */}
+                                      <div className="ml-[50px] pl-2 border-l-2 border-[#EBE3DE] flex flex-col gap-0.5">
+                                        {showBackTranslation && (
+                                          <p className="text-[10.5px] xs:text-[11px] sm:text-xs font-bold text-[#A28C89] leading-snug">
+                                            แปล: {s.translation}
+                                          </p>
+                                        )}
+                                        <p className="text-[9px] sm:text-[10px] text-slate-500 font-semibold leading-normal font-sans">
+                                          โครงสร้าง: {s.grammar}
+                                        </p>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+
+                              {/* 3. Memory Trick & Usage Tips */}
+                              {activeCardData?.trick && (
+                                <div className="bg-amber-50/60 border border-amber-100 rounded-xl p-3 text-left">
+                                  <span className="text-[9.5px] sm:text-[10.5px] font-extrabold text-[#A28C89] uppercase tracking-wider block mb-1 flex items-center gap-1">
+                                    <span>💡</span> เทคนิคการใช้และข้อควรระวัง:
+                                  </span>
+                                  <p className="text-[11px] sm:text-xs text-slate-700 leading-relaxed font-sans font-medium">
+                                    {activeCardData.trick}
+                                  </p>
+                                </div>
+                              )}
                             </div>
-                            <div className="flex flex-col gap-0.5">
-                              <span className="text-[10px] text-indigo-600 font-bold uppercase tracking-wider">รูปแบบและวิธีการใช้งาน (Usage & Grammar Patterns)</span>
-                              <p className="text-xs font-semibold text-slate-600 leading-relaxed">
-                                {activeCardData.trick}
-                              </p>
-                            </div>
-                          </div>
-                        )}
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
-
 
                   {/* Starred Notes Input Area */}
                   <div className="w-full max-w-xl bg-white border border-[#E5E0DC] rounded-2xl p-4 flex flex-col gap-3 shadow-sm">
