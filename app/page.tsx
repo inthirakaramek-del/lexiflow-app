@@ -1414,7 +1414,13 @@ export default function Home() {
                               </span>
                             </div>
                           ) : activeCardData ? (
-                            <div className="bg-[#f8faff] border border-slate-100 rounded-2xl p-4 sm:p-5 max-w-2xl mx-auto w-full text-left shadow-xs">
+                            <div
+                              className="bg-[#f8faff] border border-slate-100 rounded-2xl p-4 sm:p-5 max-w-2xl mx-auto w-full text-left shadow-xs overflow-y-auto max-h-[52vh] sm:max-h-[44vh]"
+                              onTouchStart={(e) => e.stopPropagation()}
+                              onTouchMove={(e) => e.stopPropagation()}
+                              onClick={(e) => e.stopPropagation()}
+                              onWheel={(e) => e.stopPropagation()}
+                            >
                               {/* Article Header Controls */}
                               <div className="flex items-center justify-between gap-2 border-b border-slate-100 pb-2.5 mb-3">
                                 <div className="flex items-center gap-2">
