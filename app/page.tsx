@@ -845,6 +845,9 @@ export default function Home() {
         }
         .card-face {
           backface-visibility: hidden;
+          overflow-y: auto;
+          -webkit-overflow-scrolling: touch;
+          touch-action: pan-y;
         }
         .card-back {
           transform: rotateY(180deg);
@@ -1282,13 +1285,17 @@ export default function Home() {
 
                   {/* Outer Flip Card Container */}
                   <div
-                    onClick={() => {
+                    onClick={(e) => {
+                      // Prevent flip if the click target is a scrollable card-face that was scrolled
+                      const target = e.target as HTMLElement;
+                      const face = target.closest(".card-face") as HTMLElement | null;
+                      if (face && face.scrollTop > 0) return;
                       if (!loadingAI) setIsFlipped((prev) => !prev);
                     }}
-                    className="w-full max-w-3xl min-h-[380px] xs:min-h-[420px] sm:min-h-[500px] cursor-pointer card-perspective"
+                    className="w-full max-w-3xl min-h-[420px] sm:min-h-[500px] cursor-pointer card-perspective"
                   >
                     <div
-                      className={`w-full h-full min-h-[380px] xs:min-h-[420px] sm:min-h-[500px] relative card-inner rounded-3xl border border-[#E5E0DC] shadow-lg shadow-stone-200/30 ${
+                      className={`w-full min-h-[420px] sm:min-h-[500px] relative card-inner rounded-3xl border border-[#E5E0DC] shadow-lg shadow-stone-200/30 ${
                         isFlipped ? "card-flipped" : ""
                       } ${
                         cardTransition === "swipe-left"
