@@ -1,10 +1,322 @@
 {
   "progress": {
-    "masteredIds": [],
+    "notes": {},
     "starredIds": [],
-    "notes": {}
+    "masteredIds": [
+      "w-0",
+      "w-1",
+      "w-2",
+      "w-3",
+      "w-4"
+    ]
   },
-  "cardCache": {},
+  "cardCache": {
+    "w-0": {
+      "trick": "ใช้ 'a bit' เพื่อลดความรุนแรงของคำคุณศัพท์หรือกริยาวิเศษณ์ ให้ความรู้สึกว่า 'เล็กน้อย' 'นิดหน่อย' หรือ 'ค่อนข้าง' มักใช้ในบริบทที่ไม่เป็นทางการ สามารถใช้แทน 'a little' ได้ เช่น 'I'm a bit tired' (ฉันเหนื่อยเล็กน้อย) หรือ 'It's a bit cold today' (วันนี้ค่อนข้างหนาว) ใช้ได้ทั้งกับความรู้สึก สภาพอากาศ หรือลักษณะของสิ่งต่างๆ",
+      "sentences": [
+        {
+          "grammar": "S (I: ฉัน) + V (worried: กังวล)",
+          "sentence": "Before the important presentation, I worried a bit.",
+          "structure": "S + V",
+          "translation": "ก่อนการนำเสนอที่สำคัญ ฉันรู้สึกกังวลเล็กน้อย",
+          "thaiPronunciation": "บีฟอร์ เดอะ อิมพอร์แทนท์ พรีเซนเทชัน ไอ วอร์ริด อะ บิท"
+        },
+        {
+          "grammar": "S (I: ฉัน) + V (checked: ตรวจทาน) + O (my notes: บันทึกของฉัน)",
+          "sentence": "I checked my notes one last time.",
+          "structure": "S + V + O",
+          "translation": "ฉันตรวจทานบันทึกของฉันเป็นครั้งสุดท้าย",
+          "thaiPronunciation": "ไอ เช็คด์ มาย โน้ทส์ วัน ลาสท์ ไทม์"
+        },
+        {
+          "grammar": "S (The large auditorium: ห้องประชุมขนาดใหญ่) + V (seemed: ดูเหมือน) + C (intimidating: น่าเกรงขาม)",
+          "sentence": "The large auditorium seemed a bit intimidating.",
+          "structure": "S + V + C",
+          "translation": "ห้องประชุมขนาดใหญ่ดูน่าเกรงขามเล็กน้อย",
+          "thaiPronunciation": "เดอะ ลาร์จ ออดิทอเรียม ซีมด์ อะ บิท อินทิมิเดทิง"
+        },
+        {
+          "grammar": "S (My professor: อาจารย์ของฉัน) + V (offered: มอบให้) + IO (me: ฉัน) + DO (a reassuring smile: รอยยิ้มที่ทำให้มั่นใจ)",
+          "sentence": "My professor then offered me a reassuring smile.",
+          "structure": "S + V + IO + DO",
+          "translation": "จากนั้นอาจารย์ของฉันก็มอบรอยยิ้มที่ทำให้ฉันอุ่นใจ",
+          "thaiPronunciation": "มาย โปรเฟสเซอร์ เดน ออฟเฟอร์ด มี อะ รีแอชเชอริง สไมล์"
+        },
+        {
+          "grammar": "S (His encouragement: กำลังใจของท่าน) + V (made: ทำให้) + O (the whole experience: ประสบการณ์ทั้งหมด) + C (less stressful: ผ่อนคลายลง)",
+          "sentence": "His encouragement made the whole experience a bit less stressful.",
+          "structure": "S + V + O + C",
+          "translation": "กำลังใจของท่านทำให้ประสบการณ์ทั้งหมดผ่อนคลายลงเล็กน้อย",
+          "thaiPronunciation": "ฮิส เอ็นเคอเรจเม้นท์ เมด เดอะ โฮล เอ็กซ์พีเรียนซ์ อะ บิท เลส สเตรสฟูล"
+        }
+      ],
+      "articleTitle": "A Bit of Encouragement",
+      "fullArticleThai": "ก่อนการนำเสนอที่สำคัญ ฉันรู้สึกกังวลเล็กน้อย ฉันตรวจทานบันทึกของฉันเป็นครั้งสุดท้าย ห้องประชุมขนาดใหญ่ดูน่าเกรงขามเล็กน้อย จากนั้นอาจารย์ของฉันก็มอบรอยยิ้มที่ทำให้ฉันอุ่นใจ กำลังใจของท่านทำให้ประสบการณ์ทั้งหมดผ่อนคลายลงเล็กน้อย",
+      "wordTranslation": "เล็กน้อย",
+      "thaiPronunciation": "อะ บิท"
+    },
+    "w-1": {
+      "wordTranslation": "ข้างบน, เหนือ",
+      "thaiPronunciation": "อะ-บัฟ",
+      "sentences": [
+        {
+          "structure": "S + V",
+          "sentence": "Clouds floated above.",
+          "translation": "เมฆลอยอยู่ข้างบน",
+          "thaiPronunciation": "คลาวดส์ โฟลเท็ด อะ-บัฟ",
+          "grammar": "S (Clouds: เมฆ) + V (floated: ลอย) + adv (above: ข้างบน)"
+        },
+        {
+          "structure": "S + V + O",
+          "sentence": "They spotted a steep path above.",
+          "translation": "พวกเขาเห็นทางลาดชันอยู่ข้างบน",
+          "thaiPronunciation": "เดย์ สป็อทเท็ด อะ สตีพ พาธ อะ-บัฟ",
+          "grammar": "S (They: พวกเขา) + V (spotted: เห็น) + O (a steep path: ทางลาดชัน) + adv (above: ข้างบน)"
+        },
+        {
+          "structure": "S + V + C",
+          "sentence": "The sky above appeared vast and endless.",
+          "translation": "ท้องฟ้าด้านบนดูเวิ้งว้างและไร้ขีดจำกัด",
+          "thaiPronunciation": "เดอะ สกาย อะ-บัฟ แอพเพียร์ด วาสท์ แอนด์ เอนด์เลส",
+          "grammar": "S (The sky above: ท้องฟ้าด้านบน) + V (appeared: ดูเหมือน) + C (vast: เวิ้งว้าง) + conj (and: และ) + C (endless: ไร้ขีดจำกัด)"
+        },
+        {
+          "structure": "S + V + IO + DO",
+          "sentence": "The guide showed them the panoramic view above the clouds.",
+          "translation": "ไกด์ได้แสดงให้พวกเขาเห็นทิวทัศน์พาโนรามาเหนือเมฆ",
+          "thaiPronunciation": "เดอะ ไกด์ โชว์ด เด็ม เดอะ พาโนรามิก วิว อะ-บัฟ เดอะ คลาวดส์",
+          "grammar": "S (The guide: ไกด์) + V (showed: แสดง) + IO (them: พวกเขา) + DO (the panoramic view: ทิวทัศน์พาโนรามา) + prep phrase (above the clouds: เหนือเมฆ)"
+        },
+        {
+          "structure": "S + V + O + C",
+          "sentence": "They considered the entire experience a memory above compare.",
+          "translation": "พวกเขาถือว่าประสบการณ์ทั้งหมดเป็นความทรงจำที่เหนือกว่าสิ่งใด",
+          "thaiPronunciation": "เดย์ คอนซิดเดอร์ด ดิ เอนไทร์ เอ็กซ์พีเรียนซ์ อะ เมมโมรี่ อะ-บัฟ คอมแพร์",
+          "grammar": "S (They: พวกเขา) + V (considered: ถือว่า) + O (the entire experience: ประสบการณ์ทั้งหมด) + C (a memory: ความทรงจำ) + prep phrase (above compare: ที่เหนือกว่าสิ่งใด)"
+        }
+      ],
+      "trick": "Above ใช้ได้หลายความหมายเลยนะ! หลักๆ คือ 'ข้างบน' หรือ 'เหนือกว่า'1. บอกตำแหน่ง: 'อยู่เหนือกว่า' หรือ 'อยู่สูงกว่า' เช่น \"The birds flew above the trees.\" (นกบินอยู่เหนือต้นไม้)2. บอกระดับ/ปริมาณที่สูงกว่า: 'มากกว่า', 'เกินกว่า' เช่น \"The temperature is above 30 degrees Celsius.\" (อุณหภูมิสูงกว่า 30 องศาเซลเซียส) หรือ \"Your work is above average.\" (ผลงานของคุณสูงกว่าค่าเฉลี่ย)3. เปรียบเทียบเชิงคุณภาพ: 'เหนือกว่า', 'ดีกว่า', 'สำคัญกว่า' เช่น \"She values honesty above all else.\" (เธอให้ความสำคัญกับความซื่อสัตย์เหนือสิ่งอื่นใด)4. ในวลีเฉพาะ: เช่น \"above board\" (ซื่อสัตย์สุจริต) หรือ \"above suspicion\" (พ้นจากข้อสงสัย)จำไว้ว่า 'above' ใช้เมื่อสิ่งหนึ่งอยู่สูงกว่าอีกสิ่งหนึ่งในแนวตั้ง หรือมีระดับ/คุณภาพที่เหนือกว่า ใช้บ่อยในชีวิตประจำวันแน่นอน!",
+      "articleTitle": "High Above",
+      "fullArticleThai": "เมฆลอยอยู่ข้างบน พวกเขาเห็นทางลาดชันอยู่ข้างบน ท้องฟ้าด้านบนดูเวิ้งว้างและไร้ขีดจำกัด ไกด์ได้แสดงให้พวกเขาเห็นทิวทัศน์พาโนรามาเหนือเมฆ พวกเขาถือว่าประสบการณ์ทั้งหมดเป็นความทรงจำที่เหนือกว่าสิ่งใด"
+    },
+    "w-3": {
+      "trick": "“a little” (det.) ใช้เพื่อระบุปริมาณที่ “เล็กน้อย” หรือ “นิดหน่อย” โดยหลักแล้วจะใช้กับคำนามนับไม่ได้ เช่น a little sugar (น้ำตาลนิดหน่อย), a little money (เงินเล็กน้อย) และ a little time (เวลานิดหน่อย) นอกจากนี้ยังสามารถใช้กับคำนามนับได้ในความหมายว่า ‘เล็กๆ’ หรือ ‘ไม่สำคัญมากนัก’ เช่น a little problem (ปัญหาเล็กๆ), a little snack (ของว่างเล็กน้อย) ตัวอย่างเช่น ‘Could I have a little water?’ (ขอน้ำนิดหน่อยได้ไหม?) หรือ ‘She made a little mistake.’ (เธอทำผิดพลาดเล็กน้อย)",
+      "sentences": [
+        {
+          "grammar": "S (A little time: เวลาเล็กน้อย) + V (passed: ผ่านไป)",
+          "sentence": "A little time passed as Emma struggled with her complex coding assignment.",
+          "structure": "S + V",
+          "translation": "เวลาเล็กน้อยผ่านไปขณะที่เอ็มม่าพยายามอย่างหนักกับงานเขียนโค้ดที่ซับซ้อนของเธอ",
+          "thaiPronunciation": "อะ ลิท-เทิล ไทม์ พาสดฺ แอส เอ็ม-ม่า สตรัก-เกิลด์ วิธ เฮอร์ คอม-เพล็กซ์ โคด-ดิง อะ-ไซน์-เมนท์"
+        },
+        {
+          "grammar": "S (She: เธอ) + V (needed: ต้องการ) + O (a little inspiration: แรงบันดาลใจเล็กน้อย)",
+          "sentence": "She needed a little inspiration to solve the tricky bug.",
+          "structure": "S + V + O",
+          "translation": "เธอต้องการแรงบันดาลใจเล็กน้อยเพื่อแก้ไขบั๊กที่ยุ่งยาก",
+          "thaiPronunciation": "ชี นีด-เดด อะ ลิท-เทิล อิน-สปิ-เร-ชั่น ทู โซลฟ์ เดอะ ทริก-กี้ บัก"
+        },
+        {
+          "grammar": "S (The feeling of finally cracking it: ความรู้สึกที่ในที่สุดก็แก้ปัญหานั้นได้สำเร็จ) + V (felt like: รู้สึกเหมือนเป็น) + C (a little miracle: ปาฏิหาริย์เล็กๆ)",
+          "sentence": "The feeling of finally cracking it felt like a little miracle.",
+          "structure": "S + V + C",
+          "translation": "ความรู้สึกที่ในที่สุดก็แก้ปัญหานั้นได้สำเร็จให้ความรู้สึกเหมือนปาฏิหาริย์เล็กๆ",
+          "thaiPronunciation": "เดอะ ฟีล-ลิ่ง ออฟ ไฟ-นอล-ลี่ แครก-กิง อิท เฟลท์ ไลค์ อะ ลิท-เทิล มิ-รา-เคิล"
+        },
+        {
+          "grammar": "S (Her mentor: ที่ปรึกษาของเธอ) + V (gave: ให้) + IO (her: เธอ) + DO (a little guidance: คำแนะนำเล็กน้อย)",
+          "sentence": "Her mentor often gave her a little guidance whenever she faced a roadblock.",
+          "structure": "S + V + IO + DO",
+          "translation": "ที่ปรึกษาของเธอมักจะให้คำแนะนำเล็กน้อยแก่เธอเสมอเมื่อเธอเผชิญกับอุปสรรค",
+          "thaiPronunciation": "เฮอร์ เมน-ทอร์ ออฟ-เทน เกฟ เฮอร์ อะ ลิท-เทิล ไกด์-แดนซ์ เวน-เอฟ-เวอร์ ชี เฟซดฺ อะ โร้ด-บล็อก"
+        },
+        {
+          "grammar": "S (She: เธอ) + V (considered: ถือว่า) + O (every solved problem: ทุกปัญหาที่แก้ได้) + C (a little triumph: ชัยชนะเล็กๆ)",
+          "sentence": "She considered every solved problem a little triumph.",
+          "structure": "S + V + O + C",
+          "translation": "เธอถือว่าทุกปัญหาที่แก้ได้เป็นชัยชนะเล็กๆ น้อยๆ",
+          "thaiPronunciation": "ชี คอน-ซิ-เดอร์ดฺ เอฟ-วรี โซลฟด์ พร็อบ-เบลม อะ ลิท-เทิล ไทร-อัมพ์"
+        }
+      ],
+      "articleTitle": "Emma's Little Victories",
+      "fullArticleThai": "เวลาเล็กน้อยผ่านไปขณะที่เอ็มม่าพยายามอย่างหนักกับงานเขียนโค้ดที่ซับซ้อนของเธอ เธอต้องการแรงบันดาลใจเล็กน้อยเพื่อแก้ไขบั๊กที่ยุ่งยาก ความรู้สึกที่ในที่สุดก็แก้ปัญหานั้นได้สำเร็จให้ความรู้สึกเหมือนปาฏิหาริย์เล็กๆ ที่ปรึกษาของเธอมักจะให้คำแนะนำเล็กน้อยแก่เธอเสมอเมื่อเธอเผชิญกับอุปสรรค เธอถือว่าทุกปัญหาที่แก้ได้เป็นชัยชนะเล็กๆ น้อยๆ",
+      "wordTranslation": "นิดหน่อย, เล็กน้อย (ใช้กับคำนามนับไม่ได้ หรือใช้กับนามนับได้ในความหมายว่า 'เล็กๆ')",
+      "thaiPronunciation": "อะ-ลิท-เทิล"
+    },
+    "w-4": {
+      "trick": "a lot เป็นคำกำหนดปริมาณ (determiner) ที่ใช้ได้ทั้งกับคำนามนับได้พหูพจน์และคำนามนับไม่ได้ โดยจะต้องมีคำว่า 'of' ตามหลังเสมอ (เช่น 'a lot of people', 'a lot of water') เพื่อแสดงปริมาณว่า 'จำนวนมาก' หรือ 'มากมาย' ต่างจาก 'a lot' ที่ใช้เป็นกริยาวิเศษณ์ (adverb) โดยไม่มี 'of' ตามหลัง ซึ่งจะแปลว่า 'มาก' หรือ 'อย่างมาก' (เช่น 'I like it a lot.')",
+      "sentences": [
+        {
+          "grammar": "S (A lot of things: หลายสิ่งหลายอย่าง) + V (happened: เกิดขึ้น)",
+          "sentence": "A lot of things happened.",
+          "structure": "S + V",
+          "translation": "หลายสิ่งหลายอย่างเกิดขึ้น",
+          "thaiPronunciation": "อะ ล็อท ออฟ ติงส์ แฮพเพินด์"
+        },
+        {
+          "grammar": "S (She: เธอ) + V (prepared: เตรียม) + O (a lot of dishes: อาหารมากมาย)",
+          "sentence": "She prepared a lot of dishes for the party.",
+          "structure": "S + V + O",
+          "translation": "เธอเตรียมอาหารมากมายสำหรับงานปาร์ตี้",
+          "thaiPronunciation": "ชี พรีแพร์ด อะ ล็อท ออฟ ดิชเชส ฟอร์ เดอะ ปาร์ตี้"
+        },
+        {
+          "grammar": "S (Those: สิ่งเหล่านั้น) + V (were: เป็น) + C (a lot of good ideas: ความคิดที่ดีจำนวนมาก)",
+          "sentence": "Those were a lot of good ideas.",
+          "structure": "S + V + C",
+          "translation": "สิ่งเหล่านั้นเป็นความคิดที่ดีจำนวนมาก",
+          "thaiPronunciation": "โธส เวอร์ อะ ล็อท ออฟ กูด ไอเดียส์"
+        },
+        {
+          "grammar": "S (The company: บริษัท) + V (offered: เสนอ) + IO (him: เขา) + DO (a lot of benefits: ผลประโยชน์มากมาย)",
+          "sentence": "The company offered him a lot of benefits.",
+          "structure": "S + V + IO + DO",
+          "translation": "บริษัทเสนอผลประโยชน์มากมายให้เขา",
+          "thaiPronunciation": "เดอะ คัมพะนี ออฟเฟอร์ด ฮิม อะ ล็อท ออฟ เบเนฟิตส์"
+        },
+        {
+          "grammar": "S (We: เรา) + V (found: พบ) + O (a lot of items: ของหลายรายการ) + C (missing: หายไป)",
+          "sentence": "We found a lot of items missing from the inventory.",
+          "structure": "S + V + O + C",
+          "translation": "เราพบว่ามีของหลายรายการหายไปจากคลังสินค้า",
+          "thaiPronunciation": "วี เฟาวน์ด อะ ล็อท ออฟ ไอเทมส์ มิสซิ่ง ฟรอม ดิ อินเวนทอรี่"
+        }
+      ],
+      "wordTranslation": "จำนวนมาก, มากมาย",
+      "thaiPronunciation": "อะ ล็อท"
+    },
+    "w-5": {
+      "trick": "เคล็ดลับ: 'a' และ 'an' คือคำนำหน้านามไม่ชี้เฉพาะ (indefinite articles) ใช้กับคำนามนับได้เอกพจน์เพื่อบอกว่าสิ่งนั้นเป็นสิ่งทั่วไป ไม่ได้เจาะจงสิ่งใดสิ่งหนึ่งโดยเฉพาะ โดยมีหลักการใช้ดังนี้: - 'a' ใช้เมื่อคำนามที่ตามมาขึ้นต้นด้วยเสียงพยัญชนะ (ไม่ใช่ตัวอักษรพยัญชนะเสมอไป) เช่น a book (อะ บุ๊ก), a cat (อะ แคท), a university (อะ ยูนิเวอร์ซิตี้ - 'ยู' เป็นเสียงพยัญชนะ). - 'an' ใช้เมื่อคำนามที่ตามมาขึ้นต้นด้วยเสียงสระ (a, e, i, o, u) หรือเสียงที่เหมือนเสียงสระ เช่น an apple (แอน แอปเปิล), an hour (แอน อาวเออร์ - 'อาว' เป็นเสียงสระ). จำง่ายๆ คือให้ฟังที่เสียงแรกของคำที่ตามมา ไม่ใช่แค่ดูตัวอักษร!",
+      "sentences": [
+        {
+          "grammar": "S (An important presentation: การนำเสนอที่สำคัญ) + V (approaches: กำลังใกล้เข้ามา)",
+          "sentence": "An important presentation approaches.",
+          "structure": "S + V",
+          "translation": "การนำเสนอที่สำคัญกำลังใกล้เข้ามา",
+          "thaiPronunciation": "แอน อิมพอร์แท็นท พรีเซ็นเทชัน แอพโพรชเชส"
+        },
+        {
+          "grammar": "S (She: เธอ) + V (prepared: เตรียม) + O (a detailed outline: โครงร่างโดยละเอียด)",
+          "sentence": "She prepared a detailed outline.",
+          "structure": "S + V + O",
+          "translation": "เธอเตรียมโครงร่างโดยละเอียด",
+          "thaiPronunciation": "ชี พรีแพร์ด อะ ดีเทลด เอาต์ไลน์"
+        },
+        {
+          "grammar": "S (The upcoming presentation: การนำเสนอที่กำลังจะมาถึง) + V (was: เป็น) + C (a big challenge: ความท้าทายครั้งใหญ่)",
+          "sentence": "The upcoming presentation was a big challenge.",
+          "structure": "S + V + C",
+          "translation": "การนำเสนอที่กำลังจะมาถึงเป็นความท้าทายครั้งใหญ่",
+          "thaiPronunciation": "เดอะ อัพคัมมิง พรีเซ็นเทชัน วอส อะ บิก แชลเลนจ์"
+        },
+        {
+          "grammar": "S (Her mentor: ที่ปรึกษาของเธอ) + V (offered: เสนอแนะ) + IO (her: เธอ) + DO (a new perspective: มุมมองใหม่)",
+          "sentence": "Her mentor offered her a new perspective on the topic.",
+          "structure": "S + V + IO + DO",
+          "translation": "ที่ปรึกษาของเธอเสนอแนะมุมมองใหม่ในหัวข้อนั้นให้เธอ",
+          "thaiPronunciation": "เฮอ เม็นเทอร์ ออฟเฟิร์ด เฮอ อะ นิว เพอร์สเป็กทีฟ ออน เดอะ ทอปปิก"
+        },
+        {
+          "grammar": "S (She: เธอ) + V (considered: ถือว่า) + O (the feedback: ข้อเสนอแนะนั้น) + C (a tremendous asset: เป็นทรัพย์สินที่มีค่ามาก)",
+          "sentence": "She considered the feedback a tremendous asset.",
+          "structure": "S + V + O + C",
+          "translation": "เธอถือว่าข้อเสนอแนะนั้นเป็นทรัพย์สินที่มีค่ามาก",
+          "thaiPronunciation": "ชี คอนซิดเดิร์ด เดอะ ฟีดแบ็ก อะ ทรีเม็นดัส แอสเซ็ต"
+        }
+      ],
+      "articleTitle": "A Presentation Journey",
+      "fullArticleThai": "การนำเสนอที่สำคัญกำลังใกล้เข้ามา เธอเตรียมโครงร่างโดยละเอียด การนำเสนอที่กำลังจะมาถึงเป็นความท้าทายครั้งใหญ่ ที่ปรึกษาของเธอเสนอแนะมุมมองใหม่ในหัวข้อนั้นให้เธอ เธอถือว่าข้อเสนอแนะนั้นเป็นทรัพย์สินที่มีค่ามาก",
+      "wordTranslation": "หนึ่ง (คำนำหน้านามไม่ชี้เฉพาะ)",
+      "thaiPronunciation": "อะ, แอน"
+    },
+    "w-6": {
+      "trick": "คำว่า \"a.m.\" เป็นคำขยาย ให้ลองจับคู่เข้ากับกริยาหรือคุณศัพท์ที่เห็นบ่อยๆ",
+      "sentences": [
+        {
+          "grammar": "S (They: ประธาน) + V (acted: ปฏิบัติ/แสดงออก) + M (a.m.: อย่างa.m.)",
+          "sentence": "They acted a.m..",
+          "structure": "S + V",
+          "translation": "พวกเขา ได้ปฏิบัติอย่างมีระดับ (a.m.)",
+          "thaiPronunciation": "เด แคทด์ แม"
+        },
+        {
+          "grammar": "S (We: พวกเรา) + V (understood: เข้าใจ) + O (their work: งานของพวกเขา) + M (a.m.: อย่างa.m.)",
+          "sentence": "We understood their work a.m..",
+          "structure": "S + V + O",
+          "translation": "พวกเราเข้าใจงานของพวกเขาในรูปแบบ (a.m.)",
+          "thaiPronunciation": "วี อันเดอร์สทูด แดร์ เวิร์ก แม"
+        },
+        {
+          "grammar": "S (The presentation: การนำเสนอ) + V (was: เป็น/คือ) + C (strange: แปลก) + M (a.m.: อย่างa.m.)",
+          "sentence": "The presentation was a.m. strange.",
+          "structure": "S + V + C",
+          "translation": "การนำเสนอผลงานนั้นมีความแปลกในระดับ (a.m.)",
+          "thaiPronunciation": "เดอะ พรีเซนเทชัน วอส แม สเตรนจ์"
+        },
+        {
+          "grammar": "S (She: เธอ) + V (gave: ให้) + IO (them: พวกเขา) + DO (a a.m. clear answer: คำตอบที่ขยายความ (a.m.))",
+          "sentence": "She gave them a a.m. clear answer.",
+          "structure": "S + V + IO + DO",
+          "translation": "เธอตอบคำถามให้พวกเขากระจ่างชัดเจนแบบ (a.m.)",
+          "thaiPronunciation": "ชี เกฟ ทฮเอม อะ แม เคลียร์ แอนเซอร์"
+        },
+        {
+          "grammar": "S (We: พวกเรา) + V (consider: ถือว่า) + O (the task: ภารกิจ) + C (completed: เสร็จสิ้น) + M (a.m.: อย่างa.m.)",
+          "sentence": "We consider the task a.m. completed.",
+          "structure": "S + V + O + C",
+          "translation": "พวกเราถือว่าภารกิจนั้นสมบูรณ์แบบเรียบร้อย (a.m.)",
+          "thaiPronunciation": "วี คอนซิเดอร์ เดอะ ทาสก์ แม คอมพลเอทด์"
+        }
+      ],
+      "isFallback": true,
+      "wordTranslation": "คำแปลของคำว่า \"a.m.\"",
+      "thaiPronunciation": "แม"
+    },
+    "w-8": {
+      "trick": "abandoned (ที่ถูกทิ้งร้าง) เป็นคำคุณศัพท์ (adjective) ที่ใช้อธิบายถึงสิ่งของ สถานที่ หรือแม้กระทั่งความรู้สึกที่ถูกทอดทิ้ง ไม่ได้รับการดูแลอีกต่อไป เวลาใช้ให้วาง 'abandoned' ไว้หน้าคำนามที่มันขยาย หรือใช้กับ verb to be เช่น 'The building is abandoned.' (ตึกนั้นถูกทิ้งร้าง) ระวังอย่าสับสนกับ 'deserted' ซึ่งมักใช้กับสถานที่ที่เคยมีคนอยู่แต่ตอนนี้ว่างเปล่าไร้ผู้คน หรือ 'left behind' ที่แปลว่าทิ้งไว้ข้างหลัง แต่ 'abandoned' สื่อถึงการทอดทิ้งโดยเจตนาและมักจะขาดการดูแล.",
+      "sentences": [
+        {
+          "grammar": "S (The abandoned mansion: คฤหาสน์ร้าง) + V (appeared: ปรากฏขึ้น)",
+          "sentence": "The abandoned mansion appeared.",
+          "structure": "S + V",
+          "translation": "คฤหาสน์ร้างปรากฏขึ้น",
+          "thaiPronunciation": "เดอะ อะ-แบน-เดินด์ แมน-ชั่น แอพ-เพียร์ด"
+        },
+        {
+          "grammar": "S (We: เรา) + V (entered: เดินเข้าไปใน) + O (its crumbling gate: ประตูที่พังทลายของมัน)",
+          "sentence": "We entered its crumbling gate.",
+          "structure": "S + V + O",
+          "translation": "เราเดินเข้าไปในประตูที่พังทลายของมัน",
+          "thaiPronunciation": "วี เอ็น-เทอร์ด อิทส์ ครัม-บลิ่ง เกท"
+        },
+        {
+          "grammar": "S (The interior: ภายใน) + V (seemed: ดูเหมือน) + C (desolate: อ้างว้างเงียบเหงา)",
+          "sentence": "The interior seemed desolate.",
+          "structure": "S + V + C",
+          "translation": "ภายในดูอ้างว้างเงียบเหงา",
+          "thaiPronunciation": "เดอะ อิน-เทอร์-เรียร์ ซีมด์ เดส-โซ-เลท"
+        },
+        {
+          "grammar": "S (A former caretaker: อดีตผู้ดูแล) + V (had left: ได้ทิ้งไว้) + IO (them: พวกเขา) + DO (old journals: สมุดบันทึกเก่าๆ)",
+          "sentence": "A former caretaker had left them old journals.",
+          "structure": "S + V + IO + DO",
+          "translation": "อดีตผู้ดูแลได้ทิ้งสมุดบันทึกเก่าๆ ไว้ให้พวกเขา",
+          "thaiPronunciation": "อะ ฟอร์-เมอร์ แคร์-เทค-เกอร์ แฮด เลฟท์ เดม โอล์ด เจอร์-นอลส์"
+        },
+        {
+          "grammar": "S (We: เรา) + V (found: พบว่า) + O (the whole experience: ประสบการณ์ทั้งหมดนั้น) + C (incredibly thought-provoking: ชวนให้คิดอย่างไม่น่าเชื่อ)",
+          "sentence": "We found the whole experience incredibly thought-provoking.",
+          "structure": "S + V + O + C",
+          "translation": "เราพบว่าประสบการณ์ทั้งหมดนั้นชวนให้คิดอย่างไม่น่าเชื่อ",
+          "thaiPronunciation": "วี เฟานด์ เดอะ โฮล เอ็กซ์-พี-เรียนซ์ อิน-เครด-อะ-บลี ธอท-โพร-โว-กิ้ง"
+        }
+      ],
+      "articleTitle": "Exploring the Desolate Mansion",
+      "fullArticleThai": "คฤหาสน์ร้างปรากฏขึ้น เราเดินเข้าไปในประตูที่พังทลายของมัน ภายในดูอ้างว้างเงียบเหงา อดีตผู้ดูแลได้ทิ้งสมุดบันทึกเก่าๆ ไว้ให้พวกเขา เราพบว่าประสบการณ์ทั้งหมดนั้นชวนให้คิดอย่างไม่น่าเชื่อ",
+      "wordTranslation": "ถูกทิ้งร้าง, ที่ถูกละทิ้ง",
+      "thaiPronunciation": "อะ-แบน-เดินด์"
+    }
+  },
   "generalNotes": [],
   "reviewWords": []
 }

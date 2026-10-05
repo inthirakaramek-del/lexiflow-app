@@ -104,6 +104,28 @@ export default function Home() {
       isRestoringRef.current = false;
     }
 
+    // 1.5 Auto-reset legacy deck cache and progress to start clean with Oxford 3000 (3,213 words)
+    const CURRENT_DECK_VERSION = "oxford_3213_v1";
+    try {
+      const storedVersion = localStorage.getItem("lexiflow_deck_version");
+      if (storedVersion !== CURRENT_DECK_VERSION) {
+        localStorage.clear();
+        localStorage.setItem("lexiflow_deck_version", CURRENT_DECK_VERSION);
+        fetch("/api/db", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            progress: { masteredIds: [], starredIds: [], notes: {} },
+            cardCache: {},
+            generalNotes: [],
+            reviewWords: []
+          })
+        }).catch(() => {});
+      }
+    } catch (e) {
+      console.error("Failed to check deck version", e);
+    }
+
     // 2. Load from localStorage first to prevent UI delay and ensure no data is lost
     let localProgress: UserProgress = { masteredIds: [], starredIds: [], notes: {} };
     let localCache: Record<string, CardData> = {};
