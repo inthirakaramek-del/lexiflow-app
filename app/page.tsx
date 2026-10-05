@@ -576,11 +576,19 @@ export default function Home() {
     }
   };
 
+  // Fast lookup for words already saved in review deck
+  const reviewWordsSet = useMemo(() => {
+    return new Set(reviewWords.map((rw) => rw.word.toLowerCase().trim()));
+  }, [reviewWords]);
+
   const renderInteractiveSentence = (sentence: string) => {
     const tokens = sentence.split(/(\s+)/);
     return tokens.map((token, i) => {
-      const cleanWord = token.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, "").trim();
+      const cleanWord = token.replace(/[.,/#!$%^&*;:{}=\-_'~`()]/g, "").trim();
       if (!cleanWord) return <span key={i}>{token}</span>;
+
+      const isSavedInReview = reviewWordsSet.has(cleanWord.toLowerCase());
+
       return (
         <span
           key={i}
@@ -588,10 +596,17 @@ export default function Home() {
             e.stopPropagation();
             openTranslationModal(cleanWord);
           }}
-          className="px-0.5 hover:bg-pink-100 hover:text-[#A28C89] rounded font-semibold transition cursor-pointer"
-          title={`Click to analyze/add "${cleanWord}" to Review`}
+          className={`inline-block transition cursor-pointer rounded px-1 py-0.5 ${
+            isSavedInReview
+              ? "bg-amber-100/90 text-amber-900 border-b-2 border-amber-400 font-bold shadow-2xs hover:bg-amber-200"
+              : "hover:bg-sky-100 hover:text-sky-700 font-semibold"
+          }`}
+          title={isSavedInReview ? `"${cleanWord}" บันทึกเข้าคลังทบทวนแล้ว (คลิกเพื่อดู/แก้ไข)` : `คลิกเพื่อแปลหรือเพิ่ม "${cleanWord}" เข้าคลังทบทวน`}
         >
           {token}
+          {isSavedInReview && (
+            <span className="text-[9px] align-super text-amber-700 font-black ml-0.5" title="บันทึกในคลังทบทวนแล้ว">✓</span>
+          )}
         </span>
       );
     });
@@ -2596,6 +2611,12 @@ export default function Home() {
                   />
                 </div>
 
+                {reviewWords.some(rw => rw.word.toLowerCase() === customWordInput.trim().toLowerCase()) && (
+                  <div className="bg-amber-50 border border-amber-200 text-amber-800 text-xs px-3.5 py-2 rounded-xl flex items-center gap-2 font-bold animate-fade-in">
+                    <span className="text-sm">⚠️</span>
+                    <span>คำนี้ถูกบันทึกไว้ในคลังทบทวนแล้ว</span>
+                  </div>
+                )}
                 <button
                   onClick={() => {
                     if (customWordInput.trim() && customWordTranslation.trim()) {
@@ -2606,7 +2627,7 @@ export default function Home() {
                   disabled={!customWordInput.trim() || !customWordTranslation.trim()}
                   className="w-full bg-gradient-to-r from-[#A28C89] to-[#C3B3B1] hover:from-[#B8A3A0] hover:to-[#D4C9C8] disabled:opacity-50 text-white font-extrabold text-sm py-4 rounded-2xl transition shadow-md duration-200 mt-2"
                 >
-                  บันทึกเข้าคลังทบทวน
+                  {reviewWords.some(rw => rw.word.toLowerCase() === customWordInput.trim().toLowerCase()) ? "คำนี้อยู่ในคลังแล้ว (บันทึกซ้ำ)" : "บันทึกเข้าคลังทบทวน"}
                 </button>
               </div>
             )}
