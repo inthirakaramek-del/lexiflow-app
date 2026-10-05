@@ -62,31 +62,6 @@ export default function Home() {
 
   // Load progress, cache, review words, and notes from server DB, with localStorage fallback
   useEffect(() => {
-    // One-time self-healing database migration to clear old corrupted/overlapping caches
-    if (typeof window !== "undefined") {
-      try {
-        if (!localStorage.getItem("lexiflow_db_reset_v1")) {
-          localStorage.clear();
-          localStorage.setItem("lexiflow_db_reset_v1", "true");
-          fetch("/api/db", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              progress: { masteredIds: [], starredIds: [], notes: {} },
-              cardCache: {},
-              generalNotes: [],
-              reviewWords: []
-            })
-          }).then(() => {
-            window.location.reload();
-          });
-          return;
-        }
-      } catch (e) {
-        console.error("Self-healing DB migration failed", e);
-      }
-    }
-
     // 1. Restore deck settings and session
     try {
       const savedDeckType = localStorage.getItem("lexiflow_deck_type");
@@ -102,28 +77,6 @@ export default function Home() {
     } catch (e) {
       console.error("Failed to restore initial session settings", e);
       isRestoringRef.current = false;
-    }
-
-    // 1.5 Auto-reset legacy deck cache and progress to start clean with Oxford 3000 (3,213 words)
-    const CURRENT_DECK_VERSION = "oxford_3213_v1";
-    try {
-      const storedVersion = localStorage.getItem("lexiflow_deck_version");
-      if (storedVersion !== CURRENT_DECK_VERSION) {
-        localStorage.clear();
-        localStorage.setItem("lexiflow_deck_version", CURRENT_DECK_VERSION);
-        fetch("/api/db", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            progress: { masteredIds: [], starredIds: [], notes: {} },
-            cardCache: {},
-            generalNotes: [],
-            reviewWords: []
-          })
-        }).catch(() => {});
-      }
-    } catch (e) {
-      console.error("Failed to check deck version", e);
     }
 
     // 2. Load from localStorage first to prevent UI delay and ensure no data is lost
