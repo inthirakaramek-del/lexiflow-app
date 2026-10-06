@@ -2289,7 +2289,12 @@ export default function Home() {
                           onClick={() => {
                             const newTranslation = prompt("แก้ไขคำแปล:", rw.translation);
                             if (newTranslation !== null) {
-                              const updated = reviewWords.map(item => item.id === rw.id ? { ...item, translation: newTranslation } : item);
+                              const newPronunciation = prompt("แก้ไขคำอ่าน (สัทอักษรไทย):", rw.thaiPronunciation || "");
+                              const updated = reviewWords.map(item => item.id === rw.id ? { 
+                                ...item, 
+                                translation: newTranslation.trim(),
+                                thaiPronunciation: newPronunciation !== null ? newPronunciation.trim() : rw.thaiPronunciation 
+                              } : item);
                               setReviewWords(updated);
                               updateReviewWordsInDb(updated);
                             }
@@ -2392,19 +2397,47 @@ export default function Home() {
             </div>
 
             <div className="bg-white/90 border border-[#E5E0DC] rounded-3xl p-5 shadow-sm">
-              <div className="flex flex-col gap-1.5 w-full">
-                <label className="text-[10px] text-slate-500 font-bold uppercase tracking-wider pl-1">ค้นหาคำศัพท์เพิ่มเอง</label>
-                <div className="relative">
-                  <input
-                    type="text"
-                    value={customSearchQuery}
-                    onChange={(e) => setCustomSearchQuery(e.target.value)}
-                    placeholder="ค้นหาคำศัพท์ที่คุณเพิ่มเอง..."
-                    className="w-full bg-slate-55 border border-slate-200 hover:border-[#E5DDD8] focus:border-[#B8A3A0] rounded-xl pl-10 pr-4 py-2 text-sm text-slate-700 focus:outline-none transition"
-                  />
-                  <svg className="absolute left-3.5 top-3 w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                  </svg>
+              <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+                <div className="flex flex-col gap-1.5 w-full">
+                  <label className="text-[10px] text-slate-500 font-bold uppercase tracking-wider pl-1">ค้นหาคำศัพท์เพิ่มเอง</label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={customSearchQuery}
+                      onChange={(e) => setCustomSearchQuery(e.target.value)}
+                      placeholder="ค้นหาคำศัพท์ที่คุณเพิ่มเอง..."
+                      className="w-full bg-slate-55 border border-slate-200 hover:border-[#E5DDD8] focus:border-[#B8A3A0] rounded-xl pl-10 pr-4 py-2 text-sm text-slate-700 focus:outline-none transition"
+                    />
+                    <svg className="absolute left-3.5 top-3 w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                  </div>
+                </div>
+
+                {/* Toggles for Pronunciation & Translation */}
+                <div className="flex items-center gap-2 w-full md:w-auto justify-end pt-1 md:pt-4">
+                  <button
+                    onClick={() => setShowReviewPronunciation(!showReviewPronunciation)}
+                    className={`text-xs font-bold px-3 py-2 rounded-xl border transition shadow-2xs flex items-center gap-1.5 whitespace-nowrap ${
+                      showReviewPronunciation
+                        ? "bg-emerald-50 text-emerald-800 border-emerald-200 hover:bg-emerald-100"
+                        : "bg-white text-slate-400 border-slate-200 hover:text-slate-700"
+                    }`}
+                    title="เปิด/ปิด คำอ่านในคลังเพิ่มเอง"
+                  >
+                    <span>🗣️ คำอ่าน: {showReviewPronunciation ? "เปิด" : "ปิด"}</span>
+                  </button>
+                  <button
+                    onClick={() => setShowReviewTranslation(!showReviewTranslation)}
+                    className={`text-xs font-bold px-3 py-2 rounded-xl border transition shadow-2xs flex items-center gap-1.5 whitespace-nowrap ${
+                      showReviewTranslation
+                        ? "bg-amber-50 text-amber-900 border-amber-200 hover:bg-amber-100"
+                        : "bg-white text-slate-400 border-slate-200 hover:text-slate-700"
+                    }`}
+                    title="เปิด/ปิด คำแปลในคลังเพิ่มเอง (คลิกเพื่อฝึกจำ)"
+                  >
+                    <span>👁️ คำแปล: {showReviewTranslation ? "เปิด" : "ปิด"}</span>
+                  </button>
                 </div>
               </div>
             </div>
@@ -2474,8 +2507,25 @@ export default function Home() {
                     </div>
 
                     <div>
-                      <h4 className="text-base font-extrabold text-slate-800">{rw.word}</h4>
-                      <p className="text-xs font-bold text-[#A28C89] mt-1">แปล: {rw.translation}</p>
+                      <h4 className="text-base font-extrabold text-slate-800 flex items-center gap-1.5 flex-wrap">
+                        <span>{rw.word}</span>
+                        {showReviewPronunciation && rw.thaiPronunciation && (
+                          <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-100 font-sans">
+                            [{rw.thaiPronunciation}]
+                          </span>
+                        )}
+                      </h4>
+                      {showReviewTranslation || revealedReviewIds.includes(rw.id) ? (
+                        <p className="text-xs font-bold text-[#A28C89] mt-1">แปล: {rw.translation}</p>
+                      ) : (
+                        <p
+                          onClick={() => setRevealedReviewIds(prev => [...prev, rw.id])}
+                          className="text-xs font-semibold text-slate-400 mt-1 cursor-pointer italic hover:text-[#A28C89] transition select-none"
+                          title="คลิกเพื่อดูคำแปล"
+                        >
+                          👁️ คลิกเพื่อดูคำแปล...
+                        </p>
+                      )}
                     </div>
 
                     <div className="border-t border-slate-100 pt-2.5 mt-1 flex justify-between items-center">
