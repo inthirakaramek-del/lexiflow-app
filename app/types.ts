@@ -19,6 +19,7 @@ export interface ReviewWord {
   word: string;
   pos: string;
   translation: string;
+  thaiPronunciation?: string; // Thai phonetic reading of English word
   notes?: string;
   addedAt: string; // ISO string
   isCustom: boolean;

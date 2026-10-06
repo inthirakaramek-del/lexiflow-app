@@ -12,11 +12,16 @@ export async function POST(request: Request) {
     if (body.action === "translate") {
       const { word } = body;
       const prompt = `Translate the English word or phrase "${word}" to Thai.
+CRITICAL REQUIREMENTS:
+- "translation": Natural Thai translation of the meaning.
+- "thaiPronunciation": MUST be the phonetic reading of how to pronounce the ENGLISH word "${word}" written in Thai characters (คำอ่านออกเสียงของคำภาษาอังกฤษ เช่น 'ออพ-เพอร์-ทู-นิ-ที' สำหรับคำว่า 'opportunity'). DO NOT, under any circumstance, provide the pronunciation of the Thai meaning/translation!
+- "pos": Part of speech (n. / v. / adj. / adv. / prep. / conj. / pron.)
+
 Return the result as a raw JSON object with the following schema:
 {
-  "translation": "natural Thai translation",
-  "thaiPronunciation": "Thai phonetic reading of the word itself (e.g. 'ออพพอร์ทูนิตี' for 'opportunity')",
-  "pos": "part of speech (n. / v. / adj. / adv. / prep. / conj. / pron.)"
+  "translation": "Thai meaning",
+  "thaiPronunciation": "Thai phonetic reading of the ENGLISH word '${word}'",
+  "pos": "part of speech"
 }
 Return ONLY valid JSON.`;
 
@@ -32,6 +37,9 @@ Return ONLY valid JSON.`;
             contents: [{ parts: [{ text: prompt }] }],
             generationConfig: {
               responseMimeType: "application/json",
+              thinkingConfig: {
+                thinkingBudget: 0
+              },
               responseSchema: {
                 type: "OBJECT",
                 properties: {
@@ -65,12 +73,15 @@ CRITICAL REQUIREMENT:
 Instead of 5 isolated sentences, you MUST create ONE COHESIVE SHORT STORY / MINI-ARTICLE (1 บทความสั้นที่เป็นเรื่องราวเดียวกันต่อเนื่อง 5 ประโยค) centered around or featuring "${word}".
 All 5 sentences must flow smoothly and naturally together to form a single interesting, real-life storyline or coherent reading passage (บทความเดียวเชื่อมโยงกัน ไม่ใช่ประโยคแยกโดดเดี่ยว).
 
-Within this unified 5-sentence article, each sentence MUST strictly embody one of the 5 fundamental English sentence structures in sequential order:
-1. S + V (Subject + Verb) - e.g. An event begins, a character arrives, or something happens. (If "${word}" is not a verb, integrate it naturally into the Subject, e.g., "A couple of friends arrived." or "The opportunity appeared.")
-2. S + V + O (Subject + Verb + Object) - Action continues, characters do something.
-3. S + V + C (Subject + Verb + Subject Complement) - Describing the situation or character's feeling using linking verbs (is, felt, seemed, became).
-4. S + V + IO + DO (Subject + Verb + Indirect Object + Direct Object) - Someone gives, brings, shows, or tells someone something.
-5. S + V + O + C (Subject + Verb + Object + Object Complement) - A concluding action or evaluation (e.g. found it useful, called it a success, made everyone happy).
+Within this unified 5-sentence article, across the 5 sentences you MUST include all 5 fundamental English sentence structures:
+- "S + V" (Subject + Verb)
+- "S + V + O" (Subject + Verb + Object)
+- "S + V + C" (Subject + Verb + Subject Complement)
+- "S + V + IO + DO" (Subject + Verb + Indirect Object + Direct Object)
+- "S + V + O + C" (Subject + Verb + Object + Object Complement)
+
+IMPORTANT - DYNAMIC SHUFFLED ORDER:
+The 5 structures DO NOT have to appear in a fixed 1-to-5 order! You are FREE and ENCOURAGED to arrange and shuffle the order of structures dynamically (for example: starting with S+V+O+C or S+V+C first, or any order) whichever makes the story storyline most natural, dramatic, and engaging! Each of the 5 sentences must represent a distinct structure among the 5 types.
 
 GUIDELINES:
 - Flow & Narrative: Together, the 5 sentences must read like a complete mini-story or short article about a realistic situation.
@@ -84,7 +95,7 @@ GUIDELINES:
   - "thaiPronunciation": Thai phonetic reading of this English sentence (e.g. 'เดอะ ชิลเดรน อะไรฟด์ เซฟลี')
   - "grammar": Exact breakdown matching the words in this sentence to their grammatical parts with Thai translations, formatted as: 'S (Word: คำแปล) + V (Word: คำแปล) + ...'
 - "wordTranslation": Natural Thai translation of "${word}" itself
-- "thaiPronunciation": Thai phonetic reading of "${word}" itself (e.g. 'อะ คัพเพิล' for 'a couple')
+- "thaiPronunciation": Thai phonetic reading of the ENGLISH word "${word}" itself (e.g. 'เออะ บ๊าวท์' for 'about'). NEVER return pronunciation of Thai translation!
 - "trick": Practical usage guide and tips in Thai for using "${word}" in daily life.
 
 Return the result as a raw JSON object with the following schema:
@@ -119,6 +130,9 @@ Return ONLY valid JSON.`;
           contents: [{ parts: [{ text: prompt }] }],
           generationConfig: {
             responseMimeType: "application/json",
+            thinkingConfig: {
+              thinkingBudget: 0
+            },
             responseSchema: {
               type: "OBJECT",
               properties: {

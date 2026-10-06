@@ -48,6 +48,8 @@ export default function Home() {
   const [customWordInput, setCustomWordInput] = useState("");
   const [customWordPos, setCustomWordPos] = useState("n.");
   const [customWordTranslation, setCustomWordTranslation] = useState("");
+  const [customWordPronunciation, setCustomWordPronunciation] = useState("");
+  const isGeneratingRef = useRef(false);
 
   // Notebook editor states
   const [noteEditId, setNoteEditId] = useState<string | null>(null);
@@ -235,7 +237,7 @@ export default function Home() {
     });
   };
 
-  const addWordToReviewList = (wordText: string, wordPos: string, wordTranslation: string, sourceWordId?: string, isCustom = false) => {
+  const addWordToReviewList = (wordText: string, wordPos: string, wordTranslation: string, sourceWordId?: string, isCustom = false, thaiPronunciation?: string) => {
     const exists = reviewWords.some((rw) => rw.word.toLowerCase() === wordText.toLowerCase());
     if (exists) return;
 
@@ -244,6 +246,7 @@ export default function Home() {
       word: wordText,
       pos: wordPos,
       translation: wordTranslation,
+      thaiPronunciation: thaiPronunciation || "",
       addedAt: new Date().toISOString(),
       isCustom,
       sourceWordId
@@ -271,6 +274,7 @@ export default function Home() {
         setCustomWordInput(wordText);
         setCustomWordPos(data.pos || "n.");
         setCustomWordTranslation(data.translation || "");
+        setCustomWordPronunciation(data.thaiPronunciation || "");
       })
       .catch((e) => {
         console.error("Translation API failed", e);
@@ -484,6 +488,10 @@ export default function Home() {
       return;
     }
 
+    // Prevent duplicate parallel requests for the same word
+    if (isGeneratingRef.current) return;
+    isGeneratingRef.current = true;
+
     // Not in cache, start loading and generate
     setLoadingAI(true);
     setApiError(null);
@@ -519,21 +527,29 @@ export default function Home() {
         setActiveCardId(currentWordObj.id);
       })
       .finally(() => {
+        isGeneratingRef.current = false;
         setLoadingAI(false);
       });
   }, [currentWordObj, cardCache, activeCardId, hasLoadedSession]);
 
-  const regenerateCard = () => {
+  const resetAndRegenerateCard = () => {
     if (!currentWordObj) return;
 
+    setIsFlipped(false);
     setLoadingAI(true);
     setApiError(null);
-    setIsFlipped(false);
+    setActiveCardData(null);
+    setActiveCardId(null);
 
     fetch("/api/generate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ word: currentWordObj.word, pos: currentWordObj.pos })
+      body: JSON.stringify({
+        word: currentWordObj.word,
+        pos: currentWordObj.pos,
+        meaning: currentWordObj.meaning,
+        pronunciation: currentWordObj.pronunciation
+      })
     })
       .then(async (res) => {
         if (!res.ok) {
@@ -550,7 +566,7 @@ export default function Home() {
         setActiveCardId(currentWordObj.id);
       })
       .catch((err) => {
-        console.error("API regeneration failed", err);
+        console.error("API reset & regeneration failed", err);
         setApiError(err.message || "Failed to regenerate card");
       })
       .finally(() => {
@@ -596,17 +612,14 @@ export default function Home() {
             e.stopPropagation();
             openTranslationModal(cleanWord);
           }}
-          className={`inline-block transition cursor-pointer rounded px-1 py-0.5 ${
+          className={`inline-block transition cursor-pointer rounded px-1.5 py-0.5 ${
             isSavedInReview
-              ? "bg-amber-100/90 text-amber-900 border-b-2 border-amber-400 font-bold shadow-2xs hover:bg-amber-200"
+              ? "border-2 border-amber-400 bg-amber-50/90 text-amber-950 font-bold shadow-2xs hover:bg-amber-100"
               : "hover:bg-sky-100 hover:text-sky-700 font-semibold"
           }`}
           title={isSavedInReview ? `"${cleanWord}" บันทึกเข้าคลังทบทวนแล้ว (คลิกเพื่อดู/แก้ไข)` : `คลิกเพื่อแปลหรือเพิ่ม "${cleanWord}" เข้าคลังทบทวน`}
         >
           {token}
-          {isSavedInReview && (
-            <span className="text-[9px] align-super text-amber-700 font-black ml-0.5" title="บันทึกในคลังทบทวนแล้ว">✓</span>
-          )}
         </span>
       );
     });
@@ -1319,7 +1332,8 @@ export default function Home() {
                                   currentWordObj.pos,
                                   activeCardData?.wordTranslation || "คำแปลของการ์ดหลัก",
                                   currentWordObj.id,
-                                  false
+                                  false,
+                                  activeCardData?.thaiPronunciation || currentWordObj.pronunciation || ""
                                 );
                                 if (progress.masteredIds.includes(currentWordObj.id)) {
                                   toggleMastered(currentWordObj.id);
@@ -1343,7 +1357,22 @@ export default function Home() {
                             </button>
                           </div>
                           <div className="flex items-center gap-2">
-                            <span className="text-[8.5px] sm:text-[10px] text-slate-400 uppercase tracking-widest font-bold">Front: Article (5 Structures)</span>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                if (confirm(`ต้องการรีเซ็ตและสร้างบทความคำว่า "${currentWordObj.word}" ใหม่ด้วย AI ใช่หรือไม่? (ข้อมูลเก่าจะถูกลบและแทนที่ด้วยอันใหม่)`)) {
+                                  resetAndRegenerateCard();
+                                }
+                              }}
+                              className="inline-flex items-center gap-1 bg-white hover:bg-rose-50 text-slate-500 hover:text-[#A28C89] border border-slate-200 hover:border-rose-200 px-2 py-1 rounded-lg text-[10px] font-bold transition shadow-2xs"
+                              title="รีเซ็ตและสร้างบทความคำนี้ใหม่ด้วย AI"
+                            >
+                              <svg className="w-3.5 h-3.5 text-slate-400 hover:text-[#A28C89]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                              </svg>
+                              <span>รีเซ็ตการ์ด</span>
+                            </button>
+                            <span className="text-[8.5px] sm:text-[10px] text-slate-400 uppercase tracking-widest font-bold hidden sm:inline">Front</span>
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
@@ -1434,18 +1463,6 @@ export default function Home() {
                                     </svg>
                                     <span>ฟังบทความ</span>
                                   </button>
-
-                                  {/* Toggle Thai Pronunciation on Front */}
-                                  <button
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      setShowPronunciationFront(!showPronunciationFront);
-                                    }}
-                                    className="inline-flex items-center gap-1 bg-white hover:bg-slate-50 text-slate-600 hover:text-slate-900 border border-slate-200 px-2 py-1 rounded-lg text-[10px] font-bold transition shadow-2xs"
-                                    title="เปิด/ปิด คำอ่าน"
-                                  >
-                                    <span>🗣️ คำอ่าน: {showPronunciationFront ? "เปิด" : "ปิด"}</span>
-                                  </button>
                                 </div>
                               </div>
 
@@ -1462,18 +1479,7 @@ export default function Home() {
                                   ))}
                                 </div>
 
-                                {/* Thai Phonetic Reading: Shown directly on Front */}
-                                {showPronunciationFront && (
-                                  <div className="bg-amber-50/70 border border-amber-100 rounded-xl p-2.5 sm:p-3 mt-3">
-                                    <div className="flex items-center gap-1.5 text-[9.5px] sm:text-[10px] font-extrabold text-[#A28C89] uppercase tracking-wider mb-1">
-                                      <span>🗣️</span>
-                                      <span>คำอ่านบทความ (Thai Reading Guide):</span>
-                                    </div>
-                                    <p className="text-[11px] sm:text-xs text-[#8c6f6b] font-medium leading-relaxed">
-                                      {activeCardData.sentences.map((s) => s.thaiPronunciation).filter(Boolean).join("  •  ")}
-                                    </p>
-                                  </div>
-                                )}
+
                               </div>
                             </div>
                           ) : (
@@ -1492,9 +1498,26 @@ export default function Home() {
                       {/* CARD BACK: Shows Full Story Translation, 5 Grammar Structures, and Controls */}
                       <div className="absolute inset-0 card-face card-back w-full h-full bg-white/95 rounded-3xl p-3.5 sm:p-6 md:p-8 flex flex-col justify-between shadow-sm overflow-y-auto">
                         <div className="w-full flex justify-between items-center border-b border-slate-100 pb-2 sm:pb-3">
-                          <span className="text-[8.5px] sm:text-[10px] text-slate-400 uppercase tracking-widest font-bold flex items-center gap-1.5 flex-wrap">
-                            Back: {currentWordObj.word} {activeCardData?.thaiPronunciation && <span className="text-emerald-600 font-extrabold">[{activeCardData.thaiPronunciation}]</span>} {activeCardData?.wordTranslation && `(แปลหลัก: ${activeCardData.wordTranslation})`}
-                          </span>
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                if (confirm(`ต้องการรีเซ็ตและสร้างบทความคำว่า "${currentWordObj.word}" ใหม่ด้วย AI ใช่หรือไม่? (ข้อมูลเก่าจะถูกลบและแทนที่ด้วยอันใหม่)`)) {
+                                  resetAndRegenerateCard();
+                                }
+                              }}
+                              className="inline-flex items-center gap-1 bg-white hover:bg-rose-50 text-slate-500 hover:text-[#A28C89] border border-slate-200 hover:border-rose-200 px-2 py-1 rounded-lg text-[10px] font-bold transition shadow-2xs"
+                              title="รีเซ็ตและสร้างบทความคำนี้ใหม่ด้วย AI"
+                            >
+                              <svg className="w-3.5 h-3.5 text-slate-400 hover:text-[#A28C89]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                              </svg>
+                              <span>รีเซ็ตการ์ด</span>
+                            </button>
+                            <span className="text-[8.5px] sm:text-[10px] text-slate-400 uppercase tracking-widest font-bold flex items-center gap-1.5 flex-wrap">
+                              Back: {currentWordObj.word} {activeCardData?.thaiPronunciation && <span className="text-emerald-600 font-extrabold">[{activeCardData.thaiPronunciation}]</span>} {activeCardData?.wordTranslation && `(แปลหลัก: ${activeCardData.wordTranslation})`}
+                            </span>
+                          </div>
                           <div className="flex items-center gap-2 animate-none">
                             <button
                               onClick={(e) => {
@@ -1504,7 +1527,8 @@ export default function Home() {
                                   currentWordObj.pos,
                                   activeCardData?.wordTranslation || "คำแปลของการ์ดหลัก",
                                   currentWordObj.id,
-                                  false
+                                  false,
+                                  activeCardData?.thaiPronunciation || currentWordObj.pronunciation || ""
                                 );
                                 if (progress.masteredIds.includes(currentWordObj.id)) {
                                   toggleMastered(currentWordObj.id);
@@ -2215,7 +2239,14 @@ export default function Home() {
                     </div>
 
                     <div>
-                      <h4 className="text-base font-extrabold text-slate-800">{rw.word}</h4>
+                      <h4 className="text-base font-extrabold text-slate-800 flex items-center gap-1.5 flex-wrap">
+                        <span>{rw.word}</span>
+                        {rw.thaiPronunciation && (
+                          <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-100 font-sans">
+                            [{rw.thaiPronunciation}]
+                          </span>
+                        )}
+                      </h4>
                       <p className="text-xs font-bold text-[#A28C89] mt-1">แปล: {rw.translation}</p>
                     </div>
 
@@ -2592,10 +2623,10 @@ export default function Home() {
                     <label className="text-[10px] text-slate-500 font-extrabold uppercase tracking-wider pl-1">คำอ่านไทย (Phonetic)</label>
                     <input
                       type="text"
-                      value={translationResult?.thaiPronunciation || ""}
-                      readOnly
-                      placeholder="AI คำอ่าน"
-                      className="bg-slate-100 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-550 focus:outline-none cursor-not-allowed font-semibold"
+                      value={customWordPronunciation}
+                      onChange={(e) => setCustomWordPronunciation(e.target.value)}
+                      placeholder="เช่น ออพ-เพอร์-ทู-นิ-ที"
+                      className="bg-slate-50 border border-slate-200 focus:border-[#B8A3A0] focus:bg-white rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-800 focus:outline-none"
                     />
                   </div>
                 </div>
@@ -2620,7 +2651,7 @@ export default function Home() {
                 <button
                   onClick={() => {
                     if (customWordInput.trim() && customWordTranslation.trim()) {
-                      addWordToReviewList(customWordInput.trim(), customWordPos, customWordTranslation.trim(), currentWordObj?.id, true);
+                      addWordToReviewList(customWordInput.trim(), customWordPos, customWordTranslation.trim(), currentWordObj?.id, true, customWordPronunciation.trim());
                       setShowTranslateModal(false);
                     }
                   }}
