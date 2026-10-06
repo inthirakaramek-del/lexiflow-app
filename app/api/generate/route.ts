@@ -41,7 +41,7 @@ CRITICAL:
 Return JSON: { "translation": string, "thaiPronunciation": string, "pos": string }`;
 
       const response = await fetchWithRetry(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key=${apiKey}`,
         {
           contents: [{ parts: [{ text: prompt }] }],
           generationConfig: {
@@ -95,7 +95,7 @@ Return JSON with:
 - trick: Practical usage tip in Thai`;
 
     const response = await fetchWithRetry(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key=${apiKey}`,
       {
         contents: [{ parts: [{ text: prompt }] }],
         generationConfig: {
