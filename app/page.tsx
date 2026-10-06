@@ -60,6 +60,9 @@ export default function Home() {
   // Review filters
   const [reviewFilter, setReviewFilter] = useState<"all" | "base" | "custom">("all");
   const [reviewSearchQuery, setReviewSearchQuery] = useState("");
+  const [showReviewPronunciation, setShowReviewPronunciation] = useState(true);
+  const [showReviewTranslation, setShowReviewTranslation] = useState(true);
+  const [revealedReviewIds, setRevealedReviewIds] = useState<string[]>([]);
   const [customSearchQuery, setCustomSearchQuery] = useState("");
 
   // Load progress, cache, review words, and notes from server DB, with localStorage fallback
@@ -257,12 +260,22 @@ export default function Home() {
     updateReviewWordsInDb(updatedList);
   };
 
-  const openTranslationModal = (wordText: string) => {
+  const openTranslationModal = (wordText: string, prefilledPron = "", prefilledTrans = "", prefilledPos = "n.") => {
     setWordToTranslate(wordText);
-    setTranslationResult(null);
+    setCustomWordInput(wordText);
+    setCustomWordPos(prefilledPos || "n.");
+    setCustomWordPronunciation(prefilledPron || "");
+    setCustomWordTranslation(prefilledTrans || "");
     setShowTranslateModal(true);
-    setTranslationLoading(true);
 
+    // If already pre-filled from sentence/dictionary, NO API CALL! (0 tokens, instant!)
+    if (prefilledTrans || prefilledPron) {
+      setTranslationLoading(false);
+      return;
+    }
+
+    // Only if not found locally, call API as fallback
+    setTranslationLoading(true);
     fetch("/api/generate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -270,17 +283,12 @@ export default function Home() {
     })
       .then((res) => res.json())
       .then((data) => {
-        setTranslationResult(data);
-        setCustomWordInput(wordText);
         setCustomWordPos(data.pos || "n.");
         setCustomWordTranslation(data.translation || "");
         setCustomWordPronunciation(data.thaiPronunciation || "");
       })
       .catch((e) => {
         console.error("Translation API failed", e);
-        setCustomWordInput(wordText);
-        setCustomWordPos("n.");
-        setCustomWordTranslation("");
       })
       .finally(() => {
         setTranslationLoading(false);
@@ -490,46 +498,49 @@ export default function Home() {
 
     // Prevent duplicate parallel requests for the same word
     if (isGeneratingRef.current) return;
-    isGeneratingRef.current = true;
 
-    // Not in cache, start loading and generate
+    // Not in cache, start loading state with 350ms debounce to avoid spamming on fast next/prev clicks
     setLoadingAI(true);
     setApiError(null);
     setActiveCardData(null);
     setActiveCardId(null);
 
-    fetch("/api/generate", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ word: currentWordObj.word, pos: currentWordObj.pos, meaning: currentWordObj.meaning, pronunciation: currentWordObj.pronunciation })
-    })
-      .then(async (res) => {
-        if (!res.ok) {
-          const errData = await res.json().catch(() => ({}));
-          throw new Error(errData.error || `HTTP ${res.status}`);
-        }
-        const data = await res.json();
-        if (data.error) throw new Error(data.error);
-        return data as CardData;
+    const debounceTimer = setTimeout(() => {
+      isGeneratingRef.current = true;
+      fetch("/api/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ word: currentWordObj.word, pos: currentWordObj.pos, meaning: currentWordObj.meaning, pronunciation: currentWordObj.pronunciation })
       })
-      .then((data) => {
-        addCardToCache(currentWordObj.id, data);
-        setActiveCardData(data);
-        setActiveCardId(currentWordObj.id);
-      })
-      .catch((err) => {
-        console.warn("API generate failed, loading client-side fallback sentences.", err);
-        setApiError(err.message || "Unknown API Error");
-        // Fallback generator
-        const fallback = generateFallbackCard(currentWordObj);
-        addCardToCache(currentWordObj.id, fallback);
-        setActiveCardData(fallback);
-        setActiveCardId(currentWordObj.id);
-      })
-      .finally(() => {
-        isGeneratingRef.current = false;
-        setLoadingAI(false);
-      });
+        .then(async (res) => {
+          if (!res.ok) {
+            const errData = await res.json().catch(() => ({}));
+            throw new Error(errData.error || `HTTP ${res.status}`);
+          }
+          const data = await res.json();
+          if (data.error) throw new Error(data.error);
+          return data as CardData;
+        })
+        .then((data) => {
+          addCardToCache(currentWordObj.id, data);
+          setActiveCardData(data);
+          setActiveCardId(currentWordObj.id);
+        })
+        .catch((err) => {
+          console.warn("API generate failed, loading client-side fallback sentences.", err);
+          setApiError(err.message || "Unknown API Error");
+          const fallback = generateFallbackCard(currentWordObj);
+          addCardToCache(currentWordObj.id, fallback);
+          setActiveCardData(fallback);
+          setActiveCardId(currentWordObj.id);
+        })
+        .finally(() => {
+          isGeneratingRef.current = false;
+          setLoadingAI(false);
+        });
+    }, 350);
+
+    return () => clearTimeout(debounceTimer);
   }, [currentWordObj, cardCache, activeCardId, hasLoadedSession]);
 
   const resetAndRegenerateCard = () => {
@@ -592,12 +603,55 @@ export default function Home() {
     }
   };
 
+  // Instant 0-token extraction of word pronunciation and translation from current sentence/card
+  const getWordDataFromSentence = (cleanWord: string, sentenceObj?: any) => {
+    let pronunciation = "";
+    let translation = "";
+    let pos = "n.";
+    const lower = cleanWord.toLowerCase();
+
+    // 1. Check if word is main word of current card
+    if (currentWordObj && currentWordObj.word.toLowerCase() === lower) {
+      pronunciation = activeCardData?.thaiPronunciation || currentWordObj.pronunciation || "";
+      translation = activeCardData?.wordTranslation || currentWordObj.meaning || "";
+      pos = currentWordObj.pos || "n.";
+    }
+
+    // 2. Extract pronunciation from sentence's word-by-word thaiPronunciation
+    if (!pronunciation && sentenceObj && sentenceObj.sentence && sentenceObj.thaiPronunciation) {
+      const rawWords = sentenceObj.sentence.replace(/[.,/#!$%^&*;:{}=\-_'~\x60()"]/g, " ").trim().split(/\s+/);
+      const phons = sentenceObj.thaiPronunciation.trim().split(/\s+/);
+      const wordIdx = rawWords.findIndex((w: string) => w.toLowerCase() === lower);
+      if (wordIdx !== -1 && phons[wordIdx]) {
+        pronunciation = phons[wordIdx].replace(/[.,/#!$%^&*;:{}=\-_'~\x60()"]/g, "").trim();
+      }
+    }
+
+    // 3. Extract translation from sentence's grammar breakdown
+    if (!translation && sentenceObj && sentenceObj.grammar) {
+      const match = sentenceObj.grammar.match(new RegExp(`(?:\\b${lower}\\b|${lower})\\s*:\\s*([^)+,]+)`, "i"));
+      if (match && match[1]) {
+        translation = match[1].trim();
+      }
+    }
+
+    // 4. Check Oxford 3000 dictionary (VOCAB)
+    const vocabMatch = VOCAB.find((w) => w.word.toLowerCase() === lower);
+    if (vocabMatch) {
+      if (!translation) translation = vocabMatch.meaning || "";
+      if (!pronunciation) pronunciation = vocabMatch.pronunciation || "";
+      pos = vocabMatch.pos || pos;
+    }
+
+    return { pronunciation, translation, pos };
+  };
+
   // Fast lookup for words already saved in review deck
   const reviewWordsSet = useMemo(() => {
     return new Set(reviewWords.map((rw) => rw.word.toLowerCase().trim()));
   }, [reviewWords]);
 
-  const renderInteractiveSentence = (sentence: string) => {
+  const renderInteractiveSentence = (sentence: string, sentenceObj?: any) => {
     const tokens = sentence.split(/(\s+)/);
     return tokens.map((token, i) => {
       const cleanWord = token.replace(/[.,/#!$%^&*;:{}=\-_'~`()]/g, "").trim();
@@ -610,7 +664,8 @@ export default function Home() {
           key={i}
           onClick={(e) => {
             e.stopPropagation();
-            openTranslationModal(cleanWord);
+            const extracted = getWordDataFromSentence(cleanWord, sentenceObj);
+            openTranslationModal(cleanWord, extracted.pronunciation, extracted.translation, extracted.pos);
           }}
           className={`inline-block transition cursor-pointer rounded px-1.5 py-0.5 ${
             isSavedInReview
@@ -1473,7 +1528,7 @@ export default function Home() {
                                   {activeCardData.sentences.map((s, idx) => (
                                     <span key={idx} className="group inline">
                                       <span className="inline hover:bg-sky-100/70 rounded px-0.5 transition cursor-pointer">
-                                        {renderInteractiveSentence(s.sentence)}
+                                        {renderInteractiveSentence(s.sentence, s)}
                                       </span>{" "}
                                     </span>
                                   ))}
@@ -1630,7 +1685,7 @@ export default function Home() {
                                           </span>
                                           <div className="flex-1 min-w-0">
                                             <p className="text-[11.5px] xs:text-xs sm:text-[13px] font-semibold text-slate-800 leading-snug">
-                                              {renderInteractiveSentence(s.sentence)}
+                                              {renderInteractiveSentence(s.sentence, s)}
                                             </p>
                                             {showBackPronunciation && s.thaiPronunciation && (
                                               <p className="text-[9.5px] sm:text-[10px] text-[#A28C89] font-medium tracking-wide mt-0.5 leading-snug">
@@ -2156,8 +2211,8 @@ export default function Home() {
               <p className="text-xs text-slate-500 font-medium">คำศัพท์หลักจากพจนานุกรมที่คุณใส่เข้ามาเพิ่มเติมเพื่อฝึกฝนและทบทวนเพิ่มเติม</p>
             </div>
 
-            <div className="bg-white/90 border border-[#E5E0DC] rounded-3xl p-5 shadow-sm">
-              <div className="flex flex-col gap-1.5 w-full">
+            <div className="bg-white/90 border border-[#E5E0DC] rounded-3xl p-5 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
+              <div className="flex flex-col gap-1.5 flex-1 w-full">
                 <label className="text-[10px] text-slate-500 font-bold uppercase tracking-wider pl-1">ค้นหาคำศัพท์ทวน</label>
                 <div className="relative">
                   <input
@@ -2171,6 +2226,32 @@ export default function Home() {
                     <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                   </svg>
                 </div>
+              </div>
+
+              {/* Toggles for Pronunciation & Translation */}
+              <div className="flex items-center gap-2 w-full md:w-auto justify-end pt-1 md:pt-4">
+                <button
+                  onClick={() => setShowReviewPronunciation(!showReviewPronunciation)}
+                  className={`text-xs font-bold px-3 py-2 rounded-xl border transition shadow-2xs flex items-center gap-1.5 ${
+                    showReviewPronunciation
+                      ? "bg-emerald-50 text-emerald-800 border-emerald-200 hover:bg-emerald-100"
+                      : "bg-white text-slate-400 border-slate-200 hover:text-slate-700"
+                  }`}
+                  title="เปิด/ปิด คำอ่านในคลังทบทวน"
+                >
+                  <span>🗣️ คำอ่าน: {showReviewPronunciation ? "เปิด" : "ปิด"}</span>
+                </button>
+                <button
+                  onClick={() => setShowReviewTranslation(!showReviewTranslation)}
+                  className={`text-xs font-bold px-3 py-2 rounded-xl border transition shadow-2xs flex items-center gap-1.5 ${
+                    showReviewTranslation
+                      ? "bg-amber-50 text-amber-900 border-amber-200 hover:bg-amber-100"
+                      : "bg-white text-slate-400 border-slate-200 hover:text-slate-700"
+                  }`}
+                  title="เปิด/ปิด คำแปลในคลังทบทวน (คลิกเพื่อฝึกจำ)"
+                >
+                  <span>👁️ คำแปล: {showReviewTranslation ? "เปิด" : "ปิด"}</span>
+                </button>
               </div>
             </div>
 
@@ -2241,13 +2322,23 @@ export default function Home() {
                     <div>
                       <h4 className="text-base font-extrabold text-slate-800 flex items-center gap-1.5 flex-wrap">
                         <span>{rw.word}</span>
-                        {rw.thaiPronunciation && (
-                          <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-100 font-sans">
+                        {showReviewPronunciation && rw.thaiPronunciation && (
+                          <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-100 font-sans">
                             [{rw.thaiPronunciation}]
                           </span>
                         )}
                       </h4>
-                      <p className="text-xs font-bold text-[#A28C89] mt-1">แปล: {rw.translation}</p>
+                      {showReviewTranslation || revealedReviewIds.includes(rw.id) ? (
+                        <p className="text-xs font-bold text-[#A28C89] mt-1">แปล: {rw.translation}</p>
+                      ) : (
+                        <p
+                          onClick={() => setRevealedReviewIds(prev => [...prev, rw.id])}
+                          className="text-xs font-semibold text-slate-400 mt-1 cursor-pointer italic hover:text-[#A28C89] transition select-none"
+                          title="คลิกเพื่อดูคำแปลคำนี้"
+                        >
+                          👁️ แตะเพื่อดูคำแปล
+                        </p>
+                      )}
                     </div>
 
                     <div className="border-t border-slate-100 pt-2.5 mt-1 flex justify-between items-center">
