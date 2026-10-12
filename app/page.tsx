@@ -40,6 +40,7 @@ export default function Home() {
 
   // Word translation states
   const [wordToTranslate, setWordToTranslate] = useState("");
+  const [editingReviewWordId, setEditingReviewWordId] = useState<string | null>(null);
   const [showTranslateModal, setShowTranslateModal] = useState(false);
   const [translationLoading, setTranslationLoading] = useState(false);
   const [translationResult, setTranslationResult] = useState<any>(null);
@@ -240,29 +241,95 @@ export default function Home() {
     });
   };
 
-  const addWordToReviewList = (wordText: string, wordPos: string, wordTranslation: string, sourceWordId?: string, isCustom = false, thaiPronunciation?: string) => {
-    const exists = reviewWords.some((rw) => rw.word.toLowerCase() === wordText.toLowerCase());
-    if (exists) return;
+  const addWordToReviewList = (
+    wordText: string,
+    wordPos: string,
+    wordTranslation: string,
+    sourceWordId?: string,
+    isCustom = false,
+    thaiPronunciation?: string
+  ) => {
+    const cleanWord = wordText.trim();
+    const cleanTrans = wordTranslation.trim();
+    if (!cleanWord) return;
 
-    const newReviewWord: ReviewWord = {
-      id: `rw-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
-      word: wordText,
-      pos: wordPos,
-      translation: wordTranslation,
-      thaiPronunciation: thaiPronunciation || "",
-      addedAt: new Date().toISOString(),
-      isCustom,
-      sourceWordId
-    };
+    const existsIndex = reviewWords.findIndex((rw) => rw.word.toLowerCase() === cleanWord.toLowerCase());
+    let updatedList: ReviewWord[];
 
-    const updatedList = [newReviewWord, ...reviewWords];
+    if (existsIndex >= 0) {
+      updatedList = reviewWords.map((rw, idx) =>
+        idx === existsIndex
+          ? {
+              ...rw,
+              pos: wordPos || rw.pos,
+              translation: cleanTrans || rw.translation,
+              thaiPronunciation: thaiPronunciation !== undefined ? thaiPronunciation.trim() : rw.thaiPronunciation
+            }
+          : rw
+      );
+    } else {
+      const newReviewWord: ReviewWord = {
+        id: `rw-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+        word: cleanWord,
+        pos: wordPos || "n.",
+        translation: cleanTrans || "คำแปลของคำนี้",
+        thaiPronunciation: thaiPronunciation ? thaiPronunciation.trim() : "",
+        addedAt: new Date().toISOString(),
+        isCustom,
+        sourceWordId
+      };
+      updatedList = [newReviewWord, ...reviewWords];
+    }
+
     setReviewWords(updatedList);
     updateReviewWordsInDb(updatedList);
   };
 
+  const openEditReviewWord = (rw: ReviewWord) => {
+    setEditingReviewWordId(rw.id);
+    setWordToTranslate(rw.word);
+    setCustomWordInput(rw.word);
+    setCustomWordPos(rw.pos || "n.");
+    setCustomWordPronunciation(rw.thaiPronunciation || "");
+    setCustomWordTranslation(rw.translation || "");
+    setTranslationLoading(false);
+    setShowTranslateModal(true);
+  };
+
+  const retranslateWithAI = (wordOverride?: string) => {
+    const targetWord = wordOverride || customWordInput.trim() || wordToTranslate.trim();
+    if (!targetWord) return;
+    setTranslationLoading(true);
+    fetch("/api/generate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "translate", word: targetWord })
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.pos) setCustomWordPos(data.pos);
+        if (data.translation) setCustomWordTranslation(data.translation);
+        if (data.thaiPronunciation) setCustomWordPronunciation(data.thaiPronunciation);
+      })
+      .catch((e) => {
+        console.error("Translation API failed", e);
+      })
+      .finally(() => {
+        setTranslationLoading(false);
+      });
+  };
+
   const openTranslationModal = (wordText: string, prefilledPron = "", prefilledTrans = "", prefilledPos = "n.") => {
-    setWordToTranslate(wordText);
-    setCustomWordInput(wordText);
+    const cleanWord = wordText.trim();
+    const existing = reviewWords.find(rw => rw.word.toLowerCase() === cleanWord.toLowerCase());
+    if (existing) {
+      openEditReviewWord(existing);
+      return;
+    }
+
+    setEditingReviewWordId(null);
+    setWordToTranslate(cleanWord);
+    setCustomWordInput(cleanWord);
     setCustomWordPos(prefilledPos || "n.");
     setCustomWordPronunciation(prefilledPron || "");
     setCustomWordTranslation(prefilledTrans || "");
@@ -279,7 +346,7 @@ export default function Home() {
     fetch("/api/generate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "translate", word: wordText })
+      body: JSON.stringify({ action: "translate", word: cleanWord })
     })
       .then((res) => res.json())
       .then((data) => {
@@ -1379,37 +1446,57 @@ export default function Home() {
                                 {currentWordObj.pos}
                               </span>
                             </div>
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                addWordToReviewList(
-                                  currentWordObj.word,
-                                  currentWordObj.pos,
-                                  activeCardData?.wordTranslation || "คำแปลของการ์ดหลัก",
-                                  currentWordObj.id,
-                                  false,
-                                  activeCardData?.thaiPronunciation || currentWordObj.pronunciation || ""
-                                );
-                                if (progress.masteredIds.includes(currentWordObj.id)) {
-                                  toggleMastered(currentWordObj.id);
-                                }
-                                if (activeCardData) {
-                                  addCardToCache(currentWordObj.id, activeCardData);
-                                }
-                              }}
-                              className={`transition flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-lg border ${
-                                reviewWords.some(rw => rw.word.toLowerCase() === currentWordObj.word.toLowerCase())
-                                  ? "bg-rose-50 border-rose-200 text-[#A28C89] cursor-not-allowed"
-                                  : "bg-slate-50 border-slate-200 text-slate-500 hover:bg-rose-50 hover:border-[#EBE3DE] hover:text-[#A28C89]"
-                              }`}
-                              disabled={reviewWords.some(rw => rw.word.toLowerCase() === currentWordObj.word.toLowerCase())}
-                              title="Add to Review List (ยังจำไม่ได้)"
-                            >
-                              <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-                              </svg>
-                              {reviewWords.some(rw => rw.word.toLowerCase() === currentWordObj.word.toLowerCase()) ? "ต้องทบทวนแล้ว" : "ทวนคำนี้ (จำไม่ได้)"}
-                            </button>
+                            {reviewWords.some(rw => rw.word.toLowerCase() === currentWordObj.word.toLowerCase()) ? (
+                              <div className="flex items-center gap-1">
+                                <span className="bg-rose-50 border border-rose-200 text-[#A28C89] text-[10px] font-bold px-2 py-0.5 rounded-lg flex items-center gap-1">
+                                  <svg className="w-3 h-3 text-rose-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                  </svg>
+                                  ในคลังทวน
+                                </span>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    const rw = reviewWords.find(item => item.word.toLowerCase() === currentWordObj.word.toLowerCase());
+                                    if (rw) openEditReviewWord(rw);
+                                  }}
+                                  className="bg-white hover:bg-rose-50 border border-slate-200 hover:border-[#EBE3DE] text-[#A28C89] text-[10px] font-bold px-1.5 py-0.5 rounded-lg transition flex items-center gap-1"
+                                  title="แก้ไขคำแปลของคำนี้ในคลัง"
+                                >
+                                  <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                  </svg>
+                                  แก้คำแปล
+                                </button>
+                              </div>
+                            ) : (
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  addWordToReviewList(
+                                    currentWordObj.word,
+                                    currentWordObj.pos,
+                                    activeCardData?.wordTranslation || currentWordObj.meaning || "คำแปลของการ์ดหลัก",
+                                    currentWordObj.id,
+                                    false,
+                                    activeCardData?.thaiPronunciation || currentWordObj.pronunciation || ""
+                                  );
+                                  if (progress.masteredIds.includes(currentWordObj.id)) {
+                                    toggleMastered(currentWordObj.id);
+                                  }
+                                  if (activeCardData) {
+                                    addCardToCache(currentWordObj.id, activeCardData);
+                                  }
+                                }}
+                                className="transition flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-lg border bg-slate-50 border-slate-200 text-slate-500 hover:bg-rose-50 hover:border-[#EBE3DE] hover:text-[#A28C89]"
+                                title="Add to Review List (ยังจำไม่ได้)"
+                              >
+                                <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                ทวนคำนี้ (จำไม่ได้)
+                              </button>
+                            )}
                           </div>
                           <div className="flex items-center gap-2">
                             <button
@@ -1574,34 +1661,54 @@ export default function Home() {
                             </span>
                           </div>
                           <div className="flex items-center gap-2 animate-none">
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                addWordToReviewList(
-                                  currentWordObj.word,
-                                  currentWordObj.pos,
-                                  activeCardData?.wordTranslation || "คำแปลของการ์ดหลัก",
-                                  currentWordObj.id,
-                                  false,
-                                  activeCardData?.thaiPronunciation || currentWordObj.pronunciation || ""
-                                );
-                                if (progress.masteredIds.includes(currentWordObj.id)) {
-                                  toggleMastered(currentWordObj.id);
-                                }
-                                if (activeCardData) {
-                                  addCardToCache(currentWordObj.id, activeCardData);
-                                }
-                              }}
-                              className={`transition flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-lg border ${
-                                reviewWords.some(rw => rw.word.toLowerCase() === currentWordObj.word.toLowerCase())
-                                  ? "bg-rose-50 border-rose-200 text-[#A28C89] cursor-not-allowed"
-                                  : "bg-slate-50 border-slate-200 text-slate-500 hover:bg-rose-50 hover:border-[#EBE3DE] hover:text-[#A28C89]"
-                              }`}
-                              disabled={reviewWords.some(rw => rw.word.toLowerCase() === currentWordObj.word.toLowerCase())}
-                              title="Add to Review List (ยังจำไม่ได้)"
-                            >
-                              ทวนคำนี้ (จำไม่ได้)
-                            </button>
+                            {reviewWords.some(rw => rw.word.toLowerCase() === currentWordObj.word.toLowerCase()) ? (
+                              <div className="flex items-center gap-1">
+                                <span className="bg-rose-50 border border-rose-200 text-[#A28C89] text-[10px] font-bold px-2 py-0.5 rounded-lg flex items-center gap-1">
+                                  <svg className="w-3 h-3 text-rose-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                  </svg>
+                                  ในคลังทวน
+                                </span>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    const rw = reviewWords.find(item => item.word.toLowerCase() === currentWordObj.word.toLowerCase());
+                                    if (rw) openEditReviewWord(rw);
+                                  }}
+                                  className="bg-white hover:bg-rose-50 border border-slate-200 hover:border-[#EBE3DE] text-[#A28C89] text-[10px] font-bold px-1.5 py-0.5 rounded-lg transition flex items-center gap-1"
+                                  title="แก้ไขคำแปลของคำนี้ในคลัง"
+                                >
+                                  <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                  </svg>
+                                  แก้คำแปล
+                                </button>
+                              </div>
+                            ) : (
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  addWordToReviewList(
+                                    currentWordObj.word,
+                                    currentWordObj.pos,
+                                    activeCardData?.wordTranslation || currentWordObj.meaning || "คำแปลของการ์ดหลัก",
+                                    currentWordObj.id,
+                                    false,
+                                    activeCardData?.thaiPronunciation || currentWordObj.pronunciation || ""
+                                  );
+                                  if (progress.masteredIds.includes(currentWordObj.id)) {
+                                    toggleMastered(currentWordObj.id);
+                                  }
+                                  if (activeCardData) {
+                                    addCardToCache(currentWordObj.id, activeCardData);
+                                  }
+                                }}
+                                className="transition flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-lg border bg-slate-50 border-slate-200 text-slate-500 hover:bg-rose-50 hover:border-[#EBE3DE] hover:text-[#A28C89]"
+                                title="Add to Review List (ยังจำไม่ได้)"
+                              >
+                                ทวนคำนี้ (จำไม่ได้)
+                              </button>
+                            )}
                             <span className={`text-[8.5px] sm:text-[10px] uppercase tracking-wider font-extrabold px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full ${getPosBadgeColor(currentWordObj.pos)}`}>
                               {currentWordObj.pos}
                             </span>
@@ -2163,25 +2270,48 @@ export default function Home() {
                           <span className="text-[10px] text-slate-450 font-semibold">
                             Status: <strong className={isMastered ? "text-emerald-600" : "text-slate-400"}>{isMastered ? "จำได้แล้ว" : "ยังจำไม่ได้"}</strong>
                           </span>
-                          <button
-                            onClick={() => {
-                              const isWordInReview = reviewWords.some(rw => rw.word.toLowerCase() === wordObj.word.toLowerCase());
-                              if (isWordInReview) {
-                                const updated = reviewWords.filter(item => item.word.toLowerCase() !== wordObj.word.toLowerCase());
-                                setReviewWords(updated);
-                                updateReviewWordsInDb(updated);
-                              } else {
-                                addWordToReviewList(wordObj.word, wordObj.pos, "คำแปลของคำนี้", wordObj.id, false);
-                              }
-                            }}
-                            className={`text-[10px] font-extrabold uppercase px-2.5 py-1.5 rounded-lg border transition ${
-                              reviewWords.some(rw => rw.word.toLowerCase() === wordObj.word.toLowerCase())
-                                ? "bg-rose-50 border-rose-200 text-[#A28C89] hover:bg-rose-100"
-                                : "bg-slate-50 border-slate-200 text-slate-500 hover:bg-slate-100"
-                            }`}
-                          >
-                            {reviewWords.some(rw => rw.word.toLowerCase() === wordObj.word.toLowerCase()) ? "ต้องทวน" : "ใส่คลังทวน"}
-                          </button>
+                          <div className="flex items-center gap-1.5">
+                            <button
+                              onClick={() => {
+                                const isWordInReview = reviewWords.some(rw => rw.word.toLowerCase() === wordObj.word.toLowerCase());
+                                if (isWordInReview) {
+                                  const updated = reviewWords.filter(item => item.word.toLowerCase() !== wordObj.word.toLowerCase());
+                                  setReviewWords(updated);
+                                  updateReviewWordsInDb(updated);
+                                } else {
+                                  addWordToReviewList(
+                                    wordObj.word,
+                                    wordObj.pos,
+                                    wordObj.meaning || "คำแปลของคำนี้",
+                                    wordObj.id,
+                                    false,
+                                    wordObj.pronunciation || ""
+                                  );
+                                }
+                              }}
+                              className={`text-[10px] font-extrabold uppercase px-2.5 py-1.5 rounded-lg border transition ${
+                                reviewWords.some(rw => rw.word.toLowerCase() === wordObj.word.toLowerCase())
+                                  ? "bg-rose-50 border-rose-200 text-[#A28C89] hover:bg-rose-100"
+                                  : "bg-slate-50 border-slate-200 text-slate-500 hover:bg-slate-100"
+                              }`}
+                            >
+                              {reviewWords.some(rw => rw.word.toLowerCase() === wordObj.word.toLowerCase()) ? "ต้องทวน" : "ใส่คลังทวน"}
+                            </button>
+                            {reviewWords.some(rw => rw.word.toLowerCase() === wordObj.word.toLowerCase()) && (
+                              <button
+                                onClick={() => {
+                                  const rw = reviewWords.find(item => item.word.toLowerCase() === wordObj.word.toLowerCase());
+                                  if (rw) openEditReviewWord(rw);
+                                }}
+                                className="p-1.5 text-slate-400 hover:text-[#A28C89] bg-white border border-slate-200 hover:border-[#E5DDD8] rounded-lg transition"
+                                title="แก้ไขคำแปลในคลัง"
+                              >
+                                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                </svg>
+                              </button>
+                            )}
+                          </div>
                         </div>
                       </div>
                     );
@@ -2286,21 +2416,9 @@ export default function Home() {
                           </svg>
                         </button>
                         <button
-                          onClick={() => {
-                            const newTranslation = prompt("แก้ไขคำแปล:", rw.translation);
-                            if (newTranslation !== null) {
-                              const newPronunciation = prompt("แก้ไขคำอ่าน (สัทอักษรไทย):", rw.thaiPronunciation || "");
-                              const updated = reviewWords.map(item => item.id === rw.id ? { 
-                                ...item, 
-                                translation: newTranslation.trim(),
-                                thaiPronunciation: newPronunciation !== null ? newPronunciation.trim() : rw.thaiPronunciation 
-                              } : item);
-                              setReviewWords(updated);
-                              updateReviewWordsInDb(updated);
-                            }
-                          }}
-                          className="text-slate-400 hover:text-[#A28C89] transition"
-                          title="แก้ไขคำแปล"
+                          onClick={() => openEditReviewWord(rw)}
+                          className="text-slate-400 hover:text-[#A28C89] p-1 rounded-lg hover:bg-slate-50 transition"
+                          title="แก้ไขคำแปล / คำอ่าน"
                         >
                           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -2334,7 +2452,16 @@ export default function Home() {
                         )}
                       </h4>
                       {showReviewTranslation || revealedReviewIds.includes(rw.id) ? (
-                        <p className="text-xs font-bold text-[#A28C89] mt-1">แปล: {rw.translation}</p>
+                        <p
+                          onClick={() => openEditReviewWord(rw)}
+                          className="text-xs font-bold text-[#A28C89] mt-1 cursor-pointer hover:underline flex items-center gap-1 group/trans"
+                          title="คลิกเพื่อแก้ไขคำแปล"
+                        >
+                          <span>แปล: {rw.translation}</span>
+                          <svg className="w-3 h-3 opacity-0 group-hover/trans:opacity-100 transition text-[#A28C89]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                          </svg>
+                        </p>
                       ) : (
                         <p
                           onClick={() => setRevealedReviewIds(prev => [...prev, rw.id])}
@@ -2473,16 +2600,9 @@ export default function Home() {
                           </svg>
                         </button>
                         <button
-                          onClick={() => {
-                            const newTranslation = prompt("แก้ไขคำแปล:", rw.translation);
-                            if (newTranslation !== null) {
-                              const updated = reviewWords.map(item => item.id === rw.id ? { ...item, translation: newTranslation } : item);
-                              setReviewWords(updated);
-                              updateReviewWordsInDb(updated);
-                            }
-                          }}
-                          className="text-slate-400 hover:text-[#A28C89] transition"
-                          title="แก้ไขคำแปล"
+                          onClick={() => openEditReviewWord(rw)}
+                          className="text-slate-400 hover:text-[#A28C89] p-1 rounded-lg hover:bg-slate-50 transition"
+                          title="แก้ไขคำแปล / คำอ่าน"
                         >
                           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -2516,7 +2636,16 @@ export default function Home() {
                         )}
                       </h4>
                       {showReviewTranslation || revealedReviewIds.includes(rw.id) ? (
-                        <p className="text-xs font-bold text-[#A28C89] mt-1">แปล: {rw.translation}</p>
+                        <p
+                          onClick={() => openEditReviewWord(rw)}
+                          className="text-xs font-bold text-[#A28C89] mt-1 cursor-pointer hover:underline flex items-center gap-1 group/trans"
+                          title="คลิกเพื่อแก้ไขคำแปล"
+                        >
+                          <span>แปล: {rw.translation}</span>
+                          <svg className="w-3 h-3 opacity-0 group-hover/trans:opacity-100 transition text-[#A28C89]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                          </svg>
+                        </p>
                       ) : (
                         <p
                           onClick={() => setRevealedReviewIds(prev => [...prev, rw.id])}
@@ -2714,98 +2843,173 @@ export default function Home() {
       </main>
 
       {/* WORD TRANSLATION AND ANALYSIS MODAL */}
-      {showTranslateModal && (
-        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-50 p-4 font-sans animate-fade-in">
-          <div className="bg-white rounded-3xl border border-slate-100 p-6 max-w-md w-full shadow-2xl flex flex-col gap-4 text-left">
-            <div className="flex justify-between items-center border-b border-slate-100 pb-3">
-              <h3 className="text-lg font-black text-slate-800">บันทึกคำศัพท์เข้าคลังทบทวน</h3>
-              <button onClick={() => setShowTranslateModal(false)} className="text-slate-450 hover:text-slate-600 transition p-1 rounded-lg">
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
+      {showTranslateModal && (() => {
+        const isEditingWord = Boolean(
+          editingReviewWordId ||
+          reviewWords.some(rw => rw.word.toLowerCase() === customWordInput.trim().toLowerCase())
+        );
 
-            {translationLoading ? (
-              <div className="py-8 flex flex-col items-center gap-3">
-                <div className="w-8 h-8 border-3 border-[#B8A3A0] border-t-transparent rounded-full animate-spin" />
-                <span className="text-xs text-slate-500 font-extrabold uppercase tracking-wider">กำลังแปลคำศัพท์ด้วย AI...</span>
-              </div>
-            ) : (
-              <div className="flex flex-col gap-4">
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-[10px] text-slate-500 font-extrabold uppercase tracking-wider pl-1">คำศัพท์ภาษาอังกฤษ (English Word)</label>
-                  <input
-                    type="text"
-                    value={customWordInput}
-                    onChange={(e) => setCustomWordInput(e.target.value)}
-                    className="bg-slate-50 border border-slate-200 focus:border-[#B8A3A0] focus:bg-white rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-800 focus:outline-none"
-                  />
+        return (
+          <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-50 p-4 font-sans animate-fade-in">
+            <div className="bg-white rounded-3xl border border-slate-100 p-6 max-w-md w-full shadow-2xl flex flex-col gap-4 text-left">
+              <div className="flex justify-between items-center border-b border-slate-100 pb-3">
+                <div>
+                  <h3 className="text-lg font-black text-slate-800 flex items-center gap-2">
+                    {isEditingWord ? (
+                      <>
+                        <span className="text-rose-500">✏️</span> แก้ไขคำแปลในคลัง
+                      </>
+                    ) : (
+                      <>
+                        <span>➕</span> บันทึกคำศัพท์เข้าคลังทบทวน
+                      </>
+                    )}
+                  </h3>
+                  <p className="text-[11px] text-slate-500 font-medium mt-0.5">
+                    {isEditingWord
+                      ? "แก้ไขคำแปลหรือคำอ่านให้ถูกต้องตามที่คุณต้องการ"
+                      : "คำศัพท์นี้จะถูกบันทึกไว้ในคลังทบทวนของคุณ"}
+                  </p>
                 </div>
+                <button
+                  onClick={() => {
+                    setShowTranslateModal(false);
+                    setEditingReviewWordId(null);
+                  }}
+                  className="text-slate-450 hover:text-slate-600 transition p-1 rounded-lg"
+                  title="ปิด"
+                >
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
 
-                <div className="grid grid-cols-2 gap-4">
+              {translationLoading ? (
+                <div className="py-8 flex flex-col items-center gap-3">
+                  <div className="w-8 h-8 border-3 border-[#B8A3A0] border-t-transparent rounded-full animate-spin" />
+                  <span className="text-xs text-slate-500 font-extrabold uppercase tracking-wider">กำลังแปลคำศัพท์ด้วย AI...</span>
+                </div>
+              ) : (
+                <div className="flex flex-col gap-4">
                   <div className="flex flex-col gap-1.5">
-                    <label className="text-[10px] text-slate-500 font-extrabold uppercase tracking-wider pl-1">ประเภทคำ (POS)</label>
-                    <select
-                      value={customWordPos}
-                      onChange={(e) => setCustomWordPos(e.target.value)}
-                      className="bg-slate-50 border border-slate-200 hover:border-[#E5DDD8] text-slate-700 text-sm font-semibold rounded-xl px-4 py-2.5 focus:outline-none focus:border-[#B8A3A0] transition"
-                    >
-                      <option value="n.">Noun (n.)</option>
-                      <option value="v.">Verb (v.)</option>
-                      <option value="adj.">Adjective (adj.)</option>
-                      <option value="adv.">Adverb (adv.)</option>
-                      <option value="prep.">Preposition (prep.)</option>
-                      <option value="conj.">Conjunction (conj.)</option>
-                      <option value="pron.">Pronoun (pron.)</option>
-                    </select>
-                  </div>
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-[10px] text-slate-500 font-extrabold uppercase tracking-wider pl-1">คำอ่านไทย (Phonetic)</label>
+                    <label className="text-[10px] text-slate-500 font-extrabold uppercase tracking-wider pl-1">
+                      คำศัพท์ภาษาอังกฤษ (English Word)
+                    </label>
                     <input
                       type="text"
-                      value={customWordPronunciation}
-                      onChange={(e) => setCustomWordPronunciation(e.target.value)}
-                      placeholder="เช่น ออพ-เพอร์-ทู-นิ-ที"
+                      value={customWordInput}
+                      onChange={(e) => setCustomWordInput(e.target.value)}
                       className="bg-slate-50 border border-slate-200 focus:border-[#B8A3A0] focus:bg-white rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-800 focus:outline-none"
                     />
                   </div>
-                </div>
 
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-[10px] text-slate-500 font-extrabold uppercase tracking-wider pl-1">คำแปลภาษาไทย (Translation)</label>
-                  <input
-                    type="text"
-                    value={customWordTranslation}
-                    onChange={(e) => setCustomWordTranslation(e.target.value)}
-                    placeholder="เช่น โอกาส, การช่วยเหลือ"
-                    className="bg-slate-50 border border-slate-200 focus:border-[#B8A3A0] focus:bg-white rounded-xl px-4 py-2.5 text-sm text-slate-800 focus:outline-none font-semibold"
-                  />
-                </div>
-
-                {reviewWords.some(rw => rw.word.toLowerCase() === customWordInput.trim().toLowerCase()) && (
-                  <div className="bg-amber-50 border border-amber-200 text-amber-800 text-xs px-3.5 py-2 rounded-xl flex items-center gap-2 font-bold animate-fade-in">
-                    <span className="text-sm">⚠️</span>
-                    <span>คำนี้ถูกบันทึกไว้ในคลังทบทวนแล้ว</span>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-[10px] text-slate-500 font-extrabold uppercase tracking-wider pl-1">ประเภทคำ (POS)</label>
+                      <select
+                        value={customWordPos}
+                        onChange={(e) => setCustomWordPos(e.target.value)}
+                        className="bg-slate-50 border border-slate-200 hover:border-[#E5DDD8] text-slate-700 text-sm font-semibold rounded-xl px-4 py-2.5 focus:outline-none focus:border-[#B8A3A0] transition"
+                      >
+                        <option value="n.">Noun (n.)</option>
+                        <option value="v.">Verb (v.)</option>
+                        <option value="adj.">Adjective (adj.)</option>
+                        <option value="adv.">Adverb (adv.)</option>
+                        <option value="prep.">Preposition (prep.)</option>
+                        <option value="conj.">Conjunction (conj.)</option>
+                        <option value="pron.">Pronoun (pron.)</option>
+                      </select>
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-[10px] text-slate-500 font-extrabold uppercase tracking-wider pl-1">คำอ่านไทย (Phonetic)</label>
+                      <input
+                        type="text"
+                        value={customWordPronunciation}
+                        onChange={(e) => setCustomWordPronunciation(e.target.value)}
+                        placeholder="เช่น ออพ-เพอร์-ทู-นิ-ที"
+                        className="bg-slate-50 border border-slate-200 focus:border-[#B8A3A0] focus:bg-white rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-800 focus:outline-none"
+                      />
+                    </div>
                   </div>
-                )}
-                <button
-                  onClick={() => {
-                    if (customWordInput.trim() && customWordTranslation.trim()) {
-                      addWordToReviewList(customWordInput.trim(), customWordPos, customWordTranslation.trim(), currentWordObj?.id, true, customWordPronunciation.trim());
-                      setShowTranslateModal(false);
-                    }
-                  }}
-                  disabled={!customWordInput.trim() || !customWordTranslation.trim()}
-                  className="w-full bg-gradient-to-r from-[#A28C89] to-[#C3B3B1] hover:from-[#B8A3A0] hover:to-[#D4C9C8] disabled:opacity-50 text-white font-extrabold text-sm py-4 rounded-2xl transition shadow-md duration-200 mt-2"
-                >
-                  {reviewWords.some(rw => rw.word.toLowerCase() === customWordInput.trim().toLowerCase()) ? "คำนี้อยู่ในคลังแล้ว (บันทึกซ้ำ)" : "บันทึกเข้าคลังทบทวน"}
-                </button>
-              </div>
-            )}
+
+                  <div className="flex flex-col gap-1.5">
+                    <div className="flex justify-between items-center pl-1">
+                      <label className="text-[10px] text-slate-500 font-extrabold uppercase tracking-wider">
+                        คำแปลภาษาไทย (Translation)
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => retranslateWithAI()}
+                        disabled={translationLoading || !customWordInput.trim()}
+                        className="text-[10px] font-bold text-[#A28C89] hover:text-[#8D7774] flex items-center gap-1 transition disabled:opacity-50 cursor-pointer"
+                        title="ให้ AI ช่วยแปลคำนี้ใหม่อีกครั้ง"
+                      >
+                        🔄 แปลใหม่ด้วย AI
+                      </button>
+                    </div>
+                    <input
+                      type="text"
+                      value={customWordTranslation}
+                      onChange={(e) => setCustomWordTranslation(e.target.value)}
+                      placeholder="เช่น โอกาส, การช่วยเหลือ"
+                      className="bg-slate-50 border-2 border-slate-200 focus:border-[#A28C89] focus:bg-white rounded-xl px-4 py-2.5 text-sm text-slate-800 focus:outline-none font-semibold transition"
+                      autoFocus
+                    />
+                    <span className="text-[10px] text-slate-400 pl-1 font-medium">
+                      💡 สามารถพิมพ์แก้ไขคำแปลได้โดยตรง หากคำแปลเดิมไม่ถูกต้อง
+                    </span>
+                  </div>
+
+                  {isEditingWord && (
+                    <div className="bg-amber-50 border border-amber-200 text-amber-900 text-xs px-3.5 py-2.5 rounded-xl flex items-center gap-2 font-bold animate-fade-in">
+                      <span className="text-base">📌</span>
+                      <div className="flex flex-col">
+                        <span>คำนี้อยู่ในคลังทบทวนของคุณแล้ว</span>
+                        <span className="text-[11px] font-normal text-amber-700">การกดบันทึกจะอัปเดตคำแปลในคลังและเซิร์ฟเวอร์ทันที</span>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="flex items-center gap-2 mt-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowTranslateModal(false);
+                        setEditingReviewWordId(null);
+                      }}
+                      className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-sm py-3.5 rounded-2xl transition"
+                    >
+                      ยกเลิก
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (customWordInput.trim() && customWordTranslation.trim()) {
+                          addWordToReviewList(
+                            customWordInput.trim(),
+                            customWordPos,
+                            customWordTranslation.trim(),
+                            currentWordObj?.id,
+                            true,
+                            customWordPronunciation.trim()
+                          );
+                          setShowTranslateModal(false);
+                          setEditingReviewWordId(null);
+                        }
+                      }}
+                      disabled={!customWordInput.trim() || !customWordTranslation.trim()}
+                      className="flex-2 bg-gradient-to-r from-[#A28C89] to-[#C3B3B1] hover:from-[#B8A3A0] hover:to-[#D4C9C8] disabled:opacity-50 text-white font-extrabold text-sm py-3.5 rounded-2xl transition shadow-md duration-200 flex items-center justify-center gap-2"
+                    >
+                      {isEditingWord ? "💾 บันทึกคำแปลที่แก้ไข" : "➕ บันทึกเข้าคลังทบทวน"}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
     </div>
   );
 }
