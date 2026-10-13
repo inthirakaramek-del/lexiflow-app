@@ -4,53 +4,7 @@
     "starredIds": [],
     "masteredIds": []
   },
-  "cardCache": {
-    "w-0": {
-      "wordTranslation": "เกี่ยวกับ",
-      "thaiPronunciation": "เออะ บ๊าว ถึ",
-      "articleTitle": "A Pleasant Gathering: about",
-      "fullArticleThai": "แขกสองสามคนได้เดินทางมาถึง พวกเขาได้นำของขวัญเล็กๆ น้อยๆ มาด้วย บรรยากาศเริ่มอบอุ่นขึ้นเป็นอย่างมาก เจ้าบ้านได้เสิร์ฟชาร้อนให้แก่ทุกคน และแขกทุกคนกล่าวว่าการพบปะครั้งนี้ยอดเยี่ยมมาก",
-      "sentences": [
-        {
-          "structure": "S + V",
-          "sentence": "About of guests arrived.",
-          "translation": "แขกสองสามคนได้เดินทางมาถึง",
-          "thaiPronunciation": "แบออุท อฟ กอุเอสทส แรรอิวด์",
-          "grammar": "S (about of guests: แขกกลุ่มหนึ่ง) + V (arrived: เดินทางมาถึง)"
-        },
-        {
-          "structure": "S + V + O",
-          "sentence": "They brought about small gifts.",
-          "translation": "พวกเขาได้นำของขวัญเล็กๆ น้อยๆ มาด้วย",
-          "thaiPronunciation": "เด บรออุกฮท แบออุท สมแลล กิฟท์ส",
-          "grammar": "S (They: พวกเขา) + V (brought: นำมา) + O (about small gifts: ของขวัญเล็กน้อย)"
-        },
-        {
-          "structure": "S + V + C",
-          "sentence": "The atmosphere became very warm.",
-          "translation": "บรรยากาศเริ่มอบอุ่นขึ้นเป็นอย่างมาก",
-          "thaiPronunciation": "เดอะ แทมอสพฮเอรเอ บีเคม วเอรย วแรม",
-          "grammar": "S (The atmosphere: บรรยากาศ) + V (became: กลายเป็น) + C (very warm: อบอุ่นมาก)"
-        },
-        {
-          "structure": "S + V + IO + DO",
-          "sentence": "The host served everyone hot tea.",
-          "translation": "เจ้าบ้านได้เสิร์ฟชาร้อนให้แก่ทุกคน",
-          "thaiPronunciation": "เดอะ ฮอสท สเอรวด์ เอวเอรยอนเอ ฮอท ทเอแ",
-          "grammar": "S (The host: เจ้าบ้าน) + V (served: เสิร์ฟ) + IO (everyone: แก่ทุกคน) + DO (hot tea: ชาร้อน)"
-        },
-        {
-          "structure": "S + V + O + C",
-          "sentence": "All guests called the gathering wonderful.",
-          "translation": "แขกทุกคนกล่าวว่าการพบปะครั้งนี้ยอดเยี่ยมมาก",
-          "thaiPronunciation": "แลล กอุเอสทส คแลลด์ เดอะ กแทฮเอรอินก วอนดเอรฟอุล",
-          "grammar": "S (All guests: แขกทุกคน) + V (called: กล่าวว่า) + O (the gathering: การพบปะ) + C (wonderful: ยอดเยี่ยม)"
-        }
-      ],
-      "trick": "คำว่า \"about\" เมื่อนำมาใช้ผสมผสานในเรื่องราวบทความสั้น จะช่วยให้เห็นภาพการใช้งานในโครงสร้างประโยคได้อย่างเป็นธรรมชาติ",
-      "isFallback": true
-    }
-  },
+  "cardCache": {},
   "generalNotes": [],
   "reviewWords": []
 }

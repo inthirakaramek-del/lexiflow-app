@@ -324,22 +324,22 @@ export function generateFallbackCard(wordObj: Word): CardData {
     fullArticleThai = `${w} อันใหม่ได้มาถึงแล้ว นักเรียนของเราได้ทำการทดสอบ ${w} การออกแบบนั้นน่าประทับใจเป็นอย่างยิ่ง คุณครูได้แสดงฟีเจอร์พิเศษให้พวกเขาได้เห็น และทุกคนประกาศว่า ${w} ชิ้นนี้ประสบความสำเร็จอย่างงดงาม`;
     trick = `คำนาม "${w}" ให้จินตนาการถึงภาพวัตถุหรือบริบทการใช้งานจริงในชีวิตประจำวันเพื่อความจำที่ยาวนาน`;
   } else {
-    // adj., det., adv., prep., etc. (e.g. "a couple", "a few", "a bit")
+    // adj., det., adv., prep., etc. (e.g. "about", "a couple", "a few", "a bit")
     articleTitle = `A Pleasant Gathering: ${w}`;
     sentences = [
       {
         structure: "S + V",
-        sentence: `${w.charAt(0).toUpperCase() + w.slice(1)} of guests arrived.`,
-        translation: `แขกสองสามคนได้เดินทางมาถึง`,
-        thaiPronunciation: englishToThaiPhonetic(`${w} of guests arrived.`),
-        grammar: `S (${w} of guests: แขกกลุ่มหนึ่ง) + V (arrived: เดินทางมาถึง)`
+        sentence: "Several friendly guests arrived early.",
+        translation: "แขกที่เป็นมิตรหลายคนเดินทางมาถึงแต่เช้า",
+        thaiPronunciation: englishToThaiPhonetic("Several friendly guests arrived early."),
+        grammar: "S (Several friendly guests: แขกหลายคน) + V (arrived early: เดินทางมาถึงแต่เช้า)"
       },
       {
         structure: "S + V + O",
-        sentence: `They brought ${w} small gifts.`,
-        translation: `พวกเขาได้นำของขวัญเล็กๆ น้อยๆ มาด้วย`,
-        thaiPronunciation: englishToThaiPhonetic(`They brought ${w} small gifts.`),
-        grammar: `S (They: พวกเขา) + V (brought: นำมา) + O (${w} small gifts: ของขวัญเล็กน้อย)`
+        sentence: "They shared thoughts about travel.",
+        translation: "พวกเขาได้แลกเปลี่ยนความคิดเห็นเกี่ยวกับการเดินทาง",
+        thaiPronunciation: englishToThaiPhonetic("They shared thoughts about travel."),
+        grammar: `S (They: พวกเขา) + V (shared: แลกเปลี่ยน) + O (thoughts about travel: ความคิดเกี่ยวกับการท่องเที่ยว)`
       },
       {
         structure: "S + V + C",
@@ -350,21 +350,21 @@ export function generateFallbackCard(wordObj: Word): CardData {
       },
       {
         structure: "S + V + IO + DO",
-        sentence: "The host served everyone hot tea.",
-        translation: "เจ้าบ้านได้เสิร์ฟชาร้อนให้แก่ทุกคน",
-        thaiPronunciation: englishToThaiPhonetic("The host served everyone hot tea."),
-        grammar: "S (The host: เจ้าบ้าน) + V (served: เสิร์ฟ) + IO (everyone: แก่ทุกคน) + DO (hot tea: ชาร้อน)"
+        sentence: "The host served everyone tea.",
+        translation: "เจ้าบ้านได้เสิร์ฟน้ำชาให้แก่ทุกคน",
+        thaiPronunciation: englishToThaiPhonetic("The host served everyone tea."),
+        grammar: "S (The host: เจ้าบ้าน) + V (served: เสิร์ฟ) + IO (everyone: แก่ทุกคน) + DO (tea: ชา)"
       },
       {
         structure: "S + V + O + C",
-        sentence: "All guests called the gathering wonderful.",
-        translation: "แขกทุกคนกล่าวว่าการพบปะครั้งนี้ยอดเยี่ยมมาก",
-        thaiPronunciation: englishToThaiPhonetic("All guests called the gathering wonderful."),
-        grammar: "S (All guests: แขกทุกคน) + V (called: กล่าวว่า) + O (the gathering: การพบปะ) + C (wonderful: ยอดเยี่ยม)"
+        sentence: "All guests called it wonderful.",
+        translation: "แขกทุกคนกล่าวว่าการพบปะนี้ยอดเยี่ยม",
+        thaiPronunciation: englishToThaiPhonetic("All guests called it wonderful."),
+        grammar: "S (All guests: แขกทุกคน) + V (called: กล่าวว่า) + O (it: มัน) + C (wonderful: ยอดเยี่ยม)"
       }
     ];
-    fullArticleThai = "แขกสองสามคนได้เดินทางมาถึง พวกเขาได้นำของขวัญเล็กๆ น้อยๆ มาด้วย บรรยากาศเริ่มอบอุ่นขึ้นเป็นอย่างมาก เจ้าบ้านได้เสิร์ฟชาร้อนให้แก่ทุกคน และแขกทุกคนกล่าวว่าการพบปะครั้งนี้ยอดเยี่ยมมาก";
-    trick = `คำว่า "${w}" เมื่อนำมาใช้ผสมผสานในเรื่องราวบทความสั้น จะช่วยให้เห็นภาพการใช้งานในโครงสร้างประโยคได้อย่างเป็นธรรมชาติ`;
+    fullArticleThai = "แขกที่เป็นมิตรหลายคนเดินทางมาถึงแต่เช้า พวกเขาได้แลกเปลี่ยนความคิดเห็นเกี่ยวกับการเดินทาง บรรยากาศเริ่มอบอุ่นขึ้นเป็นอย่างมาก เจ้าบ้านได้เสิร์ฟน้ำชาให้แก่ทุกคน และทุกคนต่างบอกว่าการพบปะนี้ยอดเยี่ยมมาก";
+    trick = `คำว่า "${w}" เมื่อนำมาใช้ผสมผสานในเรื่องราวสั้นๆ จะช่วยให้จดจำบริบทการใช้งานได้อย่างแม่นยำและเป็นธรรมชาติ`;
   }
 
   return {

@@ -71,26 +71,33 @@ Return JSON: { "translation": string, "thaiPronunciation": string, "pos": string
       return NextResponse.json(parsedData);
     }
 
-    // 2. Main vocabulary flashcard generation with streamlined prompt (~550 chars)
+    // 2. Main vocabulary flashcard generation with cohesive, moderate-length prompt (5-7 words per sentence)
     const { word, pos } = body;
-    const prompt = `Write a cohesive 5-sentence mini-story featuring "${word}" (${pos}).
-The 5 sentences must naturally include each of these 5 English structures in any creative order:
+    const prompt = `Create a connected 5-sentence mini-story featuring "${word}" (${pos}).
+ALL 5 sentences MUST connect together as ONE continuous, cohesive story about the same situation from beginning to end.
+The 5 sentences must each use one of these 5 structures:
 - S + V
 - S + V + O
 - S + V + C
 - S + V + IO + DO
 - S + V + O + C
 
+CRITICAL RULES:
+1. Cohesive narrative: Every sentence connects logically to the previous one to form a smooth mini-story.
+2. Moderate sentence length: Keep each sentence natural and concise (around 5 to 7 words). Do NOT make them ultra-short (3 words) or overly long.
+3. Natural English: Everyday conversational English that native speakers actually say.
+4. Natural Thai: Translations must sound fluent and natural to Thai speakers.
+
 Return JSON with:
 - articleTitle: Catchy English title (2-4 words)
 - wordTranslation: Natural Thai translation of "${word}"
 - thaiPronunciation: Phonetic reading of the ENGLISH word "${word}" in Thai characters
 - fullArticleThai: Fluent Thai translation of the entire 5-sentence story as a single paragraph
-- sentences: Array of 5 sentence objects in order, each with:
-  * structure: structure name
-  * sentence: English sentence
-  * translation: Thai translation of sentence
-  * thaiPronunciation: Thai phonetic reading of sentence word-by-word
+- sentences: Array of 5 sentence objects in storyline order, each with:
+  * structure: structure name (e.g. 'S + V', 'S + V + O', 'S + V + C', 'S + V + IO + DO', 'S + V + O + C')
+  * sentence: English sentence (5-7 words)
+  * translation: Natural Thai translation of this sentence
+  * thaiPronunciation: Thai phonetic pronunciation of the sentence word-by-word
   * grammar: Breakdown format 'S (Word: แปล) + V (Word: แปล) + ...'
 - trick: Practical usage tip in Thai`;
 
