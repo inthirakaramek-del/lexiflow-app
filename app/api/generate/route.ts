@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
-// Helper fetch with auto-retry for 429 rate limits
-async function fetchWithRetry(url: string, payload: any, maxRetries = 1): Promise<Response> {
+// Helper fetch with auto-retry for 429 and 503 errors
+async function fetchWithRetry(url: string, payload: any, maxRetries = 2): Promise<Response> {
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     const res = await fetch(url, {
       method: "POST",
@@ -11,9 +11,9 @@ async function fetchWithRetry(url: string, payload: any, maxRetries = 1): Promis
       },
       body: JSON.stringify(payload),
     });
-    if (res.status === 429 && attempt < maxRetries) {
-      console.warn("Gemini 429 rate limit hit, auto-retrying after 1500ms backoff...");
-      await new Promise((resolve) => setTimeout(resolve, 1500));
+    if ((res.status === 429 || res.status === 503) && attempt < maxRetries) {
+      console.warn(`Gemini ${res.status} error, auto-retrying attempt ${attempt + 1}...`);
+      await new Promise((resolve) => setTimeout(resolve, 1500 * (attempt + 1)));
       continue;
     }
     return res;
@@ -71,35 +71,27 @@ Return JSON: { "translation": string, "thaiPronunciation": string, "pos": string
       return NextResponse.json(parsedData);
     }
 
-    // 2. Main vocabulary flashcard generation with cohesive, moderate-length prompt (5-7 words per sentence)
+    // 2. Ultra-lean vocabulary flashcard generation (4-6 simple words, minimum tokens)
     const { word, pos } = body;
-    const prompt = `Create a connected 5-sentence mini-story featuring "${word}" (${pos}).
-ALL 5 sentences MUST connect together as ONE continuous, cohesive story about the same situation from beginning to end.
-The 5 sentences must each use one of these 5 structures:
-- S + V
-- S + V + O
-- S + V + C
-- S + V + IO + DO
-- S + V + O + C
+    const prompt = `Write 5 short connected sentences featuring "${word}" (${pos}) telling 1 simple everyday story.
+The 5 sentences must follow: S+V, S+V+O, S+V+C, S+V+IO+DO, S+V+O+C in order.
 
-CRITICAL RULES:
-1. Cohesive narrative: Every sentence connects logically to the previous one to form a smooth mini-story.
-2. Moderate sentence length: Keep each sentence natural and concise (around 5 to 7 words). Do NOT make them ultra-short (3 words) or overly long.
-3. Natural English: Everyday conversational English that native speakers actually say.
-4. Natural Thai: Translations must sound fluent and natural to Thai speakers.
+RULES TO MINIMIZE TOKENS:
+1. STRICT LENGTH: exactly 4 to 6 simple words per sentence.
+2. BASIC VOCABULARY ONLY: Use simple everyday A1-A2 words. NEVER use formal, corporate, or complex words (no "immediately", "initiated", "campaign", etc.).
+3. Keep Thai translation and pronunciation very short and concise.
 
-Return JSON with:
-- articleTitle: Catchy English title (2-4 words)
-- wordTranslation: Natural Thai translation of "${word}"
-- thaiPronunciation: Phonetic reading of the ENGLISH word "${word}" in Thai characters
-- fullArticleThai: Fluent Thai translation of the entire 5-sentence story as a single paragraph
-- sentences: Array of 5 sentence objects in storyline order, each with:
-  * structure: structure name (e.g. 'S + V', 'S + V + O', 'S + V + C', 'S + V + IO + DO', 'S + V + O + C')
-  * sentence: English sentence (5-7 words)
-  * translation: Natural Thai translation of this sentence
-  * thaiPronunciation: Thai phonetic pronunciation of the sentence word-by-word
-  * grammar: Breakdown format 'S (Word: แปล) + V (Word: แปล) + ...'
-- trick: Practical usage tip in Thai`;
+Return JSON:
+- articleTitle: 2-3 words English title
+- wordTranslation: natural Thai meaning of "${word}"
+- thaiPronunciation: pronunciation of ENGLISH word "${word}" in Thai
+- sentences: array of 5 sentence objects in storyline order with:
+  * structure: structure name ('S + V', 'S + V + O', 'S + V + C', 'S + V + IO + DO', 'S + V + O + C')
+  * sentence: English sentence (4-6 simple words)
+  * translation: short natural Thai translation
+  * thaiPronunciation: short Thai reading of each word
+  * grammar: format 'S (Word: แปล) + V (Word: แปล) + ...'
+- trick: 1 short sentence Thai tip (max 10 words)`;
 
     const response = await fetchWithRetry(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key=${apiKey}`,
@@ -114,7 +106,6 @@ Return JSON with:
               articleTitle: { type: "STRING" },
               wordTranslation: { type: "STRING" },
               thaiPronunciation: { type: "STRING" },
-              fullArticleThai: { type: "STRING" },
               sentences: {
                 type: "ARRAY",
                 items: {
@@ -147,14 +138,20 @@ Return JSON with:
       throw new Error("No candidates returned from Gemini API");
     }
     const textContent = data.candidates[0].content.parts[0].text;
+    let parsedData: any;
     try {
-      const parsedData = JSON.parse(textContent);
-      return NextResponse.json(parsedData);
+      parsedData = JSON.parse(textContent);
     } catch (parseErr: any) {
       const cleanText = textContent.replace(/```json/g, "").replace(/```/g, "").trim();
-      const parsedData = JSON.parse(cleanText);
-      return NextResponse.json(parsedData);
+      parsedData = JSON.parse(cleanText);
     }
+
+    // Auto-generate fullArticleThai by joining translations to save ~100 tokens from AI response
+    if (!parsedData.fullArticleThai && Array.isArray(parsedData.sentences)) {
+      parsedData.fullArticleThai = parsedData.sentences.map((s: any) => s.translation).join(" ");
+    }
+
+    return NextResponse.json(parsedData);
   } catch (error: any) {
     return NextResponse.json({ error: error.message || "Failed to generate content" }, { status: 500 });
   }
