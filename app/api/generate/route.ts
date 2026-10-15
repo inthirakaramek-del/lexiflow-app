@@ -71,27 +71,24 @@ Return JSON: { "translation": string, "thaiPronunciation": string, "pos": string
       return NextResponse.json(parsedData);
     }
 
-    // 2. Ultra-lean vocabulary flashcard generation (4-6 simple words, minimum tokens)
+    // 2. Vocabulary flashcard generation: Connected natural mini-story (5 sentences)
     const { word, pos } = body;
-    const prompt = `Write 5 short connected sentences featuring "${word}" (${pos}) telling 1 simple everyday story.
-The 5 sentences must follow: S+V, S+V+O, S+V+C, S+V+IO+DO, S+V+O+C in order.
-
-RULES TO MINIMIZE TOKENS:
-1. STRICT LENGTH: exactly 4 to 6 simple words per sentence.
-2. BASIC VOCABULARY ONLY: Use simple everyday A1-A2 words. NEVER use formal, corporate, or complex words (no "immediately", "initiated", "campaign", etc.).
-3. Keep Thai translation and pronunciation very short and concise.
+    const prompt = `Write a smooth 5-sentence connected mini-story featuring "${word}" (${pos}).
+ONE continuous story (Scene -> Situation -> Action with "${word}" -> Resolution).
+Natural everyday English (6-9 words per sentence). Flexible structures (can repeat e.g. S+V+O, S+V+C, S+V, etc.).
+Smooth, natural spoken Thai translation (flowing human tone, not robotic).
 
 Return JSON:
 - articleTitle: 2-3 words English title
 - wordTranslation: natural Thai meaning of "${word}"
 - thaiPronunciation: pronunciation of ENGLISH word "${word}" in Thai
-- sentences: array of 5 sentence objects in storyline order with:
-  * structure: structure name ('S + V', 'S + V + O', 'S + V + C', 'S + V + IO + DO', 'S + V + O + C')
-  * sentence: English sentence (4-6 simple words)
-  * translation: short natural Thai translation
+- sentences: array of 5 sentence objects in storyline order:
+  * structure: structure label (e.g. 'S + V + O', 'S + V + C', 'S + V + Adv', 'S + V', etc.)
+  * sentence: natural English sentence
+  * translation: natural, smooth Thai translation in story context
   * thaiPronunciation: short Thai reading of each word
-  * grammar: format 'S (Word: แปล) + V (Word: แปล) + ...'
-- trick: 1 short sentence Thai tip (max 10 words)`;
+  * grammar: brief grammar breakdown (e.g. 'S (Dad) + V (took) + O (action)')
+- trick: 1 short sentence Thai tip or usage note (max 10 words)`;
 
     const response = await fetchWithRetry(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key=${apiKey}`,

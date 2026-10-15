@@ -1567,13 +1567,13 @@ export default function Home() {
                           </div>
                         </div>
 
-                        {/* UNIFIED 1-ARTICLE PASSAGE (บทความเดียวเชื่อมโยง 5 โครงสร้าง) */}
+                        {/* UNIFIED 1-ARTICLE PASSAGE (บทความสั้นเชื่อมโยงคำศัพท์) */}
                         <div className="flex-1 flex flex-col justify-center my-1 sm:my-2">
                           {loadingAI ? (
                             <div className="flex flex-col items-center gap-3 py-8">
                               <div className="w-7 h-7 border-3 border-[#B8A3A0] border-t-transparent rounded-full animate-spin" />
                               <span className="text-[10px] text-slate-400 font-extrabold uppercase tracking-widest">
-                                กำลังสร้างบทความเชื่อมโยง 5 โครงสร้างด้วย AI...
+                                กำลังสร้างบทความเชื่อมโยงคำศัพท์ด้วย AI...
                               </span>
                             </div>
                           ) : activeCardData ? (
@@ -1586,7 +1586,7 @@ export default function Home() {
                                 <div className="flex items-center gap-2">
                                   <span className="text-[10px] sm:text-xs font-bold bg-[#e6f4ff] text-[#0958d9] border border-[#d2e9ff] px-2.5 py-0.5 rounded-full flex items-center gap-1.5 shadow-2xs">
                                     <span>📖</span>
-                                    <span>{activeCardData.articleTitle || "บทความสั้นเชื่อมโยง 5 โครงสร้าง"}</span>
+                                    <span>{activeCardData.articleTitle || "บทความสั้นเชื่อมโยงคำศัพท์"}</span>
                                   </span>
                                 </div>
 
@@ -1632,7 +1632,7 @@ export default function Home() {
                         {/* Flip Hint */}
                         <div className="flex justify-center mt-2 pb-6">
                           <span className="text-[9px] sm:text-[10px] text-slate-400 font-bold uppercase tracking-widest text-center animate-pulse leading-snug">
-                            🔄 คลิกที่การ์ดเพื่อพลิกดูคำแปลบทความและถอดโครงสร้างทั้ง 5 ประโยค
+                            🔄 คลิกที่การ์ดเพื่อพลิกดูคำแปลบทความและถอดโครงสร้างประโยค
                           </span>
                         </div>
                       </div>
@@ -1745,12 +1745,12 @@ export default function Home() {
                                 </p>
                               </div>
 
-                              {/* 2. 5 Sentence Structures Breakdown */}
+                              {/* 2. Sentence Structures Breakdown */}
                               <div className="bg-[#f8faff] border border-slate-100 rounded-2xl p-3.5 sm:p-4 text-left">
                                 <div className="flex items-center justify-between border-b border-slate-100 pb-2 mb-3">
                                   <span className="text-[10px] sm:text-xs font-bold text-slate-700 flex items-center gap-1.5">
                                     <span>🧩</span>
-                                    <span>ถอดโครงสร้างทั้ง 5 ประโยคในบทความ</span>
+                                    <span>ถอดโครงสร้างประโยคในบทความ</span>
                                   </span>
 
                                   {/* Quick Toggles: Open Pronunciation & Translation */}
