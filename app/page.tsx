@@ -91,6 +91,22 @@ export default function Home() {
     let localReview: ReviewWord[] = [];
     let localNotes: GeneralNote[] = [];
 
+    // Cache version migration: purge old cache format (Thai words in pronunciation / missing grammar translations)
+    const CACHE_VERSION = "v3";
+    const savedCacheVer = typeof window !== "undefined" ? localStorage.getItem("lexiflow_cache_version") : null;
+    if (savedCacheVer !== CACHE_VERSION) {
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("lexiflow_card_cache");
+        localStorage.setItem("lexiflow_cache_version", CACHE_VERSION);
+      }
+      // Inform server DB to reset cardCache as well
+      fetch("/api/db", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ cardCache: {} })
+      }).catch(() => {});
+    }
+
     try {
       const savedProgress = localStorage.getItem("lexiflow_progress");
       const savedCache = localStorage.getItem("lexiflow_card_cache");
@@ -101,7 +117,7 @@ export default function Home() {
         localProgress = JSON.parse(savedProgress);
         setProgress(localProgress);
       }
-      if (savedCache) {
+      if (savedCache && savedCacheVer === CACHE_VERSION) {
         localCache = JSON.parse(savedCache);
         setCardCache(localCache);
       }
@@ -140,15 +156,26 @@ export default function Home() {
           notes: mergedNotes
         };
 
-        // Merge cache: Local cache takes priority unless local cache has a fallback card and DB has a real AI card
-        const mergedCache: Record<string, CardData> = { ...dbCache };
+        // Helper to check if cached card has the new modern format
+        const isCardValidAndNew = (card: CardData | undefined) => {
+          if (!card || !Array.isArray(card.sentences) || card.sentences.length === 0) return false;
+          if (card.isFallback) return false;
+          if (card.wordTranslation && card.wordTranslation.includes("คำแปลของ")) return false;
+          // Must have grammar breakdown with Thai translation (contains colon ':')
+          if (!card.sentences[0].grammar || !card.sentences[0].grammar.includes(":")) return false;
+          return true;
+        };
+
+        // Merge cache: Local cache takes priority unless local cache has fallback and DB has new real card
+        const mergedCache: Record<string, CardData> = {};
+        for (const key in dbCache) {
+          if (isCardValidAndNew(dbCache[key])) {
+            mergedCache[key] = dbCache[key];
+          }
+        }
         for (const key in localCache) {
-          const localVal = localCache[key];
-          const dbVal = dbCache[key];
-          const isLocalFallback = localVal && (localVal.isFallback || (localVal.wordTranslation && localVal.wordTranslation.includes("คำแปลของ")));
-          const isDbFallback = dbVal && (dbVal.isFallback || (dbVal.wordTranslation && dbVal.wordTranslation.includes("คำแปลของ")));
-          if (!dbVal || (localVal && !isLocalFallback && isDbFallback)) {
-            mergedCache[key] = localVal;
+          if (isCardValidAndNew(localCache[key])) {
+            mergedCache[key] = localCache[key];
           }
         }
 
@@ -554,7 +581,7 @@ export default function Home() {
     // Check database cache first (ignore fallback cache so we try to heal/regenerate with real AI if online)
     const cached = cardCache[currentWordObj.id];
     const isFallbackCard = cached && (cached.isFallback || (cached.wordTranslation && cached.wordTranslation.includes("คำแปลของ")));
-    const isLegacyCard = cached && (!cached.fullArticleThai);
+    const isLegacyCard = cached && (!cached.fullArticleThai || (cached.sentences?.[0] && !cached.sentences[0].grammar?.includes(":")));
     if (cached && Array.isArray(cached.sentences) && cached.sentences.length > 0 && !isFallbackCard && !isLegacyCard) {
       setActiveCardData(cached);
       setActiveCardId(currentWordObj.id);
@@ -566,7 +593,7 @@ export default function Home() {
     // Prevent duplicate parallel requests for the same word
     if (isGeneratingRef.current) return;
 
-    // Not in cache, start loading state with 350ms debounce to avoid spamming on fast next/prev clicks
+    // Not in cache, start loading state with 600ms debounce to avoid spamming on fast next/prev clicks
     setLoadingAI(true);
     setApiError(null);
     setActiveCardData(null);
@@ -605,7 +632,7 @@ export default function Home() {
           isGeneratingRef.current = false;
           setLoadingAI(false);
         });
-    }, 350);
+    }, 600);
 
     return () => clearTimeout(debounceTimer);
   }, [currentWordObj, cardCache, activeCardId, hasLoadedSession]);

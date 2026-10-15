@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 
 // Helper fetch with auto-retry for 429 and 503 errors
 async function fetchWithRetry(url: string, payload: any, maxRetries = 2): Promise<Response> {
+  let lastStatus = 0;
+  let lastErrorText = "";
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     const res = await fetch(url, {
       method: "POST",
@@ -11,14 +13,19 @@ async function fetchWithRetry(url: string, payload: any, maxRetries = 2): Promis
       },
       body: JSON.stringify(payload),
     });
+    lastStatus = res.status;
     if ((res.status === 429 || res.status === 503) && attempt < maxRetries) {
       console.warn(`Gemini ${res.status} error, auto-retrying attempt ${attempt + 1}...`);
-      await new Promise((resolve) => setTimeout(resolve, 1500 * (attempt + 1)));
+      await new Promise((resolve) => setTimeout(resolve, 2000 * Math.pow(2, attempt)));
       continue;
+    }
+    if (!res.ok) {
+      lastErrorText = await res.text();
+      throw new Error(lastStatus === 429 ? "Gemini API rate limit exceeded" : `Gemini API error (${lastStatus}): ${lastErrorText}`);
     }
     return res;
   }
-  throw new Error("Gemini API rate limit exceeded");
+  throw new Error(lastStatus === 429 ? "Gemini API rate limit exceeded" : `Gemini service temporarily busy (${lastStatus})`);
 }
 
 export async function POST(request: Request) {
@@ -60,11 +67,6 @@ Return JSON: { "translation": string, "thaiPronunciation": string, "pos": string
         }
       );
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Gemini API error: ${errorText}`);
-      }
-
       const data = await response.json();
       const textContent = data.candidates[0].content.parts[0].text;
       const parsedData = JSON.parse(textContent);
@@ -75,8 +77,8 @@ Return JSON: { "translation": string, "thaiPronunciation": string, "pos": string
     const { word, pos } = body;
     const prompt = `Write a smooth 5-sentence connected mini-story featuring "${word}" (${pos}).
 ONE continuous story (Scene -> Situation -> Action with "${word}" -> Resolution).
-Natural everyday English (6-9 words per sentence). Flexible structures (can repeat e.g. S+V+O, S+V+C, S+V, etc.).
-Smooth, natural spoken Thai translation (flowing human tone, not robotic).
+Short simple everyday English (strictly 4-6 simple words per sentence, A1-A2 level). Flexible structures.
+Natural spoken Thai translation.
 
 Return JSON:
 - articleTitle: 2-3 words English title
@@ -84,10 +86,10 @@ Return JSON:
 - thaiPronunciation: pronunciation of ENGLISH word "${word}" in Thai
 - sentences: array of 5 sentence objects in storyline order:
   * structure: structure label (e.g. 'S + V + O', 'S + V + C', 'S + V + Adv', 'S + V', etc.)
-  * sentence: natural English sentence
+  * sentence: natural English sentence (strictly 4-6 simple words)
   * translation: natural, smooth Thai translation in story context
-  * thaiPronunciation: short Thai reading of each word
-  * grammar: brief grammar breakdown (e.g. 'S (Dad) + V (took) + O (action)')
+  * thaiPronunciation: natural phonetic pronunciation of the ENGLISH sentence using Thai characters with space between words (e.g. 'วี เม็ท ทูเดย์ แอท เดอะ โลเคิล คาเฟ่'). CRITICAL: Must be the sound of the English words, NEVER read the Thai translation!
+  * grammar: breakdown with Thai translation for EACH component in format 'Element(Word: แปล) + ...' (e.g. 'S (We: เรา) + V (met: เจอกัน) + Adv (at the cafe: ที่ร้านกาแฟ)')
 - trick: 1 short sentence Thai tip or usage note (max 10 words)`;
 
     const response = await fetchWithRetry(
@@ -124,11 +126,6 @@ Return JSON:
         },
       }
     );
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      return NextResponse.json({ error: `Gemini API error: ${errorText}` }, { status: 500 });
-    }
 
     const data = await response.json();
     if (!data.candidates || !data.candidates[0]) {
