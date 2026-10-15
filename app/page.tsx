@@ -29,6 +29,9 @@ export default function Home() {
   const [loadingAI, setLoadingAI] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
 
+  // Story sentence length preference: 'normal' (4-6 words) | 'longer' (6-9 words)
+  const [storyLengthMode, setStoryLengthMode] = useState<"normal" | "longer">("normal");
+
   // States for restoring session and search in card section
   const [lastWordIdToRestore, setLastWordIdToRestore] = useState<string | null>(null);
   const [hasLoadedSession, setHasLoadedSession] = useState(false);
@@ -107,14 +110,38 @@ export default function Home() {
       }).catch(() => {});
     }
 
+    // Mastery statistics migration: purge old accumulated mastered cards to start clean from current session
+    const MASTERY_RESET_VERSION = "v2_clean";
+    const savedMasteryVer = typeof window !== "undefined" ? localStorage.getItem("lexiflow_mastery_ver") : null;
+    const shouldResetMastery = savedMasteryVer !== MASTERY_RESET_VERSION;
+    if (shouldResetMastery) {
+      if (typeof window !== "undefined") {
+        localStorage.setItem("lexiflow_mastery_ver", MASTERY_RESET_VERSION);
+      }
+      localProgress.masteredIds = [];
+      fetch("/api/db", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ progress: { ...localProgress, masteredIds: [] } })
+      }).catch(() => {});
+    }
+
     try {
       const savedProgress = localStorage.getItem("lexiflow_progress");
       const savedCache = localStorage.getItem("lexiflow_card_cache");
       const savedReview = localStorage.getItem("lexiflow_review_words");
       const savedNotes = localStorage.getItem("lexiflow_general_notes");
+      const savedStoryLength = localStorage.getItem("lexiflow_story_length_mode") as "normal" | "longer" | null;
+
+      if (savedStoryLength === "longer" || savedStoryLength === "normal") {
+        setStoryLengthMode(savedStoryLength);
+      }
 
       if (savedProgress) {
         localProgress = JSON.parse(savedProgress);
+        if (shouldResetMastery) {
+          localProgress.masteredIds = [];
+        }
         setProgress(localProgress);
       }
       if (savedCache && savedCacheVer === CACHE_VERSION) {
@@ -146,7 +173,9 @@ export default function Home() {
         const dbGeneralNotes = data.generalNotes || [];
 
         // MERGE LOGIC: Combine unique IDs and keys
-        const mergedMastered = Array.from(new Set([...(localProgress.masteredIds || []), ...(dbProgress.masteredIds || [])]));
+        const mergedMastered = shouldResetMastery
+          ? []
+          : Array.from(new Set([...(localProgress.masteredIds || []), ...(dbProgress.masteredIds || [])]));
         const mergedStarred = Array.from(new Set([...(localProgress.starredIds || []), ...(dbProgress.starredIds || [])]));
         const mergedNotes = { ...(dbProgress.notes || {}), ...(localProgress.notes || {}) };
 
@@ -604,7 +633,13 @@ export default function Home() {
       fetch("/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ word: currentWordObj.word, pos: currentWordObj.pos, meaning: currentWordObj.meaning, pronunciation: currentWordObj.pronunciation })
+        body: JSON.stringify({
+          word: currentWordObj.word,
+          pos: currentWordObj.pos,
+          meaning: currentWordObj.meaning,
+          pronunciation: currentWordObj.pronunciation,
+          lengthMode: storyLengthMode
+        })
       })
         .then(async (res) => {
           if (!res.ok) {
@@ -635,11 +670,39 @@ export default function Home() {
     }, 600);
 
     return () => clearTimeout(debounceTimer);
-  }, [currentWordObj, cardCache, activeCardId, hasLoadedSession]);
+  }, [currentWordObj, cardCache, activeCardId, hasLoadedSession, storyLengthMode]);
 
-  const resetAndRegenerateCard = () => {
+  const toggleStoryLengthMode = (e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    const nextMode = storyLengthMode === "normal" ? "longer" : "normal";
+    setStoryLengthMode(nextMode);
+    localStorage.setItem("lexiflow_story_length_mode", nextMode);
+    return nextMode;
+  };
+
+  const resetMasteredStats = async () => {
+    if (confirm("ต้องการล้างประวัติและสถิติการจำการ์ดทั้งหมด (Reset Card Mastery) ใช่หรือไม่?\n\nสถิติการจำจะเริ่มนับใหม่จาก 0 โดยคลังคำศัพท์ทบทวน (Review Words) และโน้ตของคุณจะไม่ถูกลบ")) {
+      const updatedProgress = { ...progress, masteredIds: [] };
+      setProgress(updatedProgress);
+      localStorage.setItem("lexiflow_progress", JSON.stringify(updatedProgress));
+      try {
+        await fetch("/api/db", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ progress: updatedProgress })
+        });
+        alert("ล้างสถิติการจำการ์ดเรียบร้อยแล้ว เริ่มต้นนับใหม่จากปัจจุบัน!");
+      } catch (e: any) {
+        console.error(e);
+        alert("เกิดข้อผิดพลาดในการบันทึก: " + e.message);
+      }
+    }
+  };
+
+  const resetAndRegenerateCard = (overrideLengthMode?: "normal" | "longer") => {
     if (!currentWordObj) return;
 
+    const modeToUse = overrideLengthMode || storyLengthMode;
     setIsFlipped(false);
     setLoadingAI(true);
     setApiError(null);
@@ -653,7 +716,8 @@ export default function Home() {
         word: currentWordObj.word,
         pos: currentWordObj.pos,
         meaning: currentWordObj.meaning,
-        pronunciation: currentWordObj.pronunciation
+        pronunciation: currentWordObj.pronunciation,
+        lengthMode: modeToUse
       })
     })
       .then(async (res) => {
@@ -1313,7 +1377,17 @@ export default function Home() {
                     <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                     </svg>
-                    ล้างประวัติ & รีเซ็ตฐานข้อมูล
+                    ล้างประวัติ & รีเซ็ตฐานข้อมูลทั้งหมด
+                  </button>
+                  <button
+                    onClick={resetMasteredStats}
+                    className="text-[10px] font-extrabold uppercase px-3 py-1.5 rounded-lg border border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-500 hover:text-white transition flex items-center gap-1 shadow-sm"
+                    title="ล้างเฉพาะสถิติการจำการ์ด (Mastery) โดยไม่ลบคลังคำศัพท์ทวนและโน้ต"
+                  >
+                    <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                    ล้างเฉพาะสถิติการจำการ์ด (เริ่มนับใหม่)
                   </button>
                 </div>
               </div>
@@ -1368,7 +1442,20 @@ export default function Home() {
                 )}
               </div>
 
-              <div className="flex items-center gap-2 shrink-0">
+              <div className="flex items-center gap-2 shrink-0 flex-wrap">
+                <button
+                  onClick={toggleStoryLengthMode}
+                  className={`text-xs font-bold px-2.5 py-1.5 rounded-lg border transition flex items-center gap-1.5 shadow-2xs ${
+                    storyLengthMode === "longer"
+                      ? "bg-sky-50 border-sky-300 text-sky-700 font-extrabold"
+                      : "bg-white border-slate-200 text-slate-500 hover:text-slate-700"
+                  }`}
+                  title="ความยาวประโยค: คลิกเพื่อสลับ 'ปกติ (4-6 คำ)' หรือ 'ยาวขึ้น (6-9 คำ)' - ระบบจะจำค่านี้ไว้ตลอด"
+                >
+                  <span className="text-xs">{storyLengthMode === "longer" ? "📖" : "📏"}</span>
+                  <span>{storyLengthMode === "longer" ? "ยาวขึ้น (6-9 คำ)" : "ปกติ (4-6 คำ)"}</span>
+                </button>
+
                 <button
                   onClick={() => {
                     setCurrentCardIndex(0);
@@ -1525,7 +1612,24 @@ export default function Home() {
                               </button>
                             )}
                           </div>
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-1.5 sm:gap-2">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                const next = toggleStoryLengthMode();
+                                if (confirm(`สลับเป็น ${next === "longer" ? "โหมดยาวขึ้น (6-9 คำ)" : "โหมดปกติ (4-6 คำ)"} เรียบร้อยแล้ว (ระบบจะจำค่าไว้ใช้ตลอด)\n\nต้องการรีเซ็ตเพื่อสร้างบทความคำว่า "${currentWordObj.word}" ใหม่ด้วยโหมดนี้ทันทีเลยไหม?`)) {
+                                  resetAndRegenerateCard(next);
+                                }
+                              }}
+                              className={`inline-flex items-center gap-1 border px-2 py-1 rounded-lg text-[10px] font-bold transition shadow-2xs ${
+                                storyLengthMode === "longer"
+                                  ? "bg-sky-50 border-sky-300 text-sky-700 font-extrabold"
+                                  : "bg-white border-slate-200 text-slate-500 hover:text-slate-700"
+                              }`}
+                              title="ความยาวประโยค: คลิกเพื่อสลับ 'ปกติ (4-6 คำ)' หรือ 'ยาวขึ้น (6-9 คำ)' (ระบบจะจำค่าไว้ให้อัตโนมัติ)"
+                            >
+                              <span>{storyLengthMode === "longer" ? "📖 ยาวขึ้น" : "📏 ปกติ"}</span>
+                            </button>
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
@@ -1667,7 +1771,24 @@ export default function Home() {
                       {/* CARD BACK: Shows Full Story Translation, 5 Grammar Structures, and Controls */}
                       <div className="absolute inset-0 card-face card-back w-full h-full bg-white/95 rounded-3xl p-3.5 sm:p-6 md:p-8 flex flex-col justify-between shadow-sm overflow-y-auto">
                         <div className="w-full flex justify-between items-center border-b border-slate-100 pb-2 sm:pb-3">
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-1.5 sm:gap-2">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                const next = toggleStoryLengthMode();
+                                if (confirm(`สลับเป็น ${next === "longer" ? "โหมดยาวขึ้น (6-9 คำ)" : "โหมดปกติ (4-6 คำ)"} เรียบร้อยแล้ว (ระบบจะจำค่าไว้ใช้ตลอด)\n\nต้องการรีเซ็ตเพื่อสร้างบทความคำว่า "${currentWordObj.word}" ใหม่ด้วยโหมดนี้ทันทีเลยไหม?`)) {
+                                  resetAndRegenerateCard(next);
+                                }
+                              }}
+                              className={`inline-flex items-center gap-1 border px-2 py-1 rounded-lg text-[10px] font-bold transition shadow-2xs ${
+                                storyLengthMode === "longer"
+                                  ? "bg-sky-50 border-sky-300 text-sky-700 font-extrabold"
+                                  : "bg-white border-slate-200 text-slate-500 hover:text-slate-700"
+                              }`}
+                              title="ความยาวประโยค: คลิกเพื่อสลับ 'ปกติ (4-6 คำ)' หรือ 'ยาวขึ้น (6-9 คำ)' (ระบบจะจำค่าไว้ให้อัตโนมัติ)"
+                            >
+                              <span>{storyLengthMode === "longer" ? "📖 ยาวขึ้น" : "📏 ปกติ"}</span>
+                            </button>
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();

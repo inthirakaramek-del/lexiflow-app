@@ -74,10 +74,15 @@ Return JSON: { "translation": string, "thaiPronunciation": string, "pos": string
     }
 
     // 2. Vocabulary flashcard generation: Connected natural mini-story (5 sentences)
-    const { word, pos } = body;
+    const { word, pos, lengthMode } = body;
+    const isLonger = lengthMode === "longer";
+    const lengthInstruction = isLonger
+      ? "Natural everyday English (around 6 to 9 natural words per sentence, A1-A2 level). Flexible structures with natural modifiers."
+      : "Short simple everyday English (strictly 4-6 simple words per sentence, A1-A2 level). Flexible structures.";
+
     const prompt = `Write a smooth 5-sentence connected mini-story featuring "${word}" (${pos}).
 ONE continuous story (Scene -> Situation -> Action with "${word}" -> Resolution).
-Short simple everyday English (strictly 4-6 simple words per sentence, A1-A2 level). Flexible structures.
+${lengthInstruction}
 Natural spoken Thai translation.
 
 Return JSON:
@@ -86,7 +91,7 @@ Return JSON:
 - thaiPronunciation: pronunciation of ENGLISH word "${word}" in Thai
 - sentences: array of 5 sentence objects in storyline order:
   * structure: structure label (e.g. 'S + V + O', 'S + V + C', 'S + V + Adv', 'S + V', etc.)
-  * sentence: natural English sentence (strictly 4-6 simple words)
+  * sentence: natural English sentence (${isLonger ? "around 6-9 words" : "strictly 4-6 simple words"})
   * translation: natural, smooth Thai translation in story context
   * thaiPronunciation: natural phonetic pronunciation of the ENGLISH sentence using Thai characters with space between words (e.g. 'วี เม็ท ทูเดย์ แอท เดอะ โลเคิล คาเฟ่'). CRITICAL: Must be the sound of the English words, NEVER read the Thai translation!
   * grammar: breakdown with Thai translation for EACH component in format 'Element(Word: แปล) + ...' (e.g. 'S (We: เรา) + V (met: เจอกัน) + Adv (at the cafe: ที่ร้านกาแฟ)')
