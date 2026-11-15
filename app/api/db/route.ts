@@ -5,8 +5,8 @@ import path from "path";
 const DATA_DIR = path.join(process.cwd(), "data");
 const DB_FILE = path.join(DATA_DIR, "db.json");
 
-const SUPABASE_URL = process.env.SUPABASE_URL;
-const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY;
+const SUPABASE_URL = process.env.SUPABASE_URL || "https://kfxjglkekkhzeaydnvfr.supabase.co";
+const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtmeGpnbGtla2toemVheWRudmZyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUyNDg3MDgsImV4cCI6MjEwMDgyNDcwOH0.230h8JNmrj4RAjgGpFHdhj5LZZni5dOZ9IEpU8m0iMQ";
 
 // Sequential execution queue to prevent concurrent read/write race conditions
 async function enqueue<T>(op: () => Promise<T>): Promise<T> {

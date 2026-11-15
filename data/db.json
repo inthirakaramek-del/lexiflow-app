@@ -1,10 +1,50 @@
 {
   "progress": {
-    "notes": {},
+    "masteredIds": [],
     "starredIds": [],
-    "masteredIds": []
+    "notes": {}
   },
-  "cardCache": {},
+  "cardCache": {
+    "w-0": {
+      "wordTranslation": "เกี่ยวกับ / ประมาณ",
+      "thaiPronunciation": "อะ-เบาท์",
+      "sentences": [
+        {
+          "structure": "Past: S + V + C",
+          "sentence": "I looked for my keys.",
+          "translation": "ฉันมองหากุญแจของฉัน",
+          "thaiPronunciation": "ไอ ลุค ฟอร์ มาย คีย์ส"
+        },
+        {
+          "structure": "Past (Q): Did + S + V?",
+          "sentence": "Did you see them around?",
+          "translation": "คุณเห็นพวกมันแถวนี้ไหม",
+          "thaiPronunciation": "ดิด ยู ซี เด็ม อะราวนด์"
+        },
+        {
+          "structure": "Pres Cont: S + be + V-ing",
+          "sentence": "I am thinking about them.",
+          "translation": "ฉันกำลังคิดเกี่ยวกับมันอยู่",
+          "thaiPronunciation": "ไอ แอม ธิงคิง อะเบาท์ เด็ม"
+        },
+        {
+          "structure": "Present: S + V",
+          "sentence": "They are about ten meters.",
+          "translation": "มันอยู่ห่างประมาณสิบเมตร",
+          "thaiPronunciation": "เด อาร์ อะเบาท์ เท็น มีเทอร์ส"
+        },
+        {
+          "structure": "Future: S + will + V",
+          "sentence": "I will go there now.",
+          "translation": "ฉันจะไปที่นั่นตอนนี้",
+          "thaiPronunciation": "ไอ วิล โก แดร์ นาว"
+        }
+      ],
+      "trick": "ใช้ about เพื่อบอกเหตุผลหรือกะประมาณจำนวนได้เลย",
+      "articleTitle": "Lost Keys Found",
+      "fullArticleThai": "ฉันมองหากุญแจของฉัน คุณเห็นพวกมันแถวนี้ไหม ฉันกำลังคิดเกี่ยวกับมันอยู่ มันอยู่ห่างประมาณสิบเมตร ฉันจะไปที่นั่นตอนนี้"
+    }
+  },
   "generalNotes": [],
   "reviewWords": []
 }
