@@ -85,16 +85,21 @@ ONE continuous story (Scene -> Situation -> Action with "${word}" -> Resolution)
 ${lengthInstruction}
 Natural spoken Thai translation.
 
+TENSE & SENTENCE VARIETY GUIDELINES:
+- Naturally vary tenses across the story (e.g., Past, Present, Future, Continuous).
+- Naturally mix in questions or statements (e.g. 1 question or exclamation if natural to the story).
+- Strictly English-only structure labels indicating Tense and pattern, e.g.:
+  'Past: S + V', 'Past (Q): Did + S + V?', 'Present: S + V + C', 'Pres Cont: S + be + V-ing', 'Future: S + will + V', 'Pres Perfect: S + have + V3'. NO Thai in structure label!
+
 Return JSON:
 - articleTitle: 2-3 words English title
 - wordTranslation: natural Thai meaning of "${word}"
 - thaiPronunciation: pronunciation of ENGLISH word "${word}" in Thai
 - sentences: array of 5 sentence objects in storyline order:
-  * structure: structure label (e.g. 'S + V + O', 'S + V + C', 'S + V + Adv', 'S + V', etc.)
+  * structure: English structure & tense label (e.g. 'Past: S + V', 'Past (Q): Did + S + V?', 'Present: S + V + C', 'Pres Cont: S + be + V-ing', 'Future: S + will + V')
   * sentence: natural English sentence (${isLonger ? "around 6-9 words" : "strictly 4-6 simple words"})
   * translation: natural, smooth Thai translation in story context
   * thaiPronunciation: natural phonetic pronunciation of the ENGLISH sentence using Thai characters with space between words (e.g. 'วี เม็ท ทูเดย์ แอท เดอะ โลเคิล คาเฟ่'). CRITICAL: Must be the sound of the English words, NEVER read the Thai translation!
-  * grammar: breakdown with Thai translation for EACH component in format 'Element(Word: แปล) + ...' (e.g. 'S (We: เรา) + V (met: เจอกัน) + Adv (at the cafe: ที่ร้านกาแฟ)')
 - trick: 1 short sentence Thai tip or usage note (max 10 words)`;
 
     const response = await fetchWithRetry(
@@ -118,10 +123,9 @@ Return JSON:
                     structure: { type: "STRING" },
                     sentence: { type: "STRING" },
                     translation: { type: "STRING" },
-                    thaiPronunciation: { type: "STRING" },
-                    grammar: { type: "STRING" }
+                    thaiPronunciation: { type: "STRING" }
                   },
-                  required: ["structure", "sentence", "translation", "thaiPronunciation", "grammar"]
+                  required: ["structure", "sentence", "translation", "thaiPronunciation"]
                 }
               },
               trick: { type: "STRING" }

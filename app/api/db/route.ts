@@ -29,7 +29,7 @@ async function enqueue<T>(op: () => Promise<T>): Promise<T> {
 async function ensureLocalDb() {
   try {
     await fs.mkdir(DATA_DIR, { recursive: true });
-  } catch (e) {}
+  } catch (e) { }
 
   try {
     await fs.access(DB_FILE);
@@ -167,8 +167,8 @@ export async function POST(request: Request) {
 
       const updatedData = {
         progress: body.progress !== undefined ? body.progress : (currentData.progress || { masteredIds: [], starredIds: [], notes: {} }),
-        cardCache: body.cardCachePatch !== undefined 
-          ? { ...(currentData.cardCache || {}), ...body.cardCachePatch } 
+        cardCache: body.cardCachePatch !== undefined
+          ? { ...(currentData.cardCache || {}), ...body.cardCachePatch }
           : (body.cardCache !== undefined ? body.cardCache : (currentData.cardCache || {})),
         generalNotes: body.generalNotes !== undefined ? body.generalNotes : (currentData.generalNotes || []),
         reviewWords: body.reviewWords !== undefined ? body.reviewWords : (currentData.reviewWords || []),

@@ -95,7 +95,7 @@ export default function Home() {
     let localNotes: GeneralNote[] = [];
 
     // Cache version migration: purge old cache format (Thai words in pronunciation / missing grammar translations)
-    const CACHE_VERSION = "v3";
+    const CACHE_VERSION = "v4";
     const savedCacheVer = typeof window !== "undefined" ? localStorage.getItem("lexiflow_cache_version") : null;
     if (savedCacheVer !== CACHE_VERSION) {
       if (typeof window !== "undefined") {
@@ -518,7 +518,7 @@ export default function Home() {
   // ----------------------------------------------------
   const [flashcardDeckType, setFlashcardDeckType] = useState<"all" | "learning" | "starred" | "A1" | "A2" | "B1" | "B2">("all");
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
-  const [isFlipped, setIsFlipped] = useState(false);
+  const [showStoryTranslation, setShowStoryTranslation] = useState(false);
   const touchStartPos = useRef<{ x: number; y: number } | null>(null);
   const isTouchDragging = useRef(false);
   const [cardTransition, setCardTransition] = useState<"none" | "swipe-left" | "swipe-right">("none");
@@ -582,7 +582,7 @@ export default function Home() {
     // Only reset index when not in the process of restoring the session
     if (!isRestoringRef.current) {
       setCurrentCardIndex(0);
-      setIsFlipped(false);
+      setShowStoryTranslation(false);
       setActiveCardData(null);
     }
   }, [flashcardDeckType, flashcardSearchQuery]);
@@ -703,7 +703,7 @@ export default function Home() {
     if (!currentWordObj) return;
 
     const modeToUse = overrideLengthMode || storyLengthMode;
-    setIsFlipped(false);
+    setShowStoryTranslation(false);
     setLoadingAI(true);
     setApiError(null);
     setActiveCardData(null);
@@ -848,7 +848,7 @@ export default function Home() {
       }
       if (e.key === " ") {
         e.preventDefault();
-        setIsFlipped((prev) => !prev);
+        setShowStoryTranslation((prev) => !prev);
       } else if (e.key === "ArrowRight") {
         handleCardNext("swipe-right");
       } else if (e.key === "ArrowLeft") {
@@ -864,7 +864,7 @@ export default function Home() {
     if (flashcardWords.length === 0) return;
     setCardTransition(direction);
     setTimeout(() => {
-      setIsFlipped(false);
+      setShowStoryTranslation(false);
       setCurrentCardIndex((prev) => (prev + 1) % flashcardWords.length);
       setCardTransition("none");
     }, 250);
@@ -874,7 +874,7 @@ export default function Home() {
     if (flashcardWords.length === 0) return;
     setCardTransition("swipe-left");
     setTimeout(() => {
-      setIsFlipped(false);
+      setShowStoryTranslation(false);
       setCurrentCardIndex((prev) => (prev - 1 + flashcardWords.length) % flashcardWords.length);
       setCardTransition("none");
     }, 250);
@@ -883,7 +883,7 @@ export default function Home() {
   // ----------------------------------------------------
   // QUIZ STATE & LOGIC
   // ----------------------------------------------------
-  const [quizMode, setQuizMode] = useState<"pos" | "spelling" | "missing">("pos");
+  const [quizMode, setQuizMode] = useState<"pos" | "spelling" | "missing" | "story">("pos");
   const [quizStarted, setQuizStarted] = useState(false);
   const [quizScore, setQuizScore] = useState(0);
   const [quizTotalQuestions, setQuizTotalQuestions] = useState(0);
@@ -893,6 +893,129 @@ export default function Home() {
   const [spellingInput, setSpellingInput] = useState("");
   const [quizFeedback, setQuizFeedback] = useState<"none" | "correct" | "incorrect">("none");
   const [missingLettersHint, setMissingLettersHint] = useState("");
+
+  // Story Builder Puzzle State (0 Tokens - Client Side)
+  const [storyTargetTokens, setStoryTargetTokens] = useState<string[]>([]);
+  const [storyThaiTranslation, setStoryThaiTranslation] = useState<string>("");
+  const [storyArticleTitle, setStoryArticleTitle] = useState<string>("");
+  const [storyWordChips, setStoryWordChips] = useState<{ id: string; word: string }[]>([]);
+  const [selectedStoryChips, setSelectedStoryChips] = useState<{ id: string; word: string }[]>([]);
+  const [storyFeedback, setStoryFeedback] = useState<"none" | "correct" | "incorrect">("none");
+  const [draggedChipIndex, setDraggedChipIndex] = useState<number | null>(null);
+  const [dragOverChipIndex, setDragOverChipIndex] = useState<number | null>(null);
+
+  const startNewStoryPuzzle = () => {
+    setStoryFeedback("none");
+    setSelectedStoryChips([]);
+    setDraggedChipIndex(null);
+    setDragOverChipIndex(null);
+
+    // Pick from cached cards with sentences
+    const validCardKeys = Object.keys(cardCache).filter(
+      (k) => cardCache[k] && Array.isArray(cardCache[k].sentences) && cardCache[k].sentences.length > 0
+    );
+
+    let cardToPlay: CardData;
+    let wordTitle = "arrive";
+
+    if (validCardKeys.length > 0) {
+      const randomKey = validCardKeys[Math.floor(Math.random() * validCardKeys.length)];
+      cardToPlay = cardCache[randomKey];
+      const matchWord = VOCAB.find((w) => w.id === randomKey);
+      if (matchWord) wordTitle = matchWord.word;
+    } else {
+      const sampleWord = VOCAB[0] || { id: "w-sample", word: "arrive", pos: "v.", meaning: "มาถึง" };
+      cardToPlay = generateFallbackCard(sampleWord);
+      wordTitle = sampleWord.word;
+    }
+
+    const fullEnglish = cardToPlay.sentences.map((s) => s.sentence.trim()).join(" ");
+    const tokens = fullEnglish.split(/\s+/).filter(Boolean);
+    const fullThai = cardToPlay.fullArticleThai || cardToPlay.sentences.map((s) => s.translation).join(" ");
+
+    setStoryArticleTitle(cardToPlay.articleTitle || `Story with "${wordTitle}"`);
+    setStoryThaiTranslation(fullThai);
+    setStoryTargetTokens(tokens);
+
+    // Create scrambled chips with unique ids
+    const chips = tokens.map((w, idx) => ({
+      id: `chip-${idx}-${Math.random().toString(36).substring(2, 7)}`,
+      word: w,
+    })).sort(() => 0.5 - Math.random());
+
+    setStoryWordChips(chips);
+  };
+
+  const handlePickStoryChip = (chip: { id: string; word: string }) => {
+    setStoryWordChips((prev) => prev.filter((c) => c.id !== chip.id));
+    setSelectedStoryChips((prev) => [...prev, chip]);
+    setStoryFeedback("none");
+  };
+
+  const handleRemoveStoryChip = (chip: { id: string; word: string }) => {
+    setSelectedStoryChips((prev) => prev.filter((c) => c.id !== chip.id));
+    setStoryWordChips((prev) => [...prev, chip]);
+    setStoryFeedback("none");
+  };
+
+  const handleResetStoryChips = () => {
+    setStoryWordChips((prev) => [...prev, ...selectedStoryChips].sort(() => 0.5 - Math.random()));
+    setSelectedStoryChips([]);
+    setStoryFeedback("none");
+  };
+
+  const handleDragStartChip = (index: number) => {
+    setDraggedChipIndex(index);
+  };
+
+  const handleDragOverChip = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    setDragOverChipIndex(index);
+  };
+
+  const handleDropChip = (index: number) => {
+    if (draggedChipIndex === null || draggedChipIndex === index) return;
+    const updated = [...selectedStoryChips];
+    const [moved] = updated.splice(draggedChipIndex, 1);
+    updated.splice(index, 0, moved);
+    setSelectedStoryChips(updated);
+    setDraggedChipIndex(null);
+    setDragOverChipIndex(null);
+    setStoryFeedback("none");
+  };
+
+  const handleCheckStoryAnswer = () => {
+    if (selectedStoryChips.length === 0) return;
+    const userWords = selectedStoryChips.map((c) => c.word.trim());
+    const targetWords = storyTargetTokens.map((w) => w.trim());
+    const cleanUser = userWords.join(" ").toLowerCase().replace(/\s+/g, " ").trim();
+    const cleanTarget = targetWords.join(" ").toLowerCase().replace(/\s+/g, " ").trim();
+    const isCorrect =
+      cleanUser === cleanTarget ||
+      cleanUser.replace(/[.,/#!$%^&*;:{}=\-_'~`()]/g, "") ===
+        cleanTarget.replace(/[.,/#!$%^&*;:{}=\-_'~`()]/g, "");
+
+    if (isCorrect) {
+      setStoryFeedback("correct");
+      setQuizScore((prev) => prev + 1);
+      setQuizTotalQuestions((prev) => prev + 1);
+      speakWord(storyTargetTokens.join(" "));
+    } else {
+      setStoryFeedback("incorrect");
+    }
+  };
+
+  const startQuiz = (mode: "pos" | "spelling" | "missing" | "story") => {
+    setQuizMode(mode);
+    setQuizScore(0);
+    setQuizTotalQuestions(0);
+    setQuizStarted(true);
+    if (mode === "story") {
+      setTimeout(() => startNewStoryPuzzle(), 50);
+    } else {
+      setTimeout(() => startNewQuizQuestion(), 50);
+    }
+  };
 
   const startNewQuizQuestion = () => {
     setSelectedAnswer(null);
@@ -940,13 +1063,6 @@ export default function Home() {
     }
   };
 
-  const startQuiz = (mode: "pos" | "spelling" | "missing") => {
-    setQuizMode(mode);
-    setQuizScore(0);
-    setQuizTotalQuestions(0);
-    setQuizStarted(true);
-    setTimeout(() => startNewQuizQuestion(), 50);
-  };
 
   const checkAnswer = (answer: string) => {
     if (!currentQuizWord || selectedAnswer !== null || quizFeedback !== "none") return;
@@ -1459,7 +1575,7 @@ export default function Home() {
                 <button
                   onClick={() => {
                     setCurrentCardIndex(0);
-                    setIsFlipped(false);
+                    setShowStoryTranslation(false);
                   }}
                   disabled={currentCardIndex === 0 || flashcardWords.length === 0}
                   className="text-xs font-bold text-[#A28C89] disabled:text-slate-400 bg-[#F5F1EE] disabled:bg-slate-50 hover:bg-[#A28C89] hover:text-white border border-[#E5DDD8] disabled:border-slate-200 px-3 py-1.5 rounded-lg transition flex items-center gap-1 shadow-sm disabled:shadow-none"
@@ -1510,44 +1626,16 @@ export default function Home() {
                     </div>
                   )}
 
-                  {/* Outer Flip Card Container */}
+                  {/* Single Clean Flashcard (No 3D Flip) */}
                   <div
-                    onTouchStart={(e) => {
-                      touchStartPos.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
-                      isTouchDragging.current = false;
-                    }}
-                    onTouchMove={(e) => {
-                      if (!touchStartPos.current) return;
-                      const dx = Math.abs(e.touches[0].clientX - touchStartPos.current.x);
-                      const dy = Math.abs(e.touches[0].clientY - touchStartPos.current.y);
-                      if (dx > 8 || dy > 8) {
-                        isTouchDragging.current = true;
-                      }
-                    }}
-                    onClick={(e) => {
-                      if (isTouchDragging.current) {
-                        isTouchDragging.current = false;
-                        return;
-                      }
-                      const target = e.target as HTMLElement;
-                      if (target.closest("button") || target.closest("input") || target.closest("textarea")) return;
-                      if (!loadingAI) setIsFlipped((prev) => !prev);
-                    }}
-                    className="w-full max-w-3xl h-[520px] sm:h-[550px] cursor-pointer card-perspective"
+                    className={`w-full max-w-3xl min-h-[500px] bg-white/95 rounded-3xl p-4 sm:p-6 md:p-8 flex flex-col justify-between shadow-lg shadow-stone-200/30 border border-[#E5E0DC] transition ${
+                      cardTransition === "swipe-left"
+                        ? "swipe-left"
+                        : cardTransition === "swipe-right"
+                        ? "swipe-right"
+                        : ""
+                    }`}
                   >
-                    <div
-                      className={`w-full h-[520px] sm:h-[550px] relative card-inner rounded-3xl border border-[#E5E0DC] shadow-lg shadow-stone-200/30 ${
-                        isFlipped ? "card-flipped" : ""
-                      } ${
-                        cardTransition === "swipe-left"
-                          ? "swipe-left"
-                          : cardTransition === "swipe-right"
-                          ? "swipe-right"
-                          : ""
-                      }`}
-                    >
-                      {/* CARD FRONT: Shows Word, POS, and 5 Example Sentence Structures (STRICTLY ENGLISH) */}
-                      <div className="absolute inset-0 card-face w-full h-full bg-white/95 rounded-3xl p-3.5 sm:p-6 md:p-8 flex flex-col justify-between shadow-sm overflow-y-auto">
                         <div className="w-full flex justify-between items-center border-b border-slate-100 pb-2 sm:pb-3">
                           <div className="flex items-center gap-2">
                             <div className="flex items-center gap-1.5">
@@ -1645,7 +1733,6 @@ export default function Home() {
                               </svg>
                               <span>รีเซ็ตการ์ด</span>
                             </button>
-                            <span className="text-[8.5px] sm:text-[10px] text-slate-400 uppercase tracking-widest font-bold hidden sm:inline">Front</span>
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
@@ -1709,19 +1796,17 @@ export default function Home() {
                             </div>
                           ) : activeCardData ? (
                             <div
-                              className="bg-[#f8faff] border border-slate-100 rounded-2xl p-4 sm:p-5 max-w-2xl mx-auto w-full text-left shadow-xs"
+                              className="bg-[#f8faff] border border-slate-100 rounded-2xl p-4 sm:p-5 max-w-2xl mx-auto w-full text-left shadow-xs space-y-3.5"
                               onClick={(e) => e.stopPropagation()}
                             >
                               {/* Article Header Controls */}
-                              <div className="flex items-center justify-between gap-2 border-b border-slate-100 pb-2.5 mb-3">
-                                <div className="flex items-center gap-2">
-                                  <span className="text-[10px] sm:text-xs font-bold bg-[#e6f4ff] text-[#0958d9] border border-[#d2e9ff] px-2.5 py-0.5 rounded-full flex items-center gap-1.5 shadow-2xs">
-                                    <span>📖</span>
-                                    <span>{activeCardData.articleTitle || "บทความสั้นเชื่อมโยงคำศัพท์"}</span>
-                                  </span>
-                                </div>
+                              <div className="flex items-center justify-between gap-2 border-b border-slate-100 pb-2.5">
+                                <span className="text-[10px] sm:text-xs font-bold bg-[#e6f4ff] text-[#0958d9] border border-[#d2e9ff] px-2.5 py-0.5 rounded-full flex items-center gap-1.5 shadow-2xs">
+                                  <span>📖</span>
+                                  <span>{activeCardData.articleTitle || "บทความสั้นเชื่อมโยงคำศัพท์"}</span>
+                                </span>
 
-                                <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-1.5">
                                   {/* Audio Button: Listen to Full Article */}
                                   <button
                                     onClick={(e) => {
@@ -1739,182 +1824,52 @@ export default function Home() {
                                 </div>
                               </div>
 
-                              {/* The Cohesive Article Passage */}
-                              <div className="space-y-3">
-                                {/* Continuous Story Text: Paragraph Format */}
-                                <div className="text-[13px] xs:text-sm sm:text-[15px] font-medium text-slate-800 leading-relaxed space-y-1">
-                                  {activeCardData.sentences.map((s, idx) => (
-                                    <span key={idx} className="group inline">
-                                      <span className="inline hover:bg-sky-100/70 rounded px-0.5 transition cursor-pointer">
-                                        {renderInteractiveSentence(s.sentence, s)}
-                                      </span>{" "}
-                                    </span>
-                                  ))}
-                                </div>
-
-
+                              {/* 1. Continuous English Story Passage (ไม่แบ่ง 1 2 3 4 5) */}
+                              <div className="text-[13.5px] xs:text-sm sm:text-[15px] font-medium text-slate-800 leading-relaxed space-y-1">
+                                {activeCardData.sentences.map((s, idx) => (
+                                  <span key={idx} className="group inline">
+                                    <span className="inline hover:bg-sky-100/70 rounded px-0.5 transition cursor-pointer">
+                                      {renderInteractiveSentence(s.sentence, s)}
+                                    </span>{" "}
+                                  </span>
+                                ))}
                               </div>
-                            </div>
-                          ) : (
-                            <p className="text-xs text-slate-400 text-center">ไม่สามารถโหลดข้อมูลบทความได้</p>
-                          )}
-                        </div>
 
-                        {/* Flip Hint */}
-                        <div className="flex justify-center mt-2 pb-6">
-                          <span className="text-[9px] sm:text-[10px] text-slate-400 font-bold uppercase tracking-widest text-center animate-pulse leading-snug">
-                            🔄 คลิกที่การ์ดเพื่อพลิกดูคำแปลบทความและถอดโครงสร้างประโยค
-                          </span>
-                        </div>
-                      </div>
+                              {/* 2. โครงสร้าง & Tense (อังกฤษล้วน วางใต้ประโยคเลย) */}
+                              <div className="flex items-center gap-1.5 flex-wrap pt-2 border-t border-slate-100">
+                                <span className="text-[10px] font-bold text-slate-400">โครงสร้าง & Tense:</span>
+                                {activeCardData.sentences.map((s, idx) => (
+                                  <span key={idx} className="text-[8.5px] sm:text-[9.5px] font-extrabold bg-[#e6f4ff] text-[#0958d9] border border-[#d2e9ff] px-2 py-0.5 rounded-md font-mono shadow-2xs">
+                                    {s.structure}
+                                  </span>
+                                ))}
+                              </div>
 
-                      {/* CARD BACK: Shows Full Story Translation, 5 Grammar Structures, and Controls */}
-                      <div className="absolute inset-0 card-face card-back w-full h-full bg-white/95 rounded-3xl p-3.5 sm:p-6 md:p-8 flex flex-col justify-between shadow-sm overflow-y-auto">
-                        <div className="w-full flex justify-between items-center border-b border-slate-100 pb-2 sm:pb-3">
-                          <div className="flex items-center gap-1.5 sm:gap-2">
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                const next = toggleStoryLengthMode();
-                                if (confirm(`สลับเป็น ${next === "longer" ? "โหมดยาวขึ้น (6-9 คำ)" : "โหมดปกติ (4-6 คำ)"} เรียบร้อยแล้ว (ระบบจะจำค่าไว้ใช้ตลอด)\n\nต้องการรีเซ็ตเพื่อสร้างบทความคำว่า "${currentWordObj.word}" ใหม่ด้วยโหมดนี้ทันทีเลยไหม?`)) {
-                                  resetAndRegenerateCard(next);
-                                }
-                              }}
-                              className={`inline-flex items-center gap-1 border px-2 py-1 rounded-lg text-[10px] font-bold transition shadow-2xs ${
-                                storyLengthMode === "longer"
-                                  ? "bg-sky-50 border-sky-300 text-sky-700 font-extrabold"
-                                  : "bg-white border-slate-200 text-slate-500 hover:text-slate-700"
-                              }`}
-                              title="ความยาวประโยค: คลิกเพื่อสลับ 'ปกติ (4-6 คำ)' หรือ 'ยาวขึ้น (6-9 คำ)' (ระบบจะจำค่าไว้ให้อัตโนมัติ)"
-                            >
-                              <span>{storyLengthMode === "longer" ? "📖 ยาวขึ้น" : "📏 ปกติ"}</span>
-                            </button>
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                if (confirm(`ต้องการรีเซ็ตและสร้างบทความคำว่า "${currentWordObj.word}" ใหม่ด้วย AI ใช่หรือไม่? (ข้อมูลเก่าจะถูกลบและแทนที่ด้วยอันใหม่)`)) {
-                                  resetAndRegenerateCard();
-                                }
-                              }}
-                              className="inline-flex items-center gap-1 bg-white hover:bg-rose-50 text-slate-500 hover:text-[#A28C89] border border-slate-200 hover:border-rose-200 px-2 py-1 rounded-lg text-[10px] font-bold transition shadow-2xs"
-                              title="รีเซ็ตและสร้างบทความคำนี้ใหม่ด้วย AI"
-                            >
-                              <svg className="w-3.5 h-3.5 text-slate-400 hover:text-[#A28C89]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                              </svg>
-                              <span>รีเซ็ตการ์ด</span>
-                            </button>
-                            <span className="text-[8.5px] sm:text-[10px] text-slate-400 uppercase tracking-widest font-bold flex items-center gap-1.5 flex-wrap">
-                              Back: {currentWordObj.word} {activeCardData?.thaiPronunciation && <span className="text-emerald-600 font-extrabold">[{activeCardData.thaiPronunciation}]</span>} {activeCardData?.wordTranslation && `(แปลหลัก: ${activeCardData.wordTranslation})`}
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-2 animate-none">
-                            {reviewWords.some(rw => rw.word.toLowerCase() === currentWordObj.word.toLowerCase()) ? (
-                              <div className="flex items-center gap-1">
-                                <span className="bg-rose-50 border border-rose-200 text-[#A28C89] text-[10px] font-bold px-2 py-0.5 rounded-lg flex items-center gap-1">
-                                  <svg className="w-3 h-3 text-rose-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                                  </svg>
-                                  ในคลังทวน
-                                </span>
+                              {/* 3. ปุ่มกดเปิด/ปิดคำแปลบทความทั้งเรื่อง */}
+                              <div className="pt-2">
                                 <button
                                   onClick={(e) => {
                                     e.stopPropagation();
-                                    const rw = reviewWords.find(item => item.word.toLowerCase() === currentWordObj.word.toLowerCase());
-                                    if (rw) openEditReviewWord(rw);
+                                    setShowStoryTranslation(!showStoryTranslation);
                                   }}
-                                  className="bg-white hover:bg-rose-50 border border-slate-200 hover:border-[#EBE3DE] text-[#A28C89] text-[10px] font-bold px-1.5 py-0.5 rounded-lg transition flex items-center gap-1"
-                                  title="แก้ไขคำแปลของคำนี้ในคลัง"
+                                  className={`w-full py-2.5 px-4 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 border shadow-xs ${
+                                    showStoryTranslation
+                                      ? "bg-slate-100 border-slate-200 text-slate-700 hover:bg-slate-200"
+                                      : "bg-gradient-to-r from-sky-50 to-indigo-50 hover:from-sky-100 hover:to-indigo-100 border-sky-200 text-sky-800"
+                                  }`}
                                 >
-                                  <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                  </svg>
-                                  แก้คำแปล
+                                  <span>{showStoryTranslation ? "🙈 ซ่อนคำแปลบทความ (Spacebar)" : "👁️ แสดงคำแปลบทความทั้งเรื่อง (Spacebar)"}</span>
                                 </button>
                               </div>
-                            ) : (
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  addWordToReviewList(
-                                    currentWordObj.word,
-                                    currentWordObj.pos,
-                                    activeCardData?.wordTranslation || currentWordObj.meaning || "คำแปลของการ์ดหลัก",
-                                    currentWordObj.id,
-                                    false,
-                                    activeCardData?.thaiPronunciation || currentWordObj.pronunciation || ""
-                                  );
-                                  if (progress.masteredIds.includes(currentWordObj.id)) {
-                                    toggleMastered(currentWordObj.id);
-                                  }
-                                  if (activeCardData) {
-                                    addCardToCache(currentWordObj.id, activeCardData);
-                                  }
-                                }}
-                                className="transition flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-lg border bg-slate-50 border-slate-200 text-slate-500 hover:bg-rose-50 hover:border-[#EBE3DE] hover:text-[#A28C89]"
-                                title="Add to Review List (ยังจำไม่ได้)"
-                              >
-                                ทวนคำนี้ (จำไม่ได้)
-                              </button>
-                            )}
-                            <span className={`text-[8.5px] sm:text-[10px] uppercase tracking-wider font-extrabold px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full ${getPosBadgeColor(currentWordObj.pos)}`}>
-                              {currentWordObj.pos}
-                            </span>
-                          </div>
-                        </div>
 
-                        {/* Back Content: Full Article Translation + 5 Structures Breakdown */}
-                        <div className="flex-1 flex flex-col gap-3 py-2">
-                          {activeCardData && (
-                            <div className="max-w-2xl mx-auto w-full space-y-3">
-                              {/* 1. Full Story Translation Block */}
-                              <div className="bg-[#f8faff] border border-slate-100 rounded-2xl p-3.5 sm:p-4 text-left">
-                                <div className="flex items-center justify-between border-b border-slate-100 pb-2 mb-2">
-                                  <span className="text-[10px] sm:text-xs font-bold text-slate-700 flex items-center gap-1.5">
-                                    <span>📜</span>
-                                    <span>คำแปลบทความทั้งเรื่อง (Full Story Translation)</span>
-                                  </span>
-                                  <button
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      speakFullArticle(activeCardData);
-                                    }}
-                                    className="inline-flex items-center gap-1 text-[10px] font-bold text-sky-600 hover:text-sky-800 bg-sky-50 px-2 py-0.5 rounded border border-sky-200 transition"
-                                    title="ฟังบทความทั้งเรื่อง"
-                                  >
-                                    <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-                                      <path strokeLinecap="round" strokeLinejoin="round" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
-                                    </svg>
-                                    <span>ฟังบทความ</span>
-                                  </button>
-                                </div>
-                                <p className="text-[12px] sm:text-[13px] text-slate-700 font-medium leading-relaxed bg-white/70 rounded-xl p-2.5 border border-slate-100">
-                                  {activeCardData.fullArticleThai || activeCardData.sentences.map((s) => s.translation).join(" ")}
-                                </p>
-                              </div>
-
-                              {/* 2. Sentence Structures Breakdown */}
-                              <div className="bg-[#f8faff] border border-slate-100 rounded-2xl p-3.5 sm:p-4 text-left">
-                                <div className="flex items-center justify-between border-b border-slate-100 pb-2 mb-3">
-                                  <span className="text-[10px] sm:text-xs font-bold text-slate-700 flex items-center gap-1.5">
-                                    <span>🧩</span>
-                                    <span>ถอดโครงสร้างประโยคในบทความ</span>
-                                  </span>
-
-                                  {/* Quick Toggles: Open Pronunciation & Translation */}
-                                  <div className="flex items-center gap-1.5">
-                                    <button
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        setShowBackTranslation(!showBackTranslation);
-                                      }}
-                                      className={`text-[9px] font-bold px-2 py-0.5 rounded border transition ${
-                                        showBackTranslation ? "bg-amber-100 text-amber-900 border-amber-200" : "bg-white text-slate-500 border-slate-200"
-                                      }`}
-                                      title="เปิด/ปิด คำแปล"
-                                    >
-                                      👁️ คำแปล: {showBackTranslation ? "เปิด" : "ปิด"}
-                                    </button>
+                              {/* 4. กล่องคำแปลไทยเมื่อกดเปิด (ยาวต่อเนื่อง ไม่แบ่ง 1 2 3 4 5) */}
+                              {showStoryTranslation && (
+                                <div className="bg-white/95 rounded-xl p-3 sm:p-4 border border-slate-200 space-y-2.5 mt-2 animate-fadeIn">
+                                  <div className="flex items-center justify-between">
+                                    <span className="text-[11px] font-bold text-slate-700 flex items-center gap-1.5">
+                                      <span>📜</span>
+                                      <span>คำแปลบทความทั้งเรื่อง:</span>
+                                    </span>
                                     <button
                                       onClick={(e) => {
                                         e.stopPropagation();
@@ -1923,79 +1878,42 @@ export default function Home() {
                                       className={`text-[9px] font-bold px-2 py-0.5 rounded border transition ${
                                         showBackPronunciation ? "bg-emerald-100 text-emerald-900 border-emerald-200" : "bg-white text-slate-500 border-slate-200"
                                       }`}
-                                      title="เปิด/ปิด คำอ่าน"
                                     >
                                       🗣️ คำอ่าน: {showBackPronunciation ? "เปิด" : "ปิด"}
                                     </button>
                                   </div>
-                                </div>
-
-                                <div className="flex flex-col gap-2.5">
-                                  {activeCardData.sentences.map((s, idx) => (
-                                    <div key={idx} className="bg-white/80 border border-slate-100/90 rounded-xl p-2.5 flex flex-col gap-1.5">
-                                      <div className="flex items-start justify-between gap-2">
-                                        <div className="flex items-start gap-2 flex-1 min-w-0">
-                                          <span className="text-[8px] xs:text-[8.5px] font-extrabold bg-[#e6f4ff] text-[#0958d9] border border-[#d2e9ff] px-1.5 py-0.5 rounded shrink-0 mt-0.5 min-w-[42px] text-center leading-tight">
-                                            {s.structure}
-                                          </span>
-                                          <div className="flex-1 min-w-0">
-                                            <p className="text-[11.5px] xs:text-xs sm:text-[13px] font-semibold text-slate-800 leading-snug">
-                                              {renderInteractiveSentence(s.sentence, s)}
-                                            </p>
-                                            {showBackPronunciation && s.thaiPronunciation && (
-                                              <p className="text-[9.5px] sm:text-[10px] text-[#A28C89] font-medium tracking-wide mt-0.5 leading-snug">
-                                                อ่าน: {s.thaiPronunciation}
-                                              </p>
-                                            )}
-                                          </div>
-                                        </div>
-                                        <button
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            speakWord(s.sentence);
-                                          }}
-                                          className="bg-slate-50 hover:bg-sky-50 p-1.5 rounded-lg text-slate-400 hover:text-sky-600 border border-slate-200 transition shrink-0"
-                                          title="ฟังประโยคนี้"
-                                        >
-                                          <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-                                            <path strokeLinecap="round" strokeLinejoin="round" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
-                                          </svg>
-                                        </button>
-                                      </div>
-
-                                      {/* Translation & Grammar */}
-                                      <div className="ml-[50px] pl-2 border-l-2 border-[#EBE3DE] flex flex-col gap-0.5">
-                                        {showBackTranslation && (
-                                          <p className="text-[10.5px] xs:text-[11px] sm:text-xs font-bold text-[#A28C89] leading-snug">
-                                            แปล: {s.translation}
-                                          </p>
-                                        )}
-                                        <p className="text-[9px] sm:text-[10px] text-slate-500 font-semibold leading-normal font-sans">
-                                          โครงสร้าง: {s.grammar}
-                                        </p>
-                                      </div>
-                                    </div>
-                                  ))}
-                                </div>
-                              </div>
-
-                              {/* 3. Memory Trick & Usage Tips */}
-                              {activeCardData?.trick && (
-                                <div className="bg-amber-50/60 border border-amber-100 rounded-xl p-3 text-left">
-                                  <span className="text-[9.5px] sm:text-[10.5px] font-extrabold text-[#A28C89] uppercase tracking-wider block mb-1 flex items-center gap-1">
-                                    <span>💡</span> เทคนิคการใช้และข้อควรระวัง:
-                                  </span>
-                                  <p className="text-[11px] sm:text-xs text-slate-700 leading-relaxed font-sans font-medium">
-                                    {activeCardData.trick}
+                                  <p className="text-[12.5px] sm:text-[13.5px] text-slate-700 font-medium leading-relaxed bg-[#f8faff] rounded-lg p-2.5 border border-slate-100">
+                                    {activeCardData.fullArticleThai || activeCardData.sentences.map((s) => s.translation).join(" ")}
                                   </p>
+
+                                  {showBackPronunciation && (
+                                    <p className="text-[10px] sm:text-[11px] text-[#A28C89] font-medium leading-relaxed bg-amber-50/50 rounded-lg p-2 border border-amber-100">
+                                      <span className="font-bold text-amber-800 mr-1.5">🗣️ คำอ่าน:</span>
+                                      {activeCardData.sentences.map((s) => s.thaiPronunciation).filter(Boolean).join("  •  ")}
+                                    </p>
+                                  )}
+
+                                  {activeCardData.trick && (
+                                    <div className="bg-amber-50/70 border border-amber-200/70 rounded-xl p-2.5 text-[11px] sm:text-xs text-amber-900 font-medium flex items-center gap-2">
+                                      <span>💡</span>
+                                      <span><strong>ทริก:</strong> {activeCardData.trick}</span>
+                                    </div>
+                                  )}
                                 </div>
                               )}
                             </div>
+                          ) : (
+                            <p className="text-xs text-slate-400 text-center">ไม่สามารถโหลดข้อมูลบทความได้</p>
                           )}
                         </div>
+
+                        {/* Card Bottom Shortcuts Hint */}
+                        <div className="flex justify-center mt-3 pt-2 border-t border-slate-100">
+                          <span className="text-[9.5px] sm:text-[10px] text-slate-400 font-bold uppercase tracking-widest text-center leading-snug">
+                            💡 กด Spacebar เพื่อแสดง/ซ่อนคำแปล • ⬅️ ➡️ ปุ่มลูกศรเพื่อเปลี่ยนการ์ด
+                          </span>
+                        </div>
                       </div>
-                    </div>
-                  </div>
 
                   {/* Starred Notes Input Area */}
                   <div className="w-full max-w-xl bg-white border border-[#E5E0DC] rounded-2xl p-4 flex flex-col gap-3 shadow-sm">
@@ -2063,8 +1981,8 @@ export default function Home() {
                   </div>
 
                   <p className="text-[11px] text-slate-400 text-center font-bold uppercase tracking-widest hidden md:block">
-                    Press <span className="text-slate-505 bg-slate-100 border border-slate-200 px-1.5 py-0.5 rounded shadow-sm">Space</span> to flip •{" "}
-                    <span className="text-slate-505 bg-slate-100 border border-slate-200 px-1.5 py-0.5 rounded shadow-sm">← / →</span> to navigate
+                    Press <span className="text-slate-600 bg-slate-100 border border-slate-200 px-1.5 py-0.5 rounded shadow-sm">Space</span> to show/hide translation •{" "}
+                    <span className="text-slate-600 bg-slate-100 border border-slate-200 px-1.5 py-0.5 rounded shadow-sm">← / →</span> to navigate
                   </p>
                 </div>
               )
@@ -2127,17 +2045,17 @@ export default function Home() {
                     </div>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div className="bg-white/90 border border-[#E5E0DC] rounded-3xl p-6 flex flex-col justify-between gap-6 shadow-sm hover:border-[#EBE3DE] transition">
-                      <div className="flex flex-col gap-3">
-                        <div className="w-12 h-12 rounded-2xl bg-sky-50 text-sky-600 border border-sky-100 flex items-center justify-center">
-                          <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                    <div className="bg-white/90 border border-[#E5E0DC] rounded-3xl p-5 flex flex-col justify-between gap-5 shadow-sm hover:border-[#EBE3DE] transition">
+                      <div className="flex flex-col gap-2.5">
+                        <div className="w-11 h-11 rounded-2xl bg-sky-50 text-sky-600 border border-sky-100 flex items-center justify-center">
+                          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                           </svg>
                         </div>
-                        <h3 className="text-lg font-bold text-slate-800">Part of Speech</h3>
+                        <h3 className="text-base font-bold text-slate-800">Part of Speech</h3>
                         <p className="text-xs text-slate-500 leading-relaxed font-medium">
-                          Guess whether the highlighted word is a noun, verb, adjective, or other.
+                          ทายหน้าที่ของคำศัพท์ (Noun, Verb, Adjective, หรืออื่นๆ)
                         </p>
                       </div>
                       <button onClick={() => startQuiz("pos")} className="w-full bg-[#A28C89] hover:bg-[#B8A3A0] text-white font-extrabold text-xs py-2.5 rounded-xl transition shadow-md">
@@ -2145,16 +2063,16 @@ export default function Home() {
                       </button>
                     </div>
 
-                    <div className="bg-white/90 border border-[#E5E0DC] rounded-3xl p-6 flex flex-col justify-between gap-6 shadow-sm hover:border-emerald-200 transition">
-                      <div className="flex flex-col gap-3">
-                        <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 border border-emerald-100 flex items-center justify-center">
-                          <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                    <div className="bg-white/90 border border-[#E5E0DC] rounded-3xl p-5 flex flex-col justify-between gap-5 shadow-sm hover:border-emerald-200 transition">
+                      <div className="flex flex-col gap-2.5">
+                        <div className="w-11 h-11 rounded-2xl bg-emerald-50 text-emerald-600 border border-emerald-100 flex items-center justify-center">
+                          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                           </svg>
                         </div>
-                        <h3 className="text-lg font-bold text-slate-800">Letter Scramble</h3>
+                        <h3 className="text-base font-bold text-slate-800">Letter Scramble</h3>
                         <p className="text-xs text-slate-500 leading-relaxed font-medium">
-                          Unscramble letters to match the spelling of the vocab term.
+                          สลับตัวอักษรที่ปนกันให้สะกดคำศัพท์ได้ถูกต้อง
                         </p>
                       </div>
                       <button onClick={() => startQuiz("spelling")} className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-extrabold text-xs py-2.5 rounded-xl transition shadow-md">
@@ -2162,19 +2080,40 @@ export default function Home() {
                       </button>
                     </div>
 
-                    <div className="bg-white/90 border border-[#E5E0DC] rounded-3xl p-6 flex flex-col justify-between gap-6 shadow-sm hover:border-[#E5DDD8] transition">
-                      <div className="flex flex-col gap-3">
-                        <div className="w-12 h-12 rounded-2xl bg-pink-50 text-pink-650 border border-pink-100 flex items-center justify-center">
-                          <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                    <div className="bg-white/90 border border-[#E5E0DC] rounded-3xl p-5 flex flex-col justify-between gap-5 shadow-sm hover:border-[#E5DDD8] transition">
+                      <div className="flex flex-col gap-2.5">
+                        <div className="w-11 h-11 rounded-2xl bg-pink-50 text-pink-600 border border-pink-100 flex items-center justify-center">
+                          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
                           </svg>
                         </div>
-                        <h3 className="text-lg font-bold text-slate-800">Missing Letters</h3>
-                        <p className="text-xs text-slate-505 leading-relaxed font-medium">
-                          Fill in blanks (e.g. a_a_d_n) to correctly complete the word.
+                        <h3 className="text-base font-bold text-slate-800">Missing Letters</h3>
+                        <p className="text-xs text-slate-500 leading-relaxed font-medium">
+                          เติมตัวอักษรในช่องว่าง (เช่น a_a_d_n) ให้สมบูรณ์
                         </p>
                       </div>
                       <button onClick={() => startQuiz("missing")} className="w-full bg-pink-400 hover:bg-pink-500 text-white font-extrabold text-xs py-2.5 rounded-xl transition shadow-md">
+                        Start Mode
+                      </button>
+                    </div>
+
+                    {/* NEW 4th MODE: Story Builder Puzzle */}
+                    <div className="bg-white/90 border-2 border-indigo-200/80 rounded-3xl p-5 flex flex-col justify-between gap-5 shadow-sm hover:border-indigo-400 hover:shadow-indigo-100/50 transition">
+                      <div className="flex flex-col gap-2.5">
+                        <div className="w-11 h-11 rounded-2xl bg-indigo-50 text-indigo-600 border border-indigo-100 flex items-center justify-center">
+                          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                          </svg>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <h3 className="text-base font-bold text-slate-800">Story Puzzle</h3>
+                          <span className="text-[9px] font-black uppercase tracking-wider bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full">New</span>
+                        </div>
+                        <p className="text-xs text-slate-500 leading-relaxed font-medium">
+                          อ่านคำแปลภาษาไทยทั้งเรื่อง แล้วเลือกคำอังกฤษมาเรียงต่อกันเป็นบทความ ลากสลับตำแหน่งได้อิสระ!
+                        </p>
+                      </div>
+                      <button onClick={() => startQuiz("story")} className="w-full bg-gradient-to-r from-indigo-500 to-sky-500 hover:from-indigo-600 hover:to-sky-600 text-white font-extrabold text-xs py-2.5 rounded-xl transition shadow-md">
                         Start Mode
                       </button>
                     </div>
@@ -2182,8 +2121,8 @@ export default function Home() {
                 )}
               </div>
             ) : (
-              currentQuizWord && (
-                <div className="w-full flex flex-col gap-6 max-w-xl">
+              (quizMode === "story" || currentQuizWord) && (
+                <div className={`w-full flex flex-col gap-6 ${quizMode === "story" ? "max-w-3xl" : "max-w-xl"}`}>
                   <div className="flex justify-between items-center bg-white/90 border border-[#E5E0DC] px-6 py-3.5 rounded-2xl text-xs font-bold shadow-sm">
                     <button onClick={() => setQuizStarted(false)} className="text-slate-500 hover:text-slate-800 transition flex items-center gap-1.5">
                       <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
@@ -2192,115 +2131,295 @@ export default function Home() {
                       Leave Quiz
                     </button>
                     <span className="text-[#A28C89] font-extrabold uppercase">
-                      {quizMode === "pos" ? "Part of Speech Quiz" : quizMode === "spelling" ? "Spelling Scramble" : "Missing Letters"}
+                      {quizMode === "pos"
+                        ? "Part of Speech Quiz"
+                        : quizMode === "spelling"
+                        ? "Spelling Scramble"
+                        : quizMode === "missing"
+                        ? "Missing Letters"
+                        : "Story Builder Puzzle"}
                     </span>
                     <span className="text-slate-600">
                       Score: <strong className="text-emerald-600">{quizScore}</strong>/{quizTotalQuestions}
                     </span>
                   </div>
 
-                  <div className={`bg-white border border-[#E5E0DC] rounded-3xl p-8 flex flex-col items-center gap-4 text-center shadow-md ${
-                    quizFeedback === "correct" ? "animate-correct" : quizFeedback === "incorrect" ? "animate-shake" : ""
-                  }`}>
-                    {quizMode === "pos" ? (
-                      <>
-                        <span className="text-xs text-slate-400 font-bold uppercase tracking-wider">What part of speech is</span>
-                        <h2 className="text-3xl font-black text-slate-800 tracking-tight">{currentQuizWord.word}</h2>
-                      </>
-                    ) : quizMode === "spelling" ? (
-                      <>
-                        <span className="text-xs text-slate-400 font-bold uppercase tracking-wider">
-                          Spell this word (Part of Speech: <strong className="text-[#A28C89]">{currentQuizWord.pos}</strong>)
-                        </span>
-                        <h2 className="text-xl font-bold tracking-widest text-emerald-600 font-mono select-none">{scrambledWord}</h2>
-                      </>
-                    ) : (
-                      <>
-                        <span className="text-xs text-slate-400 font-bold uppercase tracking-wider">
-                          Fill in the blanks (Part of Speech: <strong className="text-[#A28C89]">{currentQuizWord.pos}</strong>)
-                        </span>
-                        <h2 className="text-3xl font-extrabold tracking-widest text-slate-800 font-mono">{missingLettersHint}</h2>
-                      </>
-                    )}
-                    <button onClick={() => speakWord(currentQuizWord.word)} className="bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 p-2.5 rounded-full transition mt-2 border border-slate-200">
-                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
-                      </svg>
-                    </button>
-                  </div>
-
-                  {quizMode === "pos" ? (
-                    <div className="grid grid-cols-2 gap-4">
-                      {quizOptions.map((opt) => {
-                        const isChosen = selectedAnswer === opt;
-                        const isCorrectOpt = opt === currentQuizWord.pos;
-                        
-                        let btnStyle = "bg-white border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-slate-350 shadow-sm";
-                        if (selectedAnswer !== null) {
-                          if (isCorrectOpt) {
-                            btnStyle = "bg-emerald-500/20 border-emerald-500/50 text-emerald-600";
-                          } else if (isChosen) {
-                            btnStyle = "bg-rose-500/20 border-rose-500/50 text-rose-500";
-                          } else {
-                            btnStyle = "bg-slate-50/50 border-slate-100 text-slate-400 opacity-60";
-                          }
-                        }
-
-                        return (
-                          <button
-                            key={opt}
-                            disabled={selectedAnswer !== null}
-                            onClick={() => checkPosAnswer(opt)}
-                            className={`py-4 px-6 rounded-2xl border text-sm font-extrabold tracking-wide uppercase transition ${btnStyle}`}
-                          >
-                            {opt}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  ) : (
-                    <div className="flex flex-col gap-3">
-                      <div className="flex gap-2">
-                        <input
-                          type="text"
-                          value={spellingInput}
-                          disabled={selectedAnswer !== null}
-                          onChange={(e) => setSpellingInput(e.target.value)}
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter") checkAnswer(spellingInput);
-                          }}
-                          placeholder={quizMode === "spelling" ? "Type spelled word..." : "Type complete word..."}
-                          className="flex-1 bg-slate-50 border border-slate-200 focus:border-[#B8A3A0] focus:bg-white rounded-2xl px-4 py-3 text-sm text-slate-800 focus:outline-none placeholder:text-slate-400 font-semibold shadow-inner"
-                        />
-                        <button
-                          disabled={selectedAnswer !== null || !spellingInput.trim()}
-                          onClick={() => checkAnswer(spellingInput)}
-                          className="bg-[#A28C89] hover:bg-[#B8A3A0] disabled:opacity-50 text-white font-extrabold text-xs px-6 rounded-2xl transition shadow-md"
-                        >
-                          Submit
-                        </button>
-                      </div>
-
-                      {selectedAnswer !== null && (
-                        <div className="bg-[#fcfdfa] border border-[#dcebdc] p-4 rounded-2xl flex flex-col gap-1.5 text-center shadow-sm">
-                          <span className={`text-xs font-extrabold uppercase ${quizFeedback === 'correct' ? 'text-emerald-600' : 'text-rose-500'}`}>
-                            {quizFeedback === "correct" ? "Correct!" : "Incorrect"}
+                  {quizMode === "story" ? (
+                    <div className="w-full flex flex-col gap-4">
+                      {/* Story Thai Translation Box (The Target Prompt) */}
+                      <div className="bg-white border border-[#E5E0DC] rounded-3xl p-5 sm:p-6 shadow-sm flex flex-col gap-3">
+                        <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
+                          <span className="text-xs font-bold text-sky-700 bg-sky-50 border border-sky-100 px-3 py-1 rounded-full flex items-center gap-1.5">
+                            <span>📜</span>
+                            <span>{storyArticleTitle || "โจทย์บทความภาษาไทย"}</span>
                           </span>
-                          <span className="text-sm text-slate-600 font-semibold">
-                            Answer: <strong className="text-slate-800 font-black">{currentQuizWord.word}</strong>
+                          <span className="text-[11px] font-bold text-slate-500 bg-slate-50 px-2.5 py-1 rounded-lg border border-slate-200">
+                            คำที่เลือกแล้ว: <strong className="text-sky-700">{selectedStoryChips.length}</strong> / {storyTargetTokens.length} คำ
                           </span>
                         </div>
-                      )}
-                    </div>
-                  )}
 
-                  {selectedAnswer !== null && (
-                    <button
-                      onClick={() => startNewQuizQuestion()}
-                      className="w-full bg-gradient-to-r from-[#A28C89] to-[#C3B3B1] hover:from-[#B8A3A0] hover:to-[#D4C9C8] text-white font-extrabold text-sm py-4 rounded-2xl transition shadow-md duration-200"
-                    >
-                      Next Question
-                    </button>
+                        <div>
+                          <p className="text-xs font-bold text-slate-500 mb-1.5">
+                            อ่านคำแปลภาษาไทยด้านล่าง แล้วเลือกคำศัพท์ภาษาอังกฤษมาต่อเรียงเป็นบทความที่ถูกต้อง:
+                          </p>
+                          <p className="text-sm sm:text-base font-semibold text-slate-800 leading-relaxed bg-[#f8faff] p-4 rounded-2xl border border-sky-100">
+                            {storyThaiTranslation}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Story Builder Playground (Assembled Chips) */}
+                      <div className="bg-white border-2 border-slate-200 rounded-3xl p-5 sm:p-6 min-h-[160px] flex flex-col justify-between gap-4 shadow-sm">
+                        <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-xs font-extrabold text-slate-700">✍️ บทความภาษาอังกฤษที่คุณเรียง:</span>
+                          </div>
+                          {selectedStoryChips.length > 0 && (
+                            <div className="flex items-center gap-2">
+                              <button
+                                onClick={() => {
+                                  if (selectedStoryChips.length === 0) return;
+                                  const last = selectedStoryChips[selectedStoryChips.length - 1];
+                                  handleRemoveStoryChip(last);
+                                }}
+                                className="text-[10px] font-bold text-rose-600 hover:text-rose-800 bg-rose-50 hover:bg-rose-100 border border-rose-200 px-2.5 py-1 rounded-lg transition"
+                                title="ลบคำล่าสุดออก"
+                              >
+                                ⌫ ลบคำล่าสุด
+                              </button>
+                              <button
+                                onClick={handleResetStoryChips}
+                                className="text-[10px] font-bold text-slate-500 hover:text-slate-800 bg-slate-100 hover:bg-slate-200 border border-slate-200 px-2.5 py-1 rounded-lg transition"
+                                title="ล้างทั้งหมด"
+                              >
+                                ↺ ล้างกระดาน
+                              </button>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Hint for dragging/clicking */}
+                        <div className="text-[10.5px] text-slate-400 font-medium">
+                          💡 คลิกคำศัพท์เพื่อนำออก | คลิกค้างแล้วลากเพื่อสลับตำแหน่งไปวางตรงไหนก็ได้
+                        </div>
+
+                        {/* Selected Chips Box */}
+                        <div className="flex flex-wrap items-center gap-2 min-h-[70px] p-3 bg-slate-50/70 rounded-2xl border border-slate-200">
+                          {selectedStoryChips.length === 0 ? (
+                            <p className="text-xs text-slate-400 font-medium italic w-full text-center py-4">
+                              เริ่มต้นจากกระดานว่าง — คลิกเลือกคำศัพท์จากคลังคำด้านล่างเพื่อเริ่มเรียงบทความ
+                            </p>
+                          ) : (
+                            selectedStoryChips.map((chip, idx) => (
+                              <div
+                                key={chip.id}
+                                draggable
+                                onDragStart={() => handleDragStartChip(idx)}
+                                onDragOver={(e) => handleDragOverChip(e, idx)}
+                                onDrop={() => handleDropChip(idx)}
+                                onClick={() => handleRemoveStoryChip(chip)}
+                                className={`cursor-grab active:cursor-grabbing select-none px-3 py-1.5 rounded-xl text-xs sm:text-sm font-bold border transition shadow-2xs flex items-center gap-1.5 group ${
+                                  dragOverChipIndex === idx
+                                    ? "border-sky-500 bg-sky-100 ring-2 ring-sky-300 scale-105"
+                                    : "bg-white border-slate-200 text-slate-800 hover:border-rose-300 hover:bg-rose-50"
+                                }`}
+                                title="คลิกเพื่อนำคำนี้ออก หรือลากเพื่อสลับตำแหน่ง"
+                              >
+                                <span className="text-[11px] text-slate-400 group-hover:text-rose-400">⠿</span>
+                                <span>{chip.word}</span>
+                                <span className="text-[10px] text-slate-300 group-hover:text-rose-600 font-extrabold ml-0.5">✕</span>
+                              </div>
+                            ))
+                          )}
+                        </div>
+
+                        {/* Feedback Banner */}
+                        {storyFeedback === "correct" && (
+                          <div className="bg-emerald-50 border border-emerald-200 p-4 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left shadow-xs animate-correct">
+                            <div className="flex items-center gap-3">
+                              <span className="text-2xl">🎉</span>
+                              <div>
+                                <p className="text-xs font-black text-emerald-800 uppercase tracking-wider">ยอดเยี่ยมมาก! เรียงบทความได้ถูกต้อง 100%</p>
+                                <p className="text-xs text-emerald-700 font-medium">คุณเข้าใจโครงสร้างและคำศัพท์บทความนี้ได้อย่างสมบูรณ์แบบ</p>
+                              </div>
+                            </div>
+                            <button
+                              onClick={startNewStoryPuzzle}
+                              className="bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs px-5 py-2.5 rounded-xl transition shadow-sm whitespace-nowrap"
+                            >
+                              เล่นบทความถัดไป ➔
+                            </button>
+                          </div>
+                        )}
+
+                        {storyFeedback === "incorrect" && (
+                          <div className="bg-rose-50 border border-rose-200 p-3.5 rounded-2xl flex items-center gap-3 text-rose-800 text-xs font-medium shadow-xs animate-shake">
+                            <span className="text-xl">❌</span>
+                            <div className="flex-1">
+                              <p className="font-bold text-rose-900">ยังไม่ถูกต้องทั้งหมด หรือยังเรียงไม่ตรงตามลำดับ</p>
+                              <p className="text-[11px] text-rose-700">ลองลากสลับตำแหน่งคำ หรือคลิกคำที่ไม่ถูกต้องเพื่อนำออกแล้วตรวจใหม่อีกครั้งครับ</p>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Action Buttons: Check Answer */}
+                        <div className="flex items-center gap-3 pt-2">
+                          <button
+                            onClick={handleCheckStoryAnswer}
+                            disabled={selectedStoryChips.length === 0}
+                            className="flex-1 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 disabled:opacity-50 text-white font-black text-sm py-3 px-6 rounded-2xl transition shadow-md flex items-center justify-center gap-2"
+                          >
+                            <span>✅ ตรวจคำตอบ</span>
+                          </button>
+                          {storyFeedback === "correct" && (
+                            <button
+                              onClick={() => speakWord(storyTargetTokens.join(" "))}
+                              className="bg-sky-50 hover:bg-sky-100 text-sky-700 border border-sky-200 font-bold text-xs py-3 px-4 rounded-2xl transition flex items-center gap-1.5"
+                              title="ฟังเสียงบทความที่ถูกต้อง"
+                            >
+                              <span>🔊 ฟังเสียงบทความ</span>
+                            </button>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Word Bank Chips Area */}
+                      <div className="bg-white/90 border border-[#E5E0DC] rounded-3xl p-5 sm:p-6 shadow-sm flex flex-col gap-3">
+                        <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+                          <span className="text-xs font-extrabold text-slate-700 flex items-center gap-1.5">
+                            <span>📦</span>
+                            <span>คลังคำศัพท์ที่ให้เลือก ({storyWordChips.length} คำ):</span>
+                          </span>
+                          <span className="text-[10px] text-slate-400">คลิกที่คำศัพท์เพื่อนำไปใส่ในบทความ</span>
+                        </div>
+
+                        <div className="flex flex-wrap items-center gap-2 min-h-[60px] p-2 bg-slate-50/50 rounded-2xl border border-slate-100">
+                          {storyWordChips.length === 0 ? (
+                            <p className="text-xs text-slate-400 font-medium italic w-full text-center py-2">
+                              เลือกคำศัพท์ไปหมดแล้ว! กดปุ่ม "ตรวจคำตอบ" ด้านบนได้เลย
+                            </p>
+                          ) : (
+                            storyWordChips.map((chip) => (
+                              <button
+                                key={chip.id}
+                                onClick={() => handlePickStoryChip(chip)}
+                                className="bg-white hover:bg-sky-50 active:scale-95 border border-slate-200 hover:border-sky-300 text-slate-700 hover:text-sky-800 px-3 py-1.5 rounded-xl text-xs sm:text-sm font-bold transition shadow-2xs"
+                              >
+                                {chip.word}
+                              </button>
+                            ))
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    currentQuizWord && (
+                      <>
+                        <div className={`bg-white border border-[#E5E0DC] rounded-3xl p-8 flex flex-col items-center gap-4 text-center shadow-md ${
+                          quizFeedback === "correct" ? "animate-correct" : quizFeedback === "incorrect" ? "animate-shake" : ""
+                        }`}>
+                          {quizMode === "pos" ? (
+                            <>
+                              <span className="text-xs text-slate-400 font-bold uppercase tracking-wider">What part of speech is</span>
+                              <h2 className="text-3xl font-black text-slate-800 tracking-tight">{currentQuizWord.word}</h2>
+                            </>
+                          ) : quizMode === "spelling" ? (
+                            <>
+                              <span className="text-xs text-slate-400 font-bold uppercase tracking-wider">
+                                Spell this word (Part of Speech: <strong className="text-[#A28C89]">{currentQuizWord.pos}</strong>)
+                              </span>
+                              <h2 className="text-xl font-bold tracking-widest text-emerald-600 font-mono select-none">{scrambledWord}</h2>
+                            </>
+                          ) : (
+                            <>
+                              <span className="text-xs text-slate-400 font-bold uppercase tracking-wider">
+                                Fill in the blanks (Part of Speech: <strong className="text-[#A28C89]">{currentQuizWord.pos}</strong>)
+                              </span>
+                              <h2 className="text-3xl font-extrabold tracking-widest text-slate-800 font-mono">{missingLettersHint}</h2>
+                            </>
+                          )}
+                          <button onClick={() => speakWord(currentQuizWord.word)} className="bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 p-2.5 rounded-full transition mt-2 border border-slate-200">
+                            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+                            </svg>
+                          </button>
+                        </div>
+
+                        {quizMode === "pos" ? (
+                          <div className="grid grid-cols-2 gap-4">
+                            {quizOptions.map((opt) => {
+                              const isChosen = selectedAnswer === opt;
+                              const isCorrectOpt = opt === currentQuizWord.pos;
+                              
+                              let btnStyle = "bg-white border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-slate-350 shadow-sm";
+                              if (selectedAnswer !== null) {
+                                if (isCorrectOpt) {
+                                  btnStyle = "bg-emerald-500/20 border-emerald-500/50 text-emerald-600";
+                                } else if (isChosen) {
+                                  btnStyle = "bg-rose-500/20 border-rose-500/50 text-rose-500";
+                                } else {
+                                  btnStyle = "bg-slate-50/50 border-slate-100 text-slate-400 opacity-60";
+                                }
+                              }
+
+                              return (
+                                <button
+                                  key={opt}
+                                  disabled={selectedAnswer !== null}
+                                  onClick={() => checkPosAnswer(opt)}
+                                  className={`py-4 px-6 rounded-2xl border text-sm font-extrabold tracking-wide uppercase transition ${btnStyle}`}
+                                >
+                                  {opt}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        ) : (
+                          <div className="flex flex-col gap-3">
+                            <div className="flex gap-2">
+                              <input
+                                type="text"
+                                value={spellingInput}
+                                disabled={selectedAnswer !== null}
+                                onChange={(e) => setSpellingInput(e.target.value)}
+                                onKeyDown={(e) => {
+                                  if (e.key === "Enter") checkAnswer(spellingInput);
+                                }}
+                                placeholder={quizMode === "spelling" ? "Type spelled word..." : "Type complete word..."}
+                                className="flex-1 bg-slate-50 border border-slate-200 focus:border-[#B8A3A0] focus:bg-white rounded-2xl px-4 py-3 text-sm text-slate-800 focus:outline-none placeholder:text-slate-400 font-semibold shadow-inner"
+                              />
+                              <button
+                                disabled={selectedAnswer !== null || !spellingInput.trim()}
+                                onClick={() => checkAnswer(spellingInput)}
+                                className="bg-[#A28C89] hover:bg-[#B8A3A0] disabled:opacity-50 text-white font-extrabold text-xs px-6 rounded-2xl transition shadow-md"
+                              >
+                                Submit
+                              </button>
+                            </div>
+
+                            {selectedAnswer !== null && (
+                              <div className="bg-[#fcfdfa] border border-[#dcebdc] p-4 rounded-2xl flex flex-col gap-1.5 text-center shadow-sm">
+                                <span className={`text-xs font-extrabold uppercase ${quizFeedback === 'correct' ? 'text-emerald-600' : 'text-rose-500'}`}>
+                                  {quizFeedback === "correct" ? "Correct!" : "Incorrect"}
+                                </span>
+                                <span className="text-sm text-slate-600 font-semibold">
+                                  Answer: <strong className="text-slate-800 font-black">{currentQuizWord.word}</strong>
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                        {selectedAnswer !== null && (
+                          <button
+                            onClick={() => startNewQuizQuestion()}
+                            className="w-full bg-gradient-to-r from-[#A28C89] to-[#C3B3B1] hover:from-[#B8A3A0] hover:to-[#D4C9C8] text-white font-extrabold text-sm py-4 rounded-2xl transition shadow-md duration-200"
+                          >
+                            Next Question
+                          </button>
+                        )}
+                      </>
+                    )
                   )}
                 </div>
               )
