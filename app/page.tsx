@@ -95,7 +95,7 @@ export default function Home() {
     let localNotes: GeneralNote[] = [];
 
     // Cache version migration: purge old cache format (Thai words in pronunciation / missing grammar translations)
-    const CACHE_VERSION = "v4";
+    const CACHE_VERSION = "v5";
     const savedCacheVer = typeof window !== "undefined" ? localStorage.getItem("lexiflow_cache_version") : null;
     if (savedCacheVer !== CACHE_VERSION) {
       if (typeof window !== "undefined") {
@@ -190,8 +190,7 @@ export default function Home() {
           if (!card || !Array.isArray(card.sentences) || card.sentences.length === 0) return false;
           if (card.isFallback) return false;
           if (card.wordTranslation && card.wordTranslation.includes("คำแปลของ")) return false;
-          // Must have grammar breakdown with Thai translation (contains colon ':')
-          if (!card.sentences[0].grammar || !card.sentences[0].grammar.includes(":")) return false;
+          // Accept cards with OR without grammar field (new format removes grammar to save tokens)
           return true;
         };
 
@@ -607,11 +606,10 @@ export default function Home() {
       return;
     }
 
-    // Check database cache first (ignore fallback cache so we try to heal/regenerate with real AI if online)
+    // Check database cache first — ถ้ามีใน cache ใช้เลย ไม่ต้องรัน AI ใหม่
     const cached = cardCache[currentWordObj.id];
     const isFallbackCard = cached && (cached.isFallback || (cached.wordTranslation && cached.wordTranslation.includes("คำแปลของ")));
-    const isLegacyCard = cached && (!cached.fullArticleThai || (cached.sentences?.[0] && !cached.sentences[0].grammar?.includes(":")));
-    if (cached && Array.isArray(cached.sentences) && cached.sentences.length > 0 && !isFallbackCard && !isLegacyCard) {
+    if (cached && Array.isArray(cached.sentences) && cached.sentences.length > 0 && !isFallbackCard) {
       setActiveCardData(cached);
       setActiveCardId(currentWordObj.id);
       setApiError(null);
