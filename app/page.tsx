@@ -4,10 +4,11 @@ import { useState, useEffect, useMemo, useRef } from "react";
 import { VOCAB } from "./vocab";
 import { Word, UserProgress, ReviewWord, GeneralNote } from "./types";
 import { CardData, generateFallbackCard } from "./utils/fallbackGenerator";
+import FoundationsViewer from "./components/FoundationsViewer";
 
 export default function Home() {
-  // Tab state: 'dashboard' | 'flashcards' | 'quiz' | 'explorer' | 'review' | 'notes' | 'customWords'
-  const [activeTab, setActiveTab] = useState<"dashboard" | "flashcards" | "quiz" | "explorer" | "review" | "notes" | "customWords">("dashboard");
+  // Tab state: 'dashboard' | 'flashcards' | 'quiz' | 'explorer' | 'review' | 'notes' | 'customWords' | 'foundations'
+  const [activeTab, setActiveTab] = useState<"dashboard" | "flashcards" | "quiz" | "explorer" | "review" | "notes" | "customWords" | "foundations">("dashboard");
 
   // Global Progress State
   const [progress, setProgress] = useState<UserProgress>({
@@ -94,20 +95,10 @@ export default function Home() {
     let localReview: ReviewWord[] = [];
     let localNotes: GeneralNote[] = [];
 
-    // Cache version migration: purge old cache format (Thai words in pronunciation / missing grammar translations)
+    // Cache version migration: ensure cache version key is saved, never wipe server DB
     const CACHE_VERSION = "v5";
-    const savedCacheVer = typeof window !== "undefined" ? localStorage.getItem("lexiflow_cache_version") : null;
-    if (savedCacheVer !== CACHE_VERSION) {
-      if (typeof window !== "undefined") {
-        localStorage.removeItem("lexiflow_card_cache");
-        localStorage.setItem("lexiflow_cache_version", CACHE_VERSION);
-      }
-      // Inform server DB to reset cardCache as well
-      fetch("/api/db", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ cardCache: {} })
-      }).catch(() => {});
+    if (typeof window !== "undefined") {
+      localStorage.setItem("lexiflow_cache_version", CACHE_VERSION);
     }
 
     // Mastery statistics migration: purge old accumulated mastered cards to start clean from current session
@@ -1295,6 +1286,18 @@ export default function Home() {
               </svg>
               Knowledge Notes ({generalNotes.length})
             </button>
+
+            <button
+              onClick={() => setActiveTab("foundations")}
+              className={`flex items-center gap-4 px-4 py-3.5 rounded-xl text-sm font-bold transition-all duration-200 group ${
+                activeTab === "foundations"
+                  ? "bg-[#F5F1EE] text-[#A28C89] border border-[#E5DDD8] shadow-sm"
+                  : "text-slate-500 hover:text-slate-800 hover:bg-slate-50 border border-transparent"
+              }`}
+            >
+              <span className="text-lg">📖</span>
+              Foundations (คลังความรู้)
+            </button>
           </nav>
         </div>
 
@@ -1339,6 +1342,7 @@ export default function Home() {
             <option value="quiz">Quiz Arena</option>
             <option value="explorer">Word Explorer</option>
             <option value="notes">Knowledge Notes</option>
+            <option value="foundations">Foundations (คลังความรู้)</option>
           </select>
         </header>
 
@@ -3104,6 +3108,11 @@ export default function Home() {
             )}
           </section>
         )}
+
+        {/* ------------------------------------------------------------------------
+            TAB 8: ENGLISH FOUNDATIONS GUIDE (KNOWLEDGE BASE)
+        ------------------------------------------------------------------------ */}
+        {activeTab === "foundations" && <FoundationsViewer />}
 
       </main>
 
