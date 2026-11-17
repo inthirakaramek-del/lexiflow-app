@@ -5,6 +5,23 @@ import { VOCAB } from "./vocab";
 import { Word, UserProgress, ReviewWord, GeneralNote } from "./types";
 import { CardData, generateFallbackCard } from "./utils/fallbackGenerator";
 
+// 10 Natural AI Neural Voices (100% Free via Edge Neural TTS)
+export const AVAILABLE_VOICES = [
+  // US Female (4 voices)
+  { id: "en-US-AvaNeural", name: "Ava", desc: "อบอุ่น เป็นธรรมชาติ", gender: "female", region: "US", flag: "🇺🇸" },
+  { id: "en-US-JennyNeural", name: "Jenny", desc: "สดใส มีชีวิตชีวา", gender: "female", region: "US", flag: "🇺🇸" },
+  { id: "en-US-EmmaNeural", name: "Emma", desc: "หวาน นุ่ม เล่าเรื่องเพลิน", gender: "female", region: "US", flag: "🇺🇸" },
+  { id: "en-US-AriaNeural", name: "Aria", desc: "คมชัด ฉะฉาน มาตรฐาน", gender: "female", region: "US", flag: "🇺🇸" },
+  // US Male (4 voices)
+  { id: "en-US-GuyNeural", name: "Guy", desc: "สบายๆ สไตล์เพื่อนคุย", gender: "male", region: "US", flag: "🇺🇸" },
+  { id: "en-US-AndrewNeural", name: "Andrew", desc: "อบอุ่น นุ่มนวล สดใส", gender: "male", region: "US", flag: "🇺🇸" },
+  { id: "en-US-ChristopherNeural", name: "Christopher", desc: "ทุ้มนุ่ม สุภาพ น่าฟัง", gender: "male", region: "US", flag: "🇺🇸" },
+  { id: "en-US-BrianNeural", name: "Brian", desc: "สุภาพ ชัดถ้อยชัดคำ", gender: "male", region: "US", flag: "🇺🇸" },
+  // UK British (2 voices)
+  { id: "en-GB-SoniaNeural", name: "Sonia", desc: "บริติช ชัดเจน หรูหรา", gender: "female", region: "UK", flag: "🇬🇧" },
+  { id: "en-GB-RyanNeural", name: "Ryan", desc: "บริติช ทุ้มนุ่มลึก", gender: "male", region: "UK", flag: "🇬🇧" },
+] as const;
+
 export default function Home() {
   // Tab state: 'dashboard' | 'flashcards' | 'quiz' | 'explorer' | 'review' | 'notes' | 'customWords'
   const [activeTab, setActiveTab] = useState<"dashboard" | "flashcards" | "quiz" | "explorer" | "review" | "notes" | "customWords">("dashboard");
@@ -36,8 +53,10 @@ export default function Home() {
   const ttsAudioCache = useRef<Map<string, string>>(new Map());
   const currentAudioRef = useRef<HTMLAudioElement | null>(null);
   const [ttsSpeakingText, setTtsSpeakingText] = useState<string | null>(null);
-  const [ttsVoice, setTtsVoice] = useState<"en-US-AriaNeural" | "en-US-AvaNeural">("en-US-AriaNeural");
-  const [audioLearningMode, setAudioLearningMode] = useState<"shadowing" | "flow" | "slow">("shadowing");
+  const [ttsVoice, setTtsVoice] = useState<string>("en-US-AvaNeural");
+  const [isVoiceDropdownOpen, setIsVoiceDropdownOpen] = useState(false);
+  const voiceDropdownRef = useRef<HTMLDivElement | null>(null);
+  const [audioLearningMode, setAudioLearningMode] = useState<"shadowing" | "flow" | "slow">("flow");
 
   // States for restoring session and search in card section
   const [lastWordIdToRestore, setLastWordIdToRestore] = useState<string | null>(null);
@@ -136,7 +155,7 @@ export default function Home() {
       }
 
       const savedVoice = localStorage.getItem("lexiflow_tts_voice");
-      if (savedVoice === "en-US-AvaNeural" || savedVoice === "en-US-AriaNeural") {
+      if (savedVoice && AVAILABLE_VOICES.some((v) => v.id === savedVoice)) {
         setTtsVoice(savedVoice);
       }
 
@@ -254,6 +273,21 @@ export default function Home() {
         setHasLoadedSession(true);
       });
   }, []);
+
+  // Close voice dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (voiceDropdownRef.current && !voiceDropdownRef.current.contains(e.target as Node)) {
+        setIsVoiceDropdownOpen(false);
+      }
+    };
+    if (isVoiceDropdownOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isVoiceDropdownOpen]);
 
   // Save card cache using partial patches
   const addCardToCache = (wordId: string, cardData: CardData) => {
@@ -772,12 +806,12 @@ export default function Home() {
       });
   };
 
-  // Speak pronunciation using Edge TTS (en-US-AriaNeural / Ava) with instant client-side memory cache
+  // Speak pronunciation using Edge TTS with instant client-side memory cache
   const speakWord = async (rawText: string, customVoice?: string, customRate?: string) => {
     if (!rawText || !rawText.trim()) return;
     const textToSpeak = rawText.trim();
-    const voiceToUse = customVoice || ttsVoice || "en-US-AriaNeural";
-    const rateToUse = customRate || (audioLearningMode === "slow" ? "-20%" : audioLearningMode === "shadowing" ? "-8%" : "-3%");
+    const voiceToUse = customVoice || ttsVoice || "en-US-AvaNeural";
+    const rateToUse = customRate || "-2%";
 
     // Stop currently playing audio or browser synthesis
     if (currentAudioRef.current) {
@@ -835,7 +869,7 @@ export default function Home() {
         const cleanForBrowser = textToSpeak.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ");
         const utterance = new SpeechSynthesisUtterance(cleanForBrowser);
         utterance.lang = "en-US";
-        utterance.rate = audioLearningMode === "slow" ? 0.75 : 0.88;
+        utterance.rate = 0.88;
         utterance.onend = () => setTtsSpeakingText(null);
         utterance.onerror = () => setTtsSpeakingText(null);
         window.speechSynthesis.speak(utterance);
@@ -847,20 +881,12 @@ export default function Home() {
 
   const speakFullArticle = (card: CardData | null) => {
     if (!card || !card.sentences || card.sentences.length === 0) return;
-    let breakTime = "1400ms";
-    let speechRate = "-8%";
-
-    if (audioLearningMode === "flow") {
-      breakTime = "300ms";
-      speechRate = "-3%";
-    } else if (audioLearningMode === "slow") {
-      breakTime = "800ms";
-      speechRate = "-20%";
-    }
-
-    // Insert natural SSML breath pause between sentences according to chosen mode
-    const fullText = card.sentences.map((s) => s.sentence).join(` <break time='${breakTime}'/> `);
-    speakWord(fullText, undefined, speechRate);
+    // Speak naturally without forced artificial breaks
+    const fullText = card.sentences
+      .map((s) => s.sentence.trim())
+      .filter(Boolean)
+      .join(" ");
+    speakWord(fullText, undefined, "-2%");
   };
 
   // Instant 0-token extraction of word pronunciation and translation from current sentence/card
@@ -1957,37 +1983,154 @@ export default function Home() {
                                 </span>
 
                                 <div className="flex items-center gap-1.5 flex-wrap justify-end">
-                                  {/* Audio Mode Switcher: Shadowing / Flow / Slow */}
-                                  <button
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      const nextMode =
-                                        audioLearningMode === "shadowing" ? "flow" : audioLearningMode === "flow" ? "slow" : "shadowing";
-                                      setAudioLearningMode(nextMode);
-                                      localStorage.setItem("lexiflow_audio_mode", nextMode);
-                                    }}
-                                    className="inline-flex items-center gap-1 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 px-2 py-1 rounded-lg text-[10px] font-bold transition shadow-2xs cursor-pointer"
-                                    title="คลิกเพื่อสลับโหมดการฟัง: พูดตาม (เว้นจังหวะ 1.4s) / พูดยาว (ต่อเนื่อง) / ช้า (ฟังชัดเจน)"
-                                  >
-                                    {audioLearningMode === "shadowing" && <span>🗣️ พูดตาม</span>}
-                                    {audioLearningMode === "flow" && <span>⚡ พูดยาว</span>}
-                                    {audioLearningMode === "slow" && <span>🐢 ช้า</span>}
-                                  </button>
+                                  {/* Voice Selector Popover: 10 Natural AI Voices */}
+                                  <div className="relative" ref={voiceDropdownRef}>
+                                    <button
+                                      type="button"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setIsVoiceDropdownOpen((prev) => !prev);
+                                      }}
+                                      className="inline-flex items-center gap-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 px-2 py-1 rounded-lg text-[10px] font-bold transition shadow-2xs cursor-pointer"
+                                      title="คลิกเพื่อเลือกเสียง AI (Ava, Jenny, Guy, Andrew, Sonia ฯลฯ)"
+                                    >
+                                      <span className="text-[11px]">🎙️</span>
+                                      <span>{AVAILABLE_VOICES.find((v) => v.id === ttsVoice)?.name || "Ava"}</span>
+                                      <svg
+                                        className={`w-2.5 h-2.5 text-slate-400 transition-transform duration-200 ${
+                                          isVoiceDropdownOpen ? "rotate-180" : ""
+                                        }`}
+                                        fill="none"
+                                        viewBox="0 0 24 24"
+                                        stroke="currentColor"
+                                      >
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
+                                      </svg>
+                                    </button>
 
-                                  {/* Voice Selector Switcher: Aria / Ava */}
-                                  <button
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      const nextVoice = ttsVoice === "en-US-AriaNeural" ? "en-US-AvaNeural" : "en-US-AriaNeural";
-                                      setTtsVoice(nextVoice);
-                                      localStorage.setItem("lexiflow_tts_voice", nextVoice);
-                                    }}
-                                    className="inline-flex items-center gap-1 bg-white hover:bg-slate-50 text-slate-600 border border-slate-200 px-2 py-1 rounded-lg text-[10px] font-bold transition shadow-2xs cursor-pointer"
-                                    title="คลิกเพื่อสลับเสียงผู้หญิงธรรมชาติ: Aria (เน้นชัดเจน) / Ava (เน้นสนทนาเป็นธรรมชาติ)"
-                                  >
-                                    <span className="text-[11px]">🎙️</span>
-                                    <span>{ttsVoice === "en-US-AriaNeural" ? "Aria" : "Ava"}</span>
-                                  </button>
+                                    {isVoiceDropdownOpen && (
+                                      <div
+                                        onClick={(e) => e.stopPropagation()}
+                                        className="absolute right-0 top-full mt-1.5 w-60 max-h-80 overflow-y-auto bg-white border border-slate-200 rounded-xl shadow-xl z-50 p-2 text-xs space-y-2 animate-in fade-in zoom-in-95 duration-150"
+                                      >
+                                        <div className="px-2 py-1 border-b border-slate-100 flex items-center justify-between">
+                                          <span className="font-bold text-[11px] text-slate-600">เลือกเสียง AI (Neural)</span>
+                                          <span className="text-[9px] bg-emerald-50 text-emerald-600 px-1.5 py-0.5 rounded font-bold">ฟรี 100%</span>
+                                        </div>
+
+                                        {/* 1. US Female */}
+                                        <div>
+                                          <div className="px-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1 flex items-center gap-1">
+                                            <span>👩</span> เสียงผู้หญิง (US)
+                                          </div>
+                                          <div className="space-y-0.5">
+                                            {AVAILABLE_VOICES.filter((v) => v.region === "US" && v.gender === "female").map((v) => {
+                                              const isSelected = ttsVoice === v.id;
+                                              return (
+                                                <button
+                                                  key={v.id}
+                                                  type="button"
+                                                  onClick={() => {
+                                                    setTtsVoice(v.id);
+                                                    localStorage.setItem("lexiflow_tts_voice", v.id);
+                                                    setIsVoiceDropdownOpen(false);
+                                                  }}
+                                                  className={`w-full text-left px-2 py-1.5 rounded-lg flex items-center justify-between transition cursor-pointer ${
+                                                    isSelected ? "bg-amber-50 text-amber-900 font-semibold" : "hover:bg-slate-50 text-slate-700"
+                                                  }`}
+                                                >
+                                                  <div className="flex items-center gap-1.5 truncate">
+                                                    <span className="text-[12px]">{v.flag}</span>
+                                                    <span className="font-bold text-[11px]">{v.name}</span>
+                                                    <span className="text-[10px] text-slate-400 font-normal truncate">({v.desc})</span>
+                                                  </div>
+                                                  {isSelected && (
+                                                    <svg className="w-3.5 h-3.5 text-amber-600 shrink-0 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                                                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                                    </svg>
+                                                  )}
+                                                </button>
+                                              );
+                                            })}
+                                          </div>
+                                        </div>
+
+                                        {/* 2. US Male */}
+                                        <div>
+                                          <div className="px-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1 flex items-center gap-1">
+                                            <span>👨</span> เสียงผู้ชาย (US)
+                                          </div>
+                                          <div className="space-y-0.5">
+                                            {AVAILABLE_VOICES.filter((v) => v.region === "US" && v.gender === "male").map((v) => {
+                                              const isSelected = ttsVoice === v.id;
+                                              return (
+                                                <button
+                                                  key={v.id}
+                                                  type="button"
+                                                  onClick={() => {
+                                                    setTtsVoice(v.id);
+                                                    localStorage.setItem("lexiflow_tts_voice", v.id);
+                                                    setIsVoiceDropdownOpen(false);
+                                                  }}
+                                                  className={`w-full text-left px-2 py-1.5 rounded-lg flex items-center justify-between transition cursor-pointer ${
+                                                    isSelected ? "bg-amber-50 text-amber-900 font-semibold" : "hover:bg-slate-50 text-slate-700"
+                                                  }`}
+                                                >
+                                                  <div className="flex items-center gap-1.5 truncate">
+                                                    <span className="text-[12px]">{v.flag}</span>
+                                                    <span className="font-bold text-[11px]">{v.name}</span>
+                                                    <span className="text-[10px] text-slate-400 font-normal truncate">({v.desc})</span>
+                                                  </div>
+                                                  {isSelected && (
+                                                    <svg className="w-3.5 h-3.5 text-amber-600 shrink-0 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                                                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                                    </svg>
+                                                  )}
+                                                </button>
+                                              );
+                                            })}
+                                          </div>
+                                        </div>
+
+                                        {/* 3. UK British */}
+                                        <div>
+                                          <div className="px-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1 flex items-center gap-1">
+                                            <span>🇬🇧</span> สำเนียงบริติช (UK)
+                                          </div>
+                                          <div className="space-y-0.5">
+                                            {AVAILABLE_VOICES.filter((v) => v.region === "UK").map((v) => {
+                                              const isSelected = ttsVoice === v.id;
+                                              return (
+                                                <button
+                                                  key={v.id}
+                                                  type="button"
+                                                  onClick={() => {
+                                                    setTtsVoice(v.id);
+                                                    localStorage.setItem("lexiflow_tts_voice", v.id);
+                                                    setIsVoiceDropdownOpen(false);
+                                                  }}
+                                                  className={`w-full text-left px-2 py-1.5 rounded-lg flex items-center justify-between transition cursor-pointer ${
+                                                    isSelected ? "bg-amber-50 text-amber-900 font-semibold" : "hover:bg-slate-50 text-slate-700"
+                                                  }`}
+                                                >
+                                                  <div className="flex items-center gap-1.5 truncate">
+                                                    <span className="text-[12px]">{v.flag}</span>
+                                                    <span className="font-bold text-[11px]">{v.name}</span>
+                                                    <span className="text-[10px] text-slate-400 font-normal truncate">({v.desc})</span>
+                                                  </div>
+                                                  {isSelected && (
+                                                    <svg className="w-3.5 h-3.5 text-amber-600 shrink-0 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                                                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                                    </svg>
+                                                  )}
+                                                </button>
+                                              );
+                                            })}
+                                          </div>
+                                        </div>
+                                      </div>
+                                    )}
+                                  </div>
 
                                   {/* Audio Button: Listen to Full Article */}
                                   <button
@@ -1998,9 +2141,7 @@ export default function Home() {
                                     className={`inline-flex items-center gap-1.5 bg-white border border-slate-200 px-2.5 py-1 rounded-lg text-[10px] sm:text-[11px] font-bold transition shadow-2xs cursor-pointer ${
                                       ttsSpeakingText ? "text-sky-600 bg-sky-50 border-sky-200 animate-pulse" : "hover:bg-sky-50 text-slate-700 hover:text-sky-600"
                                     }`}
-                                    title={`ฟังเสียงบทความทั้งเรื่อง (โหมด: ${
-                                      audioLearningMode === "shadowing" ? "พูดตาม (เว้นจังหวะ 1.4s)" : audioLearningMode === "flow" ? "พูดยาว (ต่อเนื่อง)" : "ช้า"
-                                    })`}
+                                    title="ฟังเสียงบทความทั้งเรื่อง (การอ่านออกเสียงที่เป็นธรรมชาติ)"
                                   >
                                     <svg className="w-3.5 h-3.5 text-sky-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
                                       <path strokeLinecap="round" strokeLinejoin="round" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />

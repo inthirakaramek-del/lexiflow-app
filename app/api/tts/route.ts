@@ -7,12 +7,11 @@ const MAX_CACHE_SIZE = 300;
 
 function cleanSSML(input: string): string {
   if (!input) return "";
-  // Transform <break time="..." /> into natural speech pauses with ellipses
-  let text = input.replace(/<break\s+[^>]*\/?>(?:<\/break>)?/gi, "... ");
-  // Remove any remaining raw XML tags that might cause Edge TTS websocket closing
+  // Convert any break tags or XML to standard clean text for natural flow
+  let text = input.replace(/<break\s+[^>]*\/?>(?:<\/break>)?/gi, " ");
   text = text.replace(/<[^>]+>/g, " ");
   // Collapse excessive spaces and dots
-  text = text.replace(/\s+/g, " ").replace(/\.{4,}/g, "...").trim();
+  text = text.replace(/\s+/g, " ").trim();
   return text;
 }
 
@@ -20,8 +19,8 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
     const rawText = body.text || "";
-    const voice = body.voice || "en-US-AriaNeural";
-    const rate = body.rate || "-4%";
+    const voice = body.voice || "en-US-AvaNeural";
+    const rate = body.rate || "-2%";
     const pitch = body.pitch || "+0Hz";
 
     const cleanText = cleanSSML(rawText);

@@ -85,16 +85,20 @@ ONE continuous cohesive storyline from start to finish (single point of view, lo
 ${lengthInstruction}
 Natural spoken Thai translation.
 
-FLEXIBLE STORY PATTERNS (Choose the single best natural fit for "${word}", do NOT force any single pattern):
-1. Narrative story: Flowing timeline (Scene -> Situation -> Action with "${word}" -> Resolution).
-2. Narrative with an organic question: Natural self-thought or wondering that fits the scene (e.g., "Where did I put it?", "Should I go?").
-3. Conversational dialogue: Natural Q&A exchange (Speaker A asks -> Speaker B replies with "${word}").
-* Natural exclamations/interjections (e.g., "Oh no!", "Finally!", "Wait!", "Look!") are very welcome when they enhance the scene naturally, but never forced.
+FLEXIBLE STORY PATTERNS (Vary styles naturally across different vocabulary cards):
+Select ONE dominant style that fits "${word}" best:
+1. Pattern 1 (Pure Narrative): Flowing 5-sentence story without questions or exclamations (Scene -> Action with "${word}" -> Resolution).
+2. Pattern 2 (Narrative with Inner Thought Question): Flowing story containing 1 natural reflective question or doubt (e.g., "Where did I put it?", "Will it rain today?", "Should I try this?").
+3. Pattern 3 (Conversational Q&A Dialogue): Natural dialogue where one person asks a question and the other responds using "${word}".
+
+EXCLAMATIONS & INTERJECTIONS:
+- Do NOT overuse exclamations like "Oh no!", "Look!", or "Finally!".
+- Most stories should contain ZERO exclamations. Use an exclamation ONLY when truly indispensable to the narrative.
 
 TENSE & STRUCTURE VARIETY:
 - Naturally vary tenses and patterns across the 5 sentences, drawing from the full spectrum of English tenses (Present, Past, Future, Continuous, Perfect) and Modals (can, must, should, would).
 - Strictly English-only structure labels indicating Tense and pattern, e.g.:
-  'Past: S + V', 'Past (Q): Wh + did + S + V?', 'Past Cont: S + was + V-ing', 'Present: S + V', 'Pres Cont: S + is + V-ing', 'Pres Perf: S + have + V3', 'Future: S + will + V', 'Modal: S + should + V', 'Exclam: Interj + S + V'. NO Thai in structure label!
+  'Past: S + V', 'Past (Q): Wh + did + S + V?', 'Past Cont: S + was + V-ing', 'Present: S + V', 'Pres Cont: S + is + V-ing', 'Pres Perf: S + have + V3', 'Future: S + will + V', 'Modal: S + should + V'. NO Thai in structure label!
 - Pure clean text only: NEVER include meta labels, brackets, or commentary like "(คำถาม...)" in sentences or translations.
 
 Return JSON:
