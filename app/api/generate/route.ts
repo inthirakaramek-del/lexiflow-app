@@ -86,10 +86,10 @@ ${lengthInstruction}
 Natural spoken Thai translation.
 
 FLEXIBLE STORY PATTERNS (Vary styles naturally across different vocabulary cards):
-Select ONE dominant style that fits "${word}" best:
-1. Pattern 1 (Pure Narrative): Flowing 5-sentence story without questions or exclamations (Scene -> Action with "${word}" -> Resolution).
-2. Pattern 2 (Narrative with Inner Thought Question): Flowing story containing 1 natural reflective question or doubt (e.g., "Where did I put it?", "Will it rain today?", "Should I try this?").
-3. Pattern 3 (Conversational Q&A Dialogue): Natural dialogue where one person asks a question and the other responds using "${word}".
+CRITICAL: Pick strictly ONE single dominant style for this entire card (all 5 sentences must follow this chosen style). NEVER mix styles together in one card!
+- Style 1 (Pure Narrative): Flowing 5-sentence story from start to finish without questions, dialogue, or exclamations (Scene -> Action with "${word}" -> Resolution).
+- Style 2 (Narrative with Inner Thought Question): Flowing story containing strictly 1 natural reflective self-question or doubt (e.g., "Where did I put it?", "Will it rain today?", "Should I try this?").
+- Style 3 (Conversational Q&A Dialogue): Natural dialogue where one person asks a question and the other responds using "${word}".
 
 EXCLAMATIONS & INTERJECTIONS:
 - Do NOT overuse exclamations like "Oh no!", "Look!", or "Finally!".

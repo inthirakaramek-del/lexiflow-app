@@ -811,7 +811,7 @@ export default function Home() {
     if (!rawText || !rawText.trim()) return;
     const textToSpeak = rawText.trim();
     const voiceToUse = customVoice || ttsVoice || "en-US-AvaNeural";
-    const rateToUse = customRate || "-2%";
+    const rateToUse = customRate || (audioLearningMode === "slow" ? "-20%" : audioLearningMode === "shadowing" ? "-8%" : "-2%");
 
     // Stop currently playing audio or browser synthesis
     if (currentAudioRef.current) {
@@ -869,7 +869,7 @@ export default function Home() {
         const cleanForBrowser = textToSpeak.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ");
         const utterance = new SpeechSynthesisUtterance(cleanForBrowser);
         utterance.lang = "en-US";
-        utterance.rate = 0.88;
+        utterance.rate = audioLearningMode === "slow" ? 0.75 : 0.88;
         utterance.onend = () => setTtsSpeakingText(null);
         utterance.onerror = () => setTtsSpeakingText(null);
         window.speechSynthesis.speak(utterance);
@@ -881,12 +881,15 @@ export default function Home() {
 
   const speakFullArticle = (card: CardData | null) => {
     if (!card || !card.sentences || card.sentences.length === 0) return;
-    // Speak naturally without forced artificial breaks
+    const isSlow = audioLearningMode === "slow";
+    const isShadowing = audioLearningMode === "shadowing";
+    const rate = isSlow ? "-20%" : isShadowing ? "-8%" : "-2%";
+
     const fullText = card.sentences
       .map((s) => s.sentence.trim())
       .filter(Boolean)
-      .join(" ");
-    speakWord(fullText, undefined, "-2%");
+      .join(isShadowing ? "... " : " ");
+    speakWord(fullText, undefined, rate);
   };
 
   // Instant 0-token extraction of word pronunciation and translation from current sentence/card
@@ -1983,6 +1986,24 @@ export default function Home() {
                                 </span>
 
                                 <div className="flex items-center gap-1.5 flex-wrap justify-end">
+                                  {/* Audio Mode Switcher: 🗣️ พูดตาม / ⚡ พูดยาว / 🐢 ช้า */}
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      const nextMode =
+                                        audioLearningMode === "flow" ? "shadowing" : audioLearningMode === "shadowing" ? "slow" : "flow";
+                                      setAudioLearningMode(nextMode);
+                                      localStorage.setItem("lexiflow_audio_mode", nextMode);
+                                    }}
+                                    className="inline-flex items-center gap-1 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 px-2 py-1 rounded-lg text-[10px] font-bold transition shadow-2xs cursor-pointer"
+                                    title="คลิกเพื่อสลับโหมดเสียง: ⚡ พูดยาว (ธรรมชาติ) / 🗣️ พูดตาม (เว้นจังหวะ) / 🐢 ช้า (ชัดเจน)"
+                                  >
+                                    {audioLearningMode === "flow" && <span>⚡ พูดยาว</span>}
+                                    {audioLearningMode === "shadowing" && <span>🗣️ พูดตาม</span>}
+                                    {audioLearningMode === "slow" && <span>🐢 ช้า</span>}
+                                  </button>
+
                                   {/* Voice Selector Popover: 10 Natural AI Voices */}
                                   <div className="relative" ref={voiceDropdownRef}>
                                     <button
