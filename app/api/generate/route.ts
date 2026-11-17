@@ -80,25 +80,31 @@ Return JSON: { "translation": string, "thaiPronunciation": string, "pos": string
       ? "Natural everyday English (around 6 to 9 natural words per sentence, A1-A2 level). Flexible structures with natural modifiers."
       : "Short simple everyday English (strictly 4-6 simple words per sentence, A1-A2 level). Flexible structures.";
 
-    const prompt = `Write a smooth 5-sentence connected mini-story featuring "${word}" (${pos}).
-ONE continuous story (Scene -> Situation -> Action with "${word}" -> Resolution).
+    const prompt = `Write a smooth, natural 5-sentence connected story featuring the target word "${word}" (${pos}).
+ONE continuous cohesive storyline from start to finish (single point of view, logical cause-and-effect timeline).
 ${lengthInstruction}
 Natural spoken Thai translation.
 
-TENSE & SENTENCE VARIETY GUIDELINES:
-- Naturally vary tenses across the story (e.g., Past, Present, Future, Continuous).
-- Naturally mix in questions or statements (e.g. 1 question or exclamation if natural to the story).
+FLEXIBLE STORY PATTERNS (Choose the single best natural fit for "${word}", do NOT force any single pattern):
+1. Narrative story: Flowing timeline (Scene -> Situation -> Action with "${word}" -> Resolution).
+2. Narrative with an organic question: Natural self-thought or wondering that fits the scene (e.g., "Where did I put it?", "Should I go?").
+3. Conversational dialogue: Natural Q&A exchange (Speaker A asks -> Speaker B replies with "${word}").
+* Natural exclamations/interjections (e.g., "Oh no!", "Finally!", "Wait!", "Look!") are very welcome when they enhance the scene naturally, but never forced.
+
+TENSE & STRUCTURE VARIETY:
+- Naturally vary tenses and patterns across the 5 sentences, drawing from the full spectrum of English tenses (Present, Past, Future, Continuous, Perfect) and Modals (can, must, should, would).
 - Strictly English-only structure labels indicating Tense and pattern, e.g.:
-  'Past: S + V', 'Past (Q): Did + S + V?', 'Present: S + V + C', 'Pres Cont: S + be + V-ing', 'Future: S + will + V', 'Pres Perfect: S + have + V3'. NO Thai in structure label!
+  'Past: S + V', 'Past (Q): Wh + did + S + V?', 'Past Cont: S + was + V-ing', 'Present: S + V', 'Pres Cont: S + is + V-ing', 'Pres Perf: S + have + V3', 'Future: S + will + V', 'Modal: S + should + V', 'Exclam: Interj + S + V'. NO Thai in structure label!
+- Pure clean text only: NEVER include meta labels, brackets, or commentary like "(คำถาม...)" in sentences or translations.
 
 Return JSON:
 - articleTitle: 2-3 words English title
 - wordTranslation: natural Thai meaning of "${word}"
 - thaiPronunciation: pronunciation of ENGLISH word "${word}" in Thai
 - sentences: array of 5 sentence objects in storyline order:
-  * structure: English structure & tense label (e.g. 'Past: S + V', 'Past (Q): Did + S + V?', 'Present: S + V + C', 'Pres Cont: S + be + V-ing', 'Future: S + will + V')
+  * structure: English structure & tense label (e.g. 'Past: S + V', 'Pres Perf: S + have + V3', etc.)
   * sentence: natural English sentence (${isLonger ? "around 6-9 words" : "strictly 4-6 simple words"})
-  * translation: natural, smooth Thai translation in story context
+  * translation: natural, smooth Thai translation in story context (clean text, NO explanatory parentheses)
   * thaiPronunciation: natural phonetic pronunciation of the ENGLISH sentence using Thai characters with space between words (e.g. 'วี เม็ท ทูเดย์ แอท เดอะ โลเคิล คาเฟ่'). CRITICAL: Must be the sound of the English words, NEVER read the Thai translation!
 - trick: 1 short sentence Thai tip or usage note (max 10 words)`;
 

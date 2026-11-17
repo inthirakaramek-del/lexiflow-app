@@ -37,6 +37,7 @@ export default function Home() {
   const currentAudioRef = useRef<HTMLAudioElement | null>(null);
   const [ttsSpeakingText, setTtsSpeakingText] = useState<string | null>(null);
   const [ttsVoice, setTtsVoice] = useState<"en-US-AriaNeural" | "en-US-AvaNeural">("en-US-AriaNeural");
+  const [audioLearningMode, setAudioLearningMode] = useState<"shadowing" | "flow" | "slow">("shadowing");
 
   // States for restoring session and search in card section
   const [lastWordIdToRestore, setLastWordIdToRestore] = useState<string | null>(null);
@@ -136,6 +137,11 @@ export default function Home() {
       const savedVoice = localStorage.getItem("lexiflow_tts_voice");
       if (savedVoice === "en-US-AvaNeural" || savedVoice === "en-US-AriaNeural") {
         setTtsVoice(savedVoice);
+      }
+
+      const savedAudioMode = localStorage.getItem("lexiflow_audio_mode") as "shadowing" | "flow" | "slow" | null;
+      if (savedAudioMode === "shadowing" || savedAudioMode === "flow" || savedAudioMode === "slow") {
+        setAudioLearningMode(savedAudioMode);
       }
 
       if (savedProgress) {
@@ -746,11 +752,12 @@ export default function Home() {
       });
   };
 
-  // Speak pronunciation using Edge TTS (en-US-AriaNeural) with instant client-side memory cache
-  const speakWord = async (rawText: string, customVoice?: string) => {
+  // Speak pronunciation using Edge TTS (en-US-AriaNeural / Ava) with instant client-side memory cache
+  const speakWord = async (rawText: string, customVoice?: string, customRate?: string) => {
     if (!rawText || !rawText.trim()) return;
     const textToSpeak = rawText.trim();
     const voiceToUse = customVoice || ttsVoice || "en-US-AriaNeural";
+    const rateToUse = customRate || (audioLearningMode === "slow" ? "-20%" : audioLearningMode === "shadowing" ? "-8%" : "-3%");
 
     // Stop currently playing audio or browser synthesis
     if (currentAudioRef.current) {
@@ -765,7 +772,7 @@ export default function Home() {
     setTtsSpeakingText(textToSpeak);
 
     try {
-      const cacheKey = `${voiceToUse}:${textToSpeak}`;
+      const cacheKey = `${voiceToUse}:${rateToUse}:${textToSpeak}`;
       let audioUrl = ttsAudioCache.current.get(cacheKey);
 
       if (!audioUrl) {
@@ -775,7 +782,7 @@ export default function Home() {
           body: JSON.stringify({
             text: textToSpeak,
             voice: voiceToUse,
-            rate: "-4%"
+            rate: rateToUse
           })
         });
 
@@ -808,7 +815,7 @@ export default function Home() {
         const cleanForBrowser = textToSpeak.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ");
         const utterance = new SpeechSynthesisUtterance(cleanForBrowser);
         utterance.lang = "en-US";
-        utterance.rate = 0.88;
+        utterance.rate = audioLearningMode === "slow" ? 0.75 : 0.88;
         utterance.onend = () => setTtsSpeakingText(null);
         utterance.onerror = () => setTtsSpeakingText(null);
         window.speechSynthesis.speak(utterance);
@@ -820,9 +827,20 @@ export default function Home() {
 
   const speakFullArticle = (card: CardData | null) => {
     if (!card || !card.sentences || card.sentences.length === 0) return;
-    // Insert natural SSML breath pause between sentences (600ms) for shadowing & natural rhythm
-    const fullText = card.sentences.map((s) => s.sentence).join(" <break time='600ms'/> ");
-    speakWord(fullText);
+    let breakTime = "1400ms";
+    let speechRate = "-8%";
+
+    if (audioLearningMode === "flow") {
+      breakTime = "300ms";
+      speechRate = "-3%";
+    } else if (audioLearningMode === "slow") {
+      breakTime = "800ms";
+      speechRate = "-20%";
+    }
+
+    // Insert natural SSML breath pause between sentences according to chosen mode
+    const fullText = card.sentences.map((s) => s.sentence).join(` <break time='${breakTime}'/> `);
+    speakWord(fullText, undefined, speechRate);
   };
 
   // Instant 0-token extraction of word pronunciation and translation from current sentence/card
@@ -1870,7 +1888,24 @@ export default function Home() {
                                   <span>{activeCardData.articleTitle || "บทความสั้นเชื่อมโยงคำศัพท์"}</span>
                                 </span>
 
-                                <div className="flex items-center gap-1.5">
+                                <div className="flex items-center gap-1.5 flex-wrap justify-end">
+                                  {/* Audio Mode Switcher: Shadowing / Flow / Slow */}
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      const nextMode =
+                                        audioLearningMode === "shadowing" ? "flow" : audioLearningMode === "flow" ? "slow" : "shadowing";
+                                      setAudioLearningMode(nextMode);
+                                      localStorage.setItem("lexiflow_audio_mode", nextMode);
+                                    }}
+                                    className="inline-flex items-center gap-1 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 px-2 py-1 rounded-lg text-[10px] font-bold transition shadow-2xs cursor-pointer"
+                                    title="คลิกเพื่อสลับโหมดการฟัง: พูดตาม (เว้นจังหวะ 1.4s) / พูดยาว (ต่อเนื่อง) / ช้า (ฟังชัดเจน)"
+                                  >
+                                    {audioLearningMode === "shadowing" && <span>🗣️ พูดตาม</span>}
+                                    {audioLearningMode === "flow" && <span>⚡ พูดยาว</span>}
+                                    {audioLearningMode === "slow" && <span>🐢 ช้า</span>}
+                                  </button>
+
                                   {/* Voice Selector Switcher: Aria / Ava */}
                                   <button
                                     onClick={(e) => {
@@ -1895,7 +1930,9 @@ export default function Home() {
                                     className={`inline-flex items-center gap-1.5 bg-white border border-slate-200 px-2.5 py-1 rounded-lg text-[10px] sm:text-[11px] font-bold transition shadow-2xs cursor-pointer ${
                                       ttsSpeakingText ? "text-sky-600 bg-sky-50 border-sky-200 animate-pulse" : "hover:bg-sky-50 text-slate-700 hover:text-sky-600"
                                     }`}
-                                    title="ฟังเสียงบทความทั้งเรื่อง (มีจังหวะหายใจและเว้นวรรคธรรมชาติ)"
+                                    title={`ฟังเสียงบทความทั้งเรื่อง (โหมด: ${
+                                      audioLearningMode === "shadowing" ? "พูดตาม (เว้นจังหวะ 1.4s)" : audioLearningMode === "flow" ? "พูดยาว (ต่อเนื่อง)" : "ช้า"
+                                    })`}
                                   >
                                     <svg className="w-3.5 h-3.5 text-sky-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
                                       <path strokeLinecap="round" strokeLinejoin="round" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
