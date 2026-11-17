@@ -106,7 +106,7 @@ Return JSON:
   * sentence: natural English sentence (${isLonger ? "around 6-9 words" : "strictly 4-6 simple words"})
   * translation: natural, smooth Thai translation in story context (clean text, NO explanatory parentheses)
   * thaiPronunciation: natural phonetic pronunciation of the ENGLISH sentence using Thai characters with space between words (e.g. 'วี เม็ท ทูเดย์ แอท เดอะ โลเคิล คาเฟ่'). CRITICAL: Must be the sound of the English words, NEVER read the Thai translation!
-- trick: 1 short sentence Thai tip or usage note (max 10 words)`;
+- trick: 1 practical short Thai tip (max 12 words) highlighting the most useful learning takeaway from the story (e.g. grammar point, preposition pairing, phrasal verb, tense rule, or nuance of "${word}"). Choose whatever is most valuable and natural to teach from these sentences.`;
 
     const response = await fetchWithRetry(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key=${apiKey}`,
