@@ -85,15 +85,13 @@ ONE continuous cohesive storyline from start to finish (single point of view, lo
 ${lengthInstruction}
 Natural spoken Thai translation.
 
-FLEXIBLE STORY PATTERNS (Vary styles naturally across different vocabulary cards):
-CRITICAL: Pick strictly ONE single dominant style for this entire card (all 5 sentences must follow this chosen style). NEVER mix styles together in one card!
-- Style 1 (Pure Narrative): Flowing 5-sentence story from start to finish without questions, dialogue, or exclamations (Scene -> Action with "${word}" -> Resolution).
-- Style 2 (Narrative with Inner Thought Question): Flowing story containing strictly 1 natural reflective self-question or doubt (e.g., "Where did I put it?", "Will it rain today?", "Should I try this?").
-- Style 3 (Conversational Q&A Dialogue): Natural dialogue where one person asks a question and the other responds using "${word}".
-
-EXCLAMATIONS & INTERJECTIONS:
-- Do NOT overuse exclamations like "Oh no!", "Look!", or "Finally!".
-- Most stories should contain ZERO exclamations. Use an exclamation ONLY when truly indispensable to the narrative.
+NATURAL STORY FLOW & FLEXIBILITY:
+- Let the 5-sentence story unfold naturally based on what fits "${word}" best. Elements like scene setting, an inner reflective question/doubt, brief dialogue, or action may blend smoothly together if it enhances realism.
+- Never force any rigid formula:
+  * For descriptive or activity words: pure flowing narrative (Scene -> Action with "${word}" -> Resolution).
+  * For search/doubt/realization words: narrative with an organic inner-thought question (e.g. "Where is it now?", "Did I forget it?").
+  * For interaction/request words: brief natural dialogue exchange (e.g. Speaker A asks -> Speaker B responds with "${word}").
+- EXCLAMATIONS: Do NOT overuse exclamations (e.g. "Oh no!", "Look!"). Most stories should contain ZERO exclamations. Use only when truly indispensable.
 
 TENSE & STRUCTURE VARIETY:
 - Naturally vary tenses and patterns across the 5 sentences, drawing from the full spectrum of English tenses (Present, Past, Future, Continuous, Perfect) and Modals (can, must, should, would).
