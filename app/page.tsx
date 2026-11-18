@@ -693,6 +693,10 @@ export default function Home() {
 
     const debounceTimer = setTimeout(() => {
       isGeneratingRef.current = true;
+      const wordIdx = VOCAB.findIndex((v) => v.id === currentWordObj.id);
+      const storyStyles = ["dialogue", "decision", "search", "narrative"] as const;
+      const assignedStyle = storyStyles[(wordIdx >= 0 ? wordIdx : 0) % 4];
+
       fetch("/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -701,7 +705,8 @@ export default function Home() {
           pos: currentWordObj.pos,
           meaning: currentWordObj.meaning,
           pronunciation: currentWordObj.pronunciation,
-          lengthMode: storyLengthMode
+          lengthMode: storyLengthMode,
+          style: assignedStyle
         })
       })
         .then(async (res) => {
@@ -772,6 +777,11 @@ export default function Home() {
     setActiveCardData(null);
     setActiveCardId(null);
 
+    const wordIdx = VOCAB.findIndex((v) => v.id === currentWordObj.id);
+    const storyStyles = ["dialogue", "decision", "search", "narrative"] as const;
+    const nextStyleIdx = ((wordIdx >= 0 ? wordIdx : 0) + Math.floor(Math.random() * 3 + 1)) % 4;
+    const styleToUse = storyStyles[nextStyleIdx];
+
     fetch("/api/generate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -780,7 +790,8 @@ export default function Home() {
         pos: currentWordObj.pos,
         meaning: currentWordObj.meaning,
         pronunciation: currentWordObj.pronunciation,
-        lengthMode: modeToUse
+        lengthMode: modeToUse,
+        style: styleToUse
       })
     })
       .then(async (res) => {

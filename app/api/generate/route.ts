@@ -74,30 +74,54 @@ Return JSON: { "translation": string, "thaiPronunciation": string, "pos": string
     }
 
     // 2. Vocabulary flashcard generation: Connected natural mini-story (5 sentences)
-    const { word, pos, lengthMode } = body;
+    const { word, pos, lengthMode, style } = body;
     const isLonger = lengthMode === "longer";
     const lengthInstruction = isLonger
       ? "Natural everyday English (around 6 to 9 natural words per sentence, A1-A2 level). Flexible structures with natural modifiers."
       : "Short simple everyday English (strictly 4-6 simple words per sentence, A1-A2 level). Flexible structures.";
+
+    // 4-Way Balanced Story Patterns (25% each across the 3,000+ words)
+    let assignedStyle = style;
+    if (!assignedStyle || !["dialogue", "decision", "search", "narrative"].includes(assignedStyle)) {
+      let hash = 0;
+      for (let i = 0; i < (word || "").length; i++) {
+        hash = (hash << 5) - hash + (word || "").charCodeAt(i);
+        hash |= 0;
+      }
+      const styles = ["dialogue", "decision", "search", "narrative"];
+      assignedStyle = styles[Math.abs(hash) % 4];
+    }
+
+    let styleInstruction = "";
+    if (assignedStyle === "dialogue") {
+      styleInstruction = `MANDATORY STORY PATTERN (Style 1 of 4: Social Dialogue):
+Create an everyday real-life exchange between two people (e.g. asking for help, borrowing, requesting, thanking, replying).
+5 seamless, connected sentences from start to finish featuring "${word}" (e.g. setting situation -> request/question -> agreement/answer -> gratitude -> friendly sign-off).`;
+    } else if (assignedStyle === "decision") {
+      styleInstruction = `MANDATORY STORY PATTERN (Style 2 of 4: Decision & Problem Solving):
+Create a realistic real-life situation where someone faces a daily dilemma or deadline, must make a decision regarding "${word}", weighs a sensible option, takes action, and reaches a satisfying resolution.`;
+    } else if (assignedStyle === "search") {
+      styleInstruction = `MANDATORY STORY PATTERN (Style 3 of 4: Wondering & Search Discovery):
+Someone is doing a daily activity, experiences a natural reflective question or doubt in mind (e.g. 'Where did I put it?', 'Did I forget that?'), checks/searches, discovers the answer featuring "${word}", and proceeds with relief.`;
+    } else {
+      styleInstruction = `MANDATORY STORY PATTERN (Style 4 of 4: Pure Narrative & Sequential Flow):
+5 continuous narrative sentences unfolding a realistic scene from start to finish in chronological order (Scene setting -> Developing situation -> Action featuring "${word}" -> Resolution). Pure storytelling without forced dialogue or questions.`;
+    }
 
     const prompt = `Write a smooth, natural 5-sentence connected story featuring the target word "${word}" (${pos}).
 ONE continuous cohesive storyline from start to finish (single point of view, logical cause-and-effect timeline).
 ${lengthInstruction}
 Natural spoken Thai translation.
 
-NATURAL STORY FLOW & FLEXIBILITY:
-- Let the 5-sentence story unfold naturally based on what fits "${word}" best. Elements like scene setting, an inner reflective question/doubt, brief dialogue, or action may blend smoothly together if it enhances realism.
-- Never force any rigid formula:
-  * For descriptive or activity words: pure flowing narrative (Scene -> Action with "${word}" -> Resolution).
-  * For search/doubt/realization words: narrative with an organic inner-thought question (e.g. "Where is it now?", "Did I forget it?").
-  * For interaction/request words: brief natural dialogue exchange (e.g. Speaker A asks -> Speaker B responds with "${word}").
-- EXCLAMATIONS: Do NOT overuse exclamations (e.g. "Oh no!", "Look!"). Most stories should contain ZERO exclamations. Use only when truly indispensable.
+${styleInstruction}
+
+EXCLAMATIONS: Keep exclamations rare (most stories should contain ZERO exclamations). Use only when truly indispensable.
 
 TENSE & STRUCTURE VARIETY:
 - Naturally vary tenses and patterns across the 5 sentences, drawing from the full spectrum of English tenses (Present, Past, Future, Continuous, Perfect) and Modals (can, must, should, would).
 - Strictly English-only structure labels indicating Tense and pattern, e.g.:
   'Past: S + V', 'Past (Q): Wh + did + S + V?', 'Past Cont: S + was + V-ing', 'Present: S + V', 'Pres Cont: S + is + V-ing', 'Pres Perf: S + have + V3', 'Future: S + will + V', 'Modal: S + should + V'. NO Thai in structure label!
-- Pure clean text only: NEVER include meta labels, brackets, or commentary like "(คำถาม...)" in sentences or translations.
+- Pure clean text only: NEVER include meta labels, brackets, speaker markers like "[A:]", or commentary in sentences or translations.
 
 Return JSON:
 - articleTitle: 2-3 words English title
