@@ -2229,35 +2229,10 @@ export default function Home() {
                                       <span>📜</span>
                                       <span>คำแปลบทความทั้งเรื่อง:</span>
                                     </span>
-                                    <button
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        setShowBackPronunciation(!showBackPronunciation);
-                                      }}
-                                      className={`text-[9px] font-bold px-2 py-0.5 rounded border transition ${
-                                        showBackPronunciation ? "bg-emerald-100 text-emerald-900 border-emerald-200" : "bg-white text-slate-500 border-slate-200"
-                                      }`}
-                                    >
-                                      🗣️ คำอ่าน: {showBackPronunciation ? "เปิด" : "ปิด"}
-                                    </button>
                                   </div>
                                   <p className="text-[12.5px] sm:text-[13.5px] text-slate-700 font-medium leading-relaxed bg-[#f8faff] rounded-lg p-2.5 border border-slate-100">
                                     {activeCardData.fullArticleThai || activeCardData.sentences.map((s) => s.translation).join(" ")}
                                   </p>
-
-                                  {showBackPronunciation && (
-                                    <p className="text-[10px] sm:text-[11px] text-[#A28C89] font-medium leading-relaxed bg-amber-50/50 rounded-lg p-2 border border-amber-100">
-                                      <span className="font-bold text-amber-800 mr-1.5">🗣️ คำอ่าน:</span>
-                                      {activeCardData.sentences.map((s) => s.thaiPronunciation).filter(Boolean).join("  •  ")}
-                                    </p>
-                                  )}
-
-                                  {activeCardData.trick && (
-                                    <div className="bg-amber-50/70 border border-amber-200/70 rounded-xl p-2.5 text-[11px] sm:text-xs text-amber-900 font-medium flex items-center gap-2">
-                                      <span>💡</span>
-                                      <span><strong>ทริก:</strong> {activeCardData.trick}</span>
-                                    </div>
-                                  )}
                                 </div>
                               )}
                             </div>

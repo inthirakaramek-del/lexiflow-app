@@ -126,13 +126,10 @@ TENSE & STRUCTURE VARIETY:
 Return JSON:
 - articleTitle: 2-3 words English title
 - wordTranslation: natural Thai meaning of "${word}"
-- thaiPronunciation: pronunciation of ENGLISH word "${word}" in Thai
 - sentences: array of 5 sentence objects in storyline order:
   * structure: English structure & tense label (e.g. 'Past: S + V', 'Pres Perf: S + have + V3', etc.)
   * sentence: natural English sentence (${isLonger ? "around 6-9 words" : "strictly 4-6 simple words"})
-  * translation: natural, smooth Thai translation in story context (clean text, NO explanatory parentheses)
-  * thaiPronunciation: natural phonetic pronunciation of the ENGLISH sentence using Thai characters with space between words (e.g. 'วี เม็ท ทูเดย์ แอท เดอะ โลเคิล คาเฟ่'). CRITICAL: Must be the sound of the English words, NEVER read the Thai translation!
-- trick: 1 practical short Thai tip (max 12 words) highlighting the most useful learning takeaway from the story (e.g. grammar point, preposition pairing, phrasal verb, tense rule, or nuance of "${word}"). Choose whatever is most valuable and natural to teach from these sentences.`;
+  * translation: natural, smooth Thai translation in story context (clean text, NO explanatory parentheses)`;
 
     const response = await fetchWithRetry(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key=${apiKey}`,
@@ -146,7 +143,6 @@ Return JSON:
             properties: {
               articleTitle: { type: "STRING" },
               wordTranslation: { type: "STRING" },
-              thaiPronunciation: { type: "STRING" },
               sentences: {
                 type: "ARRAY",
                 items: {
@@ -154,15 +150,13 @@ Return JSON:
                   properties: {
                     structure: { type: "STRING" },
                     sentence: { type: "STRING" },
-                    translation: { type: "STRING" },
-                    thaiPronunciation: { type: "STRING" }
+                    translation: { type: "STRING" }
                   },
-                  required: ["structure", "sentence", "translation", "thaiPronunciation"]
+                  required: ["structure", "sentence", "translation"]
                 }
-              },
-              trick: { type: "STRING" }
+              }
             },
-            required: ["wordTranslation", "thaiPronunciation", "sentences", "trick"]
+            required: ["wordTranslation", "sentences"]
           }
         },
       }
