@@ -1,31 +1,56 @@
 import { NextResponse } from "next/server";
 
-// Helper fetch with auto-retry for 429 and 503 errors
-async function fetchWithRetry(url: string, payload: any, maxRetries = 2): Promise<Response> {
-  let lastStatus = 0;
-  let lastErrorText = "";
-  for (let attempt = 0; attempt <= maxRetries; attempt++) {
-    const res = await fetch(url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "User-Agent": "aistudio-build",
-      },
-      body: JSON.stringify(payload),
-    });
-    lastStatus = res.status;
-    if ((res.status === 429 || res.status === 503) && attempt < maxRetries) {
-      console.warn(`Gemini ${res.status} error, auto-retrying attempt ${attempt + 1}...`);
-      await new Promise((resolve) => setTimeout(resolve, 2000 * Math.pow(2, attempt)));
-      continue;
+// Fallback cascade of models so if one model experiences 503 (High Demand), others seamlessly take over
+const CANDIDATE_MODELS = [
+  "gemini-3.5-flash-lite",
+  "gemini-3.8-flash",
+  "gemini-3.1-flash-lite",
+];
+
+async function generateWithGemini(apiKey: string, contents: any, generationConfig: any): Promise<any> {
+  let lastError: any = null;
+
+  for (const model of CANDIDATE_MODELS) {
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+    const configToUse = { ...generationConfig };
+    if (!model.includes("3.1")) {
+      delete configToUse.thinkingConfig;
     }
-    if (!res.ok) {
-      lastErrorText = await res.text();
-      throw new Error(lastStatus === 429 ? "Gemini API rate limit exceeded" : `Gemini API error (${lastStatus}): ${lastErrorText}`);
+
+    try {
+      const res = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "User-Agent": "aistudio-build",
+        },
+        body: JSON.stringify({ contents, generationConfig: configToUse }),
+      });
+
+      if (res.status === 429 || res.status === 503) {
+        console.warn(`Model ${model} busy (${res.status}), failing over to next model...`);
+        lastError = new Error(`Gemini API (${res.status}): ${model} is experiencing temporary high demand`);
+        continue;
+      }
+
+      if (!res.ok) {
+        const errText = await res.text();
+        console.warn(`Model ${model} error (${res.status}): ${errText}`);
+        lastError = new Error(`Gemini API error (${res.status}): ${errText}`);
+        continue;
+      }
+
+      const data = await res.json();
+      if (data.candidates && data.candidates[0]) {
+        return data;
+      }
+    } catch (e: any) {
+      console.warn(`Model ${model} fetch exception:`, e.message);
+      lastError = e;
     }
-    return res;
   }
-  throw new Error(lastStatus === 429 ? "Gemini API rate limit exceeded" : `Gemini service temporarily busy (${lastStatus})`);
+
+  throw lastError || new Error("All Gemini models are temporarily busy");
 }
 
 export async function POST(request: Request) {
@@ -47,27 +72,24 @@ CRITICAL:
 
 Return JSON: { "translation": string, "thaiPronunciation": string, "pos": string }`;
 
-      const response = await fetchWithRetry(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key=${apiKey}`,
+      const data = await generateWithGemini(
+        apiKey,
+        [{ parts: [{ text: prompt }] }],
         {
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: {
-            responseMimeType: "application/json",
-            thinkingConfig: { thinkingBudget: 0 },
-            responseSchema: {
-              type: "OBJECT",
-              properties: {
-                translation: { type: "STRING" },
-                thaiPronunciation: { type: "STRING" },
-                pos: { type: "STRING" }
-              },
-              required: ["translation", "thaiPronunciation", "pos"]
-            }
-          },
+          responseMimeType: "application/json",
+          thinkingConfig: { thinkingBudget: 0 },
+          responseSchema: {
+            type: "OBJECT",
+            properties: {
+              translation: { type: "STRING" },
+              thaiPronunciation: { type: "STRING" },
+              pos: { type: "STRING" }
+            },
+            required: ["translation", "thaiPronunciation", "pos"]
+          }
         }
       );
 
-      const data = await response.json();
       const textContent = data.candidates[0].content.parts[0].text;
       const parsedData = JSON.parse(textContent);
       return NextResponse.json(parsedData);
@@ -131,38 +153,35 @@ Return JSON:
   * sentence: natural English sentence (${isLonger ? "around 6-9 words" : "strictly 4-6 simple words"})
   * translation: natural, smooth Thai translation in story context (clean text, NO explanatory parentheses)`;
 
-    const response = await fetchWithRetry(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key=${apiKey}`,
+    const data = await generateWithGemini(
+      apiKey,
+      [{ parts: [{ text: prompt }] }],
       {
-        contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: {
-          responseMimeType: "application/json",
-          thinkingConfig: { thinkingBudget: 0 },
-          responseSchema: {
-            type: "OBJECT",
-            properties: {
-              articleTitle: { type: "STRING" },
-              wordTranslation: { type: "STRING" },
-              sentences: {
-                type: "ARRAY",
-                items: {
-                  type: "OBJECT",
-                  properties: {
-                    structure: { type: "STRING" },
-                    sentence: { type: "STRING" },
-                    translation: { type: "STRING" }
-                  },
-                  required: ["structure", "sentence", "translation"]
-                }
+        responseMimeType: "application/json",
+        thinkingConfig: { thinkingBudget: 0 },
+        responseSchema: {
+          type: "OBJECT",
+          properties: {
+            articleTitle: { type: "STRING" },
+            wordTranslation: { type: "STRING" },
+            sentences: {
+              type: "ARRAY",
+              items: {
+                type: "OBJECT",
+                properties: {
+                  structure: { type: "STRING" },
+                  sentence: { type: "STRING" },
+                  translation: { type: "STRING" }
+                },
+                required: ["structure", "sentence", "translation"]
               }
-            },
-            required: ["wordTranslation", "sentences"]
-          }
-        },
+            }
+          },
+          required: ["wordTranslation", "sentences"]
+        }
       }
     );
 
-    const data = await response.json();
     if (!data.candidates || !data.candidates[0]) {
       throw new Error("No candidates returned from Gemini API");
     }
