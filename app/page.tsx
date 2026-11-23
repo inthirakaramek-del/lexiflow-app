@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { VOCAB } from "./vocab";
 import { Word, UserProgress, ReviewWord, GeneralNote } from "./types";
 import { CardData, generateFallbackCard } from "./utils/fallbackGenerator";
@@ -96,7 +96,127 @@ export default function Home() {
   const [revealedReviewIds, setRevealedReviewIds] = useState<string[]>([]);
   const [customSearchQuery, setCustomSearchQuery] = useState("");
 
-  // Load progress, cache, review words, and notes from server DB, with localStorage fallback
+  // Cloud Sync state: 'idle' | 'syncing' | 'synced' | 'error'
+  const [syncStatus, setSyncStatus] = useState<"idle" | "syncing" | "synced" | "error">("idle");
+  const [lastSyncTime, setLastSyncTime] = useState<Date | null>(null);
+
+  // Helper to validate cached card format
+  const isCardValidAndNew = (card: CardData | undefined) => {
+    if (!card || !Array.isArray(card.sentences) || card.sentences.length === 0) return false;
+    if (card.isFallback) return false;
+    if (card.wordTranslation && card.wordTranslation.includes("คำแปลของ")) return false;
+    return true;
+  };
+
+  // Bidirectional cloud sync with Supabase
+  const syncWithCloud = useCallback(async (isManual: boolean = false) => {
+    try {
+      if (isManual) setSyncStatus("syncing");
+      const res = await fetch("/api/db?t=" + Date.now(), {
+        headers: { "Cache-Control": "no-cache" }
+      });
+      if (!res.ok) throw new Error("Failed to load backend database");
+      const data = await res.json();
+
+      const dbProgress = data.progress || { masteredIds: [], starredIds: [], notes: {} };
+      const dbCache = data.cardCache || {};
+      const dbReviewWords = data.reviewWords || [];
+      const dbGeneralNotes = data.generalNotes || [];
+
+      // 1. Progress: Union of mastered and starred IDs (ensures device progress combines seamlessly)
+      setProgress((prev) => {
+        const mergedMastered = Array.from(new Set([...(prev.masteredIds || []), ...(dbProgress.masteredIds || [])]));
+        const mergedStarred = Array.from(new Set([...(prev.starredIds || []), ...(dbProgress.starredIds || [])]));
+        const mergedNotes = { ...(dbProgress.notes || {}), ...(prev.notes || {}) };
+        const merged = {
+          masteredIds: mergedMastered,
+          starredIds: mergedStarred,
+          notes: mergedNotes
+        };
+        try {
+          localStorage.setItem("lexiflow_progress", JSON.stringify(merged));
+        } catch (_) {}
+        return merged;
+      });
+
+      // 2. Card Cache: Merge cards (cloud cards take priority so phone & PC share identical generated sentences)
+      setCardCache((prev) => {
+        const merged: Record<string, CardData> = {};
+        for (const k in prev) {
+          if (isCardValidAndNew(prev[k])) {
+            merged[k] = prev[k];
+          }
+        }
+        for (const k in dbCache) {
+          if (isCardValidAndNew(dbCache[k])) {
+            merged[k] = dbCache[k];
+          }
+        }
+        try {
+          localStorage.setItem("lexiflow_card_cache", JSON.stringify(merged));
+        } catch (_) {}
+        return merged;
+      });
+
+      // 3. Review Words: Union by word lowercase
+      setReviewWords((prev) => {
+        const reviewMap = new Map<string, ReviewWord>();
+        dbReviewWords.forEach((rw: ReviewWord) => reviewMap.set(rw.word.toLowerCase(), rw));
+        prev.forEach((rw: ReviewWord) => reviewMap.set(rw.word.toLowerCase(), rw));
+        const merged = Array.from(reviewMap.values()).sort(
+          (a, b) => new Date(b.addedAt).getTime() - new Date(a.addedAt).getTime()
+        );
+        try {
+          localStorage.setItem("lexiflow_review_words", JSON.stringify(merged));
+        } catch (_) {}
+        return merged;
+      });
+
+      // 4. General Notes: Union by ID
+      setGeneralNotes((prev) => {
+        const notesMap = new Map<string, GeneralNote>();
+        dbGeneralNotes.forEach((n: GeneralNote) => notesMap.set(n.id, n));
+        prev.forEach((n: GeneralNote) => notesMap.set(n.id, n));
+        const merged = Array.from(notesMap.values()).sort(
+          (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+        );
+        try {
+          localStorage.setItem("lexiflow_general_notes", JSON.stringify(merged));
+        } catch (_) {}
+        return merged;
+      });
+
+      setSyncStatus("synced");
+      setLastSyncTime(new Date());
+    } catch (e) {
+      console.warn("Failed to sync with cloud DB", e);
+      setSyncStatus("error");
+    } finally {
+      setHasLoadedSession(true);
+    }
+  }, []);
+
+  // Auto-sync when switching between apps/tabs (phone unlock, switching browser tabs)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        syncWithCloud(false);
+      }
+    };
+    const handleFocus = () => {
+      syncWithCloud(false);
+    };
+
+    window.addEventListener("focus", handleFocus);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      window.removeEventListener("focus", handleFocus);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [syncWithCloud]);
+
+  // Initial load: restore local settings, load localStorage cache, then sync from cloud
   useEffect(() => {
     // 1. Restore deck settings and session
     try {
@@ -116,33 +236,6 @@ export default function Home() {
     }
 
     // 2. Load from localStorage first to prevent UI delay and ensure no data is lost
-    let localProgress: UserProgress = { masteredIds: [], starredIds: [], notes: {} };
-    let localCache: Record<string, CardData> = {};
-    let localReview: ReviewWord[] = [];
-    let localNotes: GeneralNote[] = [];
-
-    // Cache version migration: ensure cache version key is saved, never wipe server DB
-    const CACHE_VERSION = "v5";
-    if (typeof window !== "undefined") {
-      localStorage.setItem("lexiflow_cache_version", CACHE_VERSION);
-    }
-
-    // Mastery statistics migration: purge old accumulated mastered cards to start clean from current session
-    const MASTERY_RESET_VERSION = "v2_clean";
-    const savedMasteryVer = typeof window !== "undefined" ? localStorage.getItem("lexiflow_mastery_ver") : null;
-    const shouldResetMastery = savedMasteryVer !== MASTERY_RESET_VERSION;
-    if (shouldResetMastery) {
-      if (typeof window !== "undefined") {
-        localStorage.setItem("lexiflow_mastery_ver", MASTERY_RESET_VERSION);
-      }
-      localProgress.masteredIds = [];
-      fetch("/api/db", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ progress: { ...localProgress, masteredIds: [] } })
-      }).catch(() => {});
-    }
-
     try {
       const savedProgress = localStorage.getItem("lexiflow_progress");
       const savedCache = localStorage.getItem("lexiflow_card_cache");
@@ -165,114 +258,28 @@ export default function Home() {
       }
 
       if (savedProgress) {
-        localProgress = JSON.parse(savedProgress);
-        if (shouldResetMastery) {
-          localProgress.masteredIds = [];
-        }
-        setProgress(localProgress);
+        setProgress(JSON.parse(savedProgress));
       }
       if (savedCache) {
         try {
-          localCache = JSON.parse(savedCache);
-          setCardCache(localCache);
+          setCardCache(JSON.parse(savedCache));
         } catch (e) {
           console.error("Failed to parse cached cards", e);
         }
       }
       if (savedReview) {
-        localReview = JSON.parse(savedReview);
-        setReviewWords(localReview);
+        setReviewWords(JSON.parse(savedReview));
       }
       if (savedNotes) {
-        localNotes = JSON.parse(savedNotes);
-        setGeneralNotes(localNotes);
+        setGeneralNotes(JSON.parse(savedNotes));
       }
     } catch (e) {
       console.error("Failed to load initial localStorage state", e);
     }
 
-    // 3. Fetch from DB and MERGE (so we don't wipe out any local changes)
-    fetch("/api/db")
-      .then((res) => {
-        if (!res.ok) throw new Error("Failed to load backend database");
-        return res.json();
-      })
-      .then((data) => {
-        const dbProgress = data.progress || { masteredIds: [], starredIds: [], notes: {} };
-        const dbCache = data.cardCache || {};
-        const dbReviewWords = data.reviewWords || [];
-        const dbGeneralNotes = data.generalNotes || [];
-
-        // MERGE LOGIC: Combine unique IDs and keys
-        const mergedMastered = shouldResetMastery
-          ? []
-          : Array.from(new Set([...(localProgress.masteredIds || []), ...(dbProgress.masteredIds || [])]));
-        const mergedStarred = Array.from(new Set([...(localProgress.starredIds || []), ...(dbProgress.starredIds || [])]));
-        const mergedNotes = { ...(dbProgress.notes || {}), ...(localProgress.notes || {}) };
-
-        const mergedProgress = {
-          masteredIds: mergedMastered,
-          starredIds: mergedStarred,
-          notes: mergedNotes
-        };
-
-        // Helper to check if cached card has the new modern format
-        const isCardValidAndNew = (card: CardData | undefined) => {
-          if (!card || !Array.isArray(card.sentences) || card.sentences.length === 0) return false;
-          if (card.isFallback) return false;
-          if (card.wordTranslation && card.wordTranslation.includes("คำแปลของ")) return false;
-          // Accept cards with OR without grammar field (new format removes grammar to save tokens)
-          return true;
-        };
-
-        // Merge cache: Local cache takes priority unless local cache has fallback and DB has new real card
-        const mergedCache: Record<string, CardData> = {};
-        for (const key in dbCache) {
-          if (isCardValidAndNew(dbCache[key])) {
-            mergedCache[key] = dbCache[key];
-          }
-        }
-        for (const key in localCache) {
-          if (isCardValidAndNew(localCache[key])) {
-            mergedCache[key] = localCache[key];
-          }
-        }
-
-        // Merge review words by unique word name
-        const reviewMap = new Map<string, ReviewWord>();
-        dbReviewWords.forEach((rw: ReviewWord) => reviewMap.set(rw.word.toLowerCase(), rw));
-        localReview.forEach((rw: ReviewWord) => reviewMap.set(rw.word.toLowerCase(), rw));
-        const mergedReviewWords = Array.from(reviewMap.values()).sort(
-          (a, b) => new Date(b.addedAt).getTime() - new Date(a.addedAt).getTime()
-        );
-
-        // Merge general notes by ID
-        const notesMap = new Map<string, GeneralNote>();
-        dbGeneralNotes.forEach((n: GeneralNote) => notesMap.set(n.id, n));
-        localNotes.forEach((n: GeneralNote) => notesMap.set(n.id, n));
-        const mergedGeneralNotes = Array.from(notesMap.values()).sort(
-          (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
-        );
-
-        // Update states
-        setProgress(mergedProgress);
-        setCardCache(mergedCache);
-        setReviewWords(mergedReviewWords);
-        setGeneralNotes(mergedGeneralNotes);
-
-        // Save back to localStorage
-        localStorage.setItem("lexiflow_progress", JSON.stringify(mergedProgress));
-        localStorage.setItem("lexiflow_card_cache", JSON.stringify(mergedCache));
-        localStorage.setItem("lexiflow_review_words", JSON.stringify(mergedReviewWords));
-        localStorage.setItem("lexiflow_general_notes", JSON.stringify(mergedGeneralNotes));
-      })
-      .catch((err) => {
-        console.warn("Failed to fetch data from server DB, using local state", err);
-      })
-      .finally(() => {
-        setHasLoadedSession(true);
-      });
-  }, []);
+    // 3. Perform seamless cloud sync
+    syncWithCloud(false);
+  }, [syncWithCloud]);
 
   // Close voice dropdown when clicking outside
   useEffect(() => {
@@ -312,7 +319,7 @@ export default function Home() {
       fetch("/api/db", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ progress: updatedProgress })
+        body: JSON.stringify({ progress: updatedProgress, replaceProgress: true })
       }).catch((e) => {
         console.error("Failed to save progress to server DB", e);
       });
@@ -325,7 +332,7 @@ export default function Home() {
     fetch("/api/db", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ reviewWords: updatedList })
+      body: JSON.stringify({ reviewWords: updatedList, replaceReviewWords: true })
     }).catch((e) => {
       console.error("Failed to save review words to server DB", e);
     });
@@ -336,7 +343,7 @@ export default function Home() {
     fetch("/api/db", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ generalNotes: updatedList })
+      body: JSON.stringify({ generalNotes: updatedList, replaceGeneralNotes: true })
     }).catch((e) => {
       console.error("Failed to save general notes to server DB", e);
     });
@@ -757,7 +764,7 @@ export default function Home() {
         await fetch("/api/db", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ progress: updatedProgress })
+          body: JSON.stringify({ isMasteryReset: true, progress: updatedProgress })
         });
         alert("ล้างสถิติการจำการ์ดเรียบร้อยแล้ว เริ่มต้นนับใหม่จากปัจจุบัน!");
       } catch (e: any) {
@@ -1471,19 +1478,31 @@ export default function Home() {
             </div>
             <h1 className="text-lg font-bold text-slate-800">LexiFlow</h1>
           </div>
-          <select
-            value={activeTab}
-            onChange={(e) => setActiveTab(e.target.value as any)}
-            className="bg-white border border-slate-200 text-slate-700 text-sm font-semibold rounded-lg px-3 py-1.5 focus:outline-none"
-          >
-            <option value="dashboard">Dashboard</option>
-            <option value="flashcards">Grammar Cards</option>
-            <option value="review">Review Deck</option>
-            <option value="customWords">Custom Words</option>
-            <option value="quiz">Quiz Arena</option>
-            <option value="explorer">Word Explorer</option>
-            <option value="notes">Knowledge Notes</option>
-          </select>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => syncWithCloud(true)}
+              disabled={syncStatus === "syncing"}
+              className="p-2 rounded-xl border border-[#E5DDD8] bg-white text-slate-600 hover:text-[#A28C89] transition shadow-xs flex items-center justify-center active:scale-95"
+              title="ซิงค์ข้อมูลกับคลาวด์ (กดเพื่ออัปเดตสถิติและประโยคล่าสุด)"
+            >
+              <svg className={`w-4 h-4 ${syncStatus === "syncing" ? "animate-spin text-amber-500" : syncStatus === "error" ? "text-rose-400" : "text-emerald-500"}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+            </button>
+            <select
+              value={activeTab}
+              onChange={(e) => setActiveTab(e.target.value as any)}
+              className="bg-white border border-slate-200 text-slate-700 text-sm font-semibold rounded-lg px-3 py-1.5 focus:outline-none"
+            >
+              <option value="dashboard">Dashboard</option>
+              <option value="flashcards">Grammar Cards</option>
+              <option value="review">Review Deck</option>
+              <option value="customWords">Custom Words</option>
+              <option value="quiz">Quiz Arena</option>
+              <option value="explorer">Word Explorer</option>
+              <option value="notes">Knowledge Notes</option>
+            </select>
+          </div>
         </header>
 
         {/* ------------------------------------------------------------------------
@@ -1580,31 +1599,47 @@ export default function Home() {
                     </button>
                   </div>
                 </div>
-                <div className="flex flex-col gap-2.5 items-center mt-3 pt-3 border-t border-slate-100">
-                  <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
-                    Syncing automatically with DB
-                  </span>
-                  <button
-                    onClick={async () => {
-                      if (confirm("⚠️ คุณต้องการล้างฐานข้อมูล (Reset Database) ทั้งหมดใช่หรือไม่? ประวัติการเรียนทั้งหมดและคำศัพท์แคชจะถูกรีเซ็ตใหม่")) {
-                        const defaultData = {
-                          progress: { masteredIds: [], starredIds: [], notes: {} },
-                          cardCache: {},
-                          generalNotes: [],
-                          reviewWords: []
-                        };
-                        try {
-                          // 1. Clear database on server/Supabase
-                          const res = await fetch("/api/db", {
-                            method: "POST",
-                            headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify({
-                              progress: defaultData.progress,
-                              cardCache: defaultData.cardCache,
-                              generalNotes: defaultData.generalNotes,
-                              reviewWords: defaultData.reviewWords
-                            })
-                          });
+                <div className="flex flex-col gap-3 mt-3 pt-3 border-t border-slate-100">
+                  <div className="w-full flex items-center justify-between px-1">
+                    <span className="text-[11px] text-slate-500 font-semibold flex items-center gap-1.5">
+                      <span className={`w-2 h-2 rounded-full ${syncStatus === "syncing" ? "bg-amber-400 animate-ping" : syncStatus === "error" ? "bg-rose-400" : "bg-emerald-500"}`}></span>
+                      {syncStatus === "syncing" ? "กำลังซิงค์ข้อมูลกับคลาวด์..." : syncStatus === "error" ? "การเชื่อมต่อขัดข้อง" : "ข้อมูลเชื่อมต่อกับคลาวด์แล้ว"}
+                    </span>
+                    <button
+                      onClick={() => syncWithCloud(true)}
+                      disabled={syncStatus === "syncing"}
+                      className="text-[11px] text-[#A28C89] hover:text-[#8E7774] font-bold flex items-center gap-1.5 px-3 py-1.5 rounded-lg hover:bg-slate-50 border border-[#E5DDD8] transition shadow-xs active:scale-95"
+                      title="กดเพื่ออัปเดตสถิติและประโยคคำศัพท์ล่าสุดจากอุปกรณ์อื่นทันที"
+                    >
+                      <svg className={`w-3.5 h-3.5 ${syncStatus === "syncing" ? "animate-spin text-amber-500" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                      </svg>
+                      {syncStatus === "syncing" ? "กำลังดึง..." : "กดซิงค์ข้อมูล"}
+                    </button>
+                  </div>
+                  <div className="flex flex-wrap items-center justify-center gap-2 pt-1 border-t border-slate-50">
+                    <button
+                      onClick={async () => {
+                        if (confirm("⚠️ คุณต้องการล้างฐานข้อมูล (Reset Database) ทั้งหมดใช่หรือไม่? ประวัติการเรียนทั้งหมดและคำศัพท์แคชจะถูกรีเซ็ตใหม่")) {
+                          const defaultData = {
+                            progress: { masteredIds: [], starredIds: [], notes: {} },
+                            cardCache: {},
+                            generalNotes: [],
+                            reviewWords: []
+                          };
+                          try {
+                            // 1. Clear database on server/Supabase
+                            const res = await fetch("/api/db", {
+                              method: "POST",
+                              headers: { "Content-Type": "application/json" },
+                              body: JSON.stringify({
+                                isFullReset: true,
+                                progress: defaultData.progress,
+                                cardCache: defaultData.cardCache,
+                                generalNotes: defaultData.generalNotes,
+                                reviewWords: defaultData.reviewWords
+                              })
+                            });
                           if (!res.ok) throw new Error("Failed to clear backend database");
                           
                           // 2. Clear browser localStorage
@@ -1650,7 +1685,8 @@ export default function Home() {
                 </div>
               </div>
             </div>
-          </section>
+          </div>
+        </section>
         )}
 
         {/* ------------------------------------------------------------------------

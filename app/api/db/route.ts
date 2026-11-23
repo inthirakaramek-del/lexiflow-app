@@ -2,11 +2,21 @@ import { NextResponse } from "next/server";
 import fs from "fs/promises";
 import path from "path";
 
+// Ensure Next.js and Vercel NEVER cache database API routes
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 const DATA_DIR = path.join(process.cwd(), "data");
 const DB_FILE = path.join(DATA_DIR, "db.json");
 
 const SUPABASE_URL = process.env.SUPABASE_URL || "https://kfxjglkekkhzeaydnvfr.supabase.co";
 const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtmeGpnbGtla2toemVheWRudmZyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUyNDg3MDgsImV4cCI6MjEwMDgyNDcwOH0.230h8JNmrj4RAjgGpFHdhj5LZZni5dOZ9IEpU8m0iMQ";
+
+const NO_CACHE_HEADERS = {
+  "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0",
+  "Pragma": "no-cache",
+  "Expires": "0",
+};
 
 // Sequential execution queue to prevent concurrent read/write race conditions
 async function enqueue<T>(op: () => Promise<T>): Promise<T> {
@@ -53,7 +63,7 @@ async function ensureLocalDb() {
 }
 
 // Read from Supabase or fallback to local
-async function readData() {
+async function readData(): Promise<{ data: any; source: "supabase" | "local" }> {
   if (SUPABASE_URL && SUPABASE_ANON_KEY) {
     try {
       const res = await fetch(`${SUPABASE_URL}/rest/v1/lexiflow_store?id=eq.default`, {
@@ -68,8 +78,13 @@ async function readData() {
 
       if (res.ok) {
         const rows = await res.json();
-        if (rows && rows.length > 0) {
+        if (rows && rows.length > 0 && rows[0].data) {
           const dbData = rows[0].data;
+          // Ensure standard structure
+          if (!dbData.progress) dbData.progress = { masteredIds: [], starredIds: [], notes: {} };
+          if (!dbData.cardCache) dbData.cardCache = {};
+          if (!dbData.generalNotes) dbData.generalNotes = [];
+          if (!dbData.reviewWords) dbData.reviewWords = [];
           return { data: dbData, source: "supabase" };
         } else {
           // Table exists, but no row with id='default' yet. Initialize it.
@@ -95,7 +110,12 @@ async function readLocalData() {
   try {
     await ensureLocalDb();
     const fileContent = await fs.readFile(DB_FILE, "utf-8");
-    return JSON.parse(fileContent);
+    const parsed = JSON.parse(fileContent);
+    if (!parsed.progress) parsed.progress = { masteredIds: [], starredIds: [], notes: {} };
+    if (!parsed.cardCache) parsed.cardCache = {};
+    if (!parsed.generalNotes) parsed.generalNotes = [];
+    if (!parsed.reviewWords) parsed.reviewWords = [];
+    return parsed;
   } catch (e) {
     return {
       progress: {
@@ -110,7 +130,7 @@ async function readLocalData() {
   }
 }
 
-async function writeToSupabase(data: any) {
+async function writeToSupabase(data: any): Promise<boolean> {
   if (!SUPABASE_URL || !SUPABASE_ANON_KEY) return false;
   try {
     const res = await fetch(`${SUPABASE_URL}/rest/v1/lexiflow_store`, {
@@ -143,18 +163,22 @@ export async function GET() {
       if (!data.generalNotes) data.generalNotes = [];
       if (!data.reviewWords) data.reviewWords = [];
       if (!data.cardCache) data.cardCache = {};
+      if (!data.progress) data.progress = { masteredIds: [], starredIds: [], notes: {} };
 
-      return NextResponse.json({
-        ...data,
-        _dbInfo: {
-          connected: source === "supabase",
-          source: source,
-          needTableCreation: source === "local" && !!SUPABASE_URL
-        }
-      });
+      return NextResponse.json(
+        {
+          ...data,
+          _dbInfo: {
+            connected: source === "supabase",
+            source: source,
+            serverTimestamp: Date.now()
+          }
+        },
+        { headers: NO_CACHE_HEADERS }
+      );
     } catch (error: any) {
       console.error("Failed to load database:", error);
-      return NextResponse.json({ error: "Failed to load database" }, { status: 500 });
+      return NextResponse.json({ error: "Failed to load database" }, { status: 500, headers: NO_CACHE_HEADERS });
     }
   });
 }
@@ -163,15 +187,111 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
     return await enqueue(async () => {
-      const { data: currentData, source } = await readData();
+      const { data: currentData } = await readData();
+
+      const isFullReset = body.isFullReset === true;
+      const isMasteryReset = body.isMasteryReset === true;
+
+      // 1. Progress Merge Logic
+      let updatedProgress: any;
+      if (isFullReset) {
+        updatedProgress = { masteredIds: [], starredIds: [], notes: {} };
+      } else if (isMasteryReset) {
+        updatedProgress = {
+          ...(currentData.progress || {}),
+          masteredIds: []
+        };
+      } else if (body.progress !== undefined) {
+        if (body.replaceProgress === true) {
+          updatedProgress = {
+            masteredIds: Array.isArray(body.progress.masteredIds) ? body.progress.masteredIds : [],
+            starredIds: Array.isArray(body.progress.starredIds) ? body.progress.starredIds : [],
+            notes: body.progress.notes || {},
+            lastWordId: body.progress.lastWordId || currentData.progress?.lastWordId
+          };
+        } else {
+          // SMART UNION: Keep mastered IDs from BOTH devices so phone & PC never wipe each other!
+          const prevMastered = currentData.progress?.masteredIds || [];
+          const incomingMastered = body.progress.masteredIds || [];
+          const mergedMastered = Array.from(new Set([...prevMastered, ...incomingMastered]));
+
+          const prevStarred = currentData.progress?.starredIds || [];
+          const incomingStarred = body.progress.starredIds || [];
+          const mergedStarred = Array.from(new Set([...prevStarred, ...incomingStarred]));
+
+          const mergedNotes = {
+            ...(currentData.progress?.notes || {}),
+            ...(body.progress.notes || {})
+          };
+
+          updatedProgress = {
+            masteredIds: mergedMastered,
+            starredIds: mergedStarred,
+            notes: mergedNotes,
+            lastWordId: body.progress.lastWordId || currentData.progress?.lastWordId
+          };
+        }
+      } else {
+        updatedProgress = currentData.progress || { masteredIds: [], starredIds: [], notes: {} };
+      }
+
+      // 2. Card Cache Merge Logic:
+      let updatedCardCache: any;
+      if (isFullReset) {
+        updatedCardCache = {};
+      } else if (body.cardCachePatch !== undefined) {
+        // Incremental card addition from AI generator
+        updatedCardCache = { ...(currentData.cardCache || {}), ...body.cardCachePatch };
+      } else if (body.cardCache !== undefined) {
+        // Deep merge full cache so sentences created on computer are preserved when phone syncs!
+        updatedCardCache = { ...(currentData.cardCache || {}), ...body.cardCache };
+      } else {
+        updatedCardCache = currentData.cardCache || {};
+      }
+
+      // 3. Review Words Merge Logic (unique by word lowercase)
+      let updatedReviewWords: any;
+      if (isFullReset) {
+        updatedReviewWords = [];
+      } else if (body.reviewWords !== undefined) {
+        if (body.replaceReviewWords === true) {
+          updatedReviewWords = body.reviewWords || [];
+        } else {
+          const reviewMap = new Map<string, any>();
+          (currentData.reviewWords || []).forEach((rw: any) => reviewMap.set(rw.word.toLowerCase(), rw));
+          (body.reviewWords || []).forEach((rw: any) => reviewMap.set(rw.word.toLowerCase(), rw));
+          updatedReviewWords = Array.from(reviewMap.values()).sort(
+            (a: any, b: any) => new Date(b.addedAt).getTime() - new Date(a.addedAt).getTime()
+          );
+        }
+      } else {
+        updatedReviewWords = currentData.reviewWords || [];
+      }
+
+      // 4. General Notes Merge Logic (unique by ID)
+      let updatedGeneralNotes: any;
+      if (isFullReset) {
+        updatedGeneralNotes = [];
+      } else if (body.generalNotes !== undefined) {
+        if (body.replaceGeneralNotes === true) {
+          updatedGeneralNotes = body.generalNotes || [];
+        } else {
+          const notesMap = new Map<string, any>();
+          (currentData.generalNotes || []).forEach((n: any) => notesMap.set(n.id, n));
+          (body.generalNotes || []).forEach((n: any) => notesMap.set(n.id, n));
+          updatedGeneralNotes = Array.from(notesMap.values()).sort(
+            (a: any, b: any) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+          );
+        }
+      } else {
+        updatedGeneralNotes = currentData.generalNotes || [];
+      }
 
       const updatedData = {
-        progress: body.progress !== undefined ? body.progress : (currentData.progress || { masteredIds: [], starredIds: [], notes: {} }),
-        cardCache: body.cardCachePatch !== undefined
-          ? { ...(currentData.cardCache || {}), ...body.cardCachePatch }
-          : (body.cardCache !== undefined ? body.cardCache : (currentData.cardCache || {})),
-        generalNotes: body.generalNotes !== undefined ? body.generalNotes : (currentData.generalNotes || []),
-        reviewWords: body.reviewWords !== undefined ? body.reviewWords : (currentData.reviewWords || []),
+        progress: updatedProgress,
+        cardCache: updatedCardCache,
+        generalNotes: updatedGeneralNotes,
+        reviewWords: updatedReviewWords
       };
 
       let supabaseSuccess = false;
@@ -184,20 +304,24 @@ export async function POST(request: Request) {
         await ensureLocalDb();
         await fs.writeFile(DB_FILE, JSON.stringify(updatedData, null, 2), "utf-8");
       } catch (err) {
-        console.warn("Failed to write local backup DB (normal on read-only serverless hosts):", err);
+        // normal on read-only serverless hosts
       }
 
-      return NextResponse.json({
-        success: true,
-        data: updatedData,
-        _dbInfo: {
-          connected: supabaseSuccess,
-          source: supabaseSuccess ? "supabase" : "local"
-        }
-      });
+      return NextResponse.json(
+        {
+          success: true,
+          data: updatedData,
+          _dbInfo: {
+            connected: supabaseSuccess,
+            source: supabaseSuccess ? "supabase" : "local",
+            serverTimestamp: Date.now()
+          }
+        },
+        { headers: NO_CACHE_HEADERS }
+      );
     });
   } catch (error: any) {
     console.error("Failed to save database:", error);
-    return NextResponse.json({ error: "Failed to save to database" }, { status: 500 });
+    return NextResponse.json({ error: "Failed to save to database" }, { status: 500, headers: NO_CACHE_HEADERS });
   }
 }
