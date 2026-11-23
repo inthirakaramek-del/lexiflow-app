@@ -202,12 +202,22 @@ export async function POST(request: Request) {
           masteredIds: []
         };
       } else if (body.progress !== undefined) {
+        const prevPosTs = currentData.progress?.lastWordUpdatedAt || 0;
+        const incPosTs = body.progress.lastWordUpdatedAt || 0;
+        const useIncomingPos = incPosTs >= prevPosTs && Boolean(body.progress.lastWordId);
+
+        const mergedPosFields = {
+          lastWordId: useIncomingPos ? body.progress.lastWordId : (currentData.progress?.lastWordId || body.progress.lastWordId),
+          lastWordUpdatedAt: useIncomingPos ? incPosTs : prevPosTs,
+          deckType: useIncomingPos ? (body.progress.deckType || currentData.progress?.deckType) : (currentData.progress?.deckType || body.progress.deckType),
+        };
+
         if (body.replaceProgress === true) {
           updatedProgress = {
             masteredIds: Array.isArray(body.progress.masteredIds) ? body.progress.masteredIds : [],
             starredIds: Array.isArray(body.progress.starredIds) ? body.progress.starredIds : [],
             notes: body.progress.notes || {},
-            lastWordId: body.progress.lastWordId || currentData.progress?.lastWordId
+            ...mergedPosFields,
           };
         } else {
           // SMART UNION: Keep mastered IDs from BOTH devices so phone & PC never wipe each other!
@@ -228,23 +238,47 @@ export async function POST(request: Request) {
             masteredIds: mergedMastered,
             starredIds: mergedStarred,
             notes: mergedNotes,
-            lastWordId: body.progress.lastWordId || currentData.progress?.lastWordId
+            ...mergedPosFields,
           };
         }
       } else {
         updatedProgress = currentData.progress || { masteredIds: [], starredIds: [], notes: {} };
       }
 
-      // 2. Card Cache Merge Logic:
+      // Lightweight cross-device position sync (current word & deck)
+      if (!isFullReset && body.positionUpdate && typeof body.positionUpdate === "object") {
+        const incomingTs = body.positionUpdate.lastWordUpdatedAt || Date.now();
+        const prevTs = updatedProgress.lastWordUpdatedAt || 0;
+        if (incomingTs >= prevTs) {
+          updatedProgress = {
+            ...updatedProgress,
+            lastWordId: body.positionUpdate.lastWordId || updatedProgress.lastWordId,
+            lastWordUpdatedAt: incomingTs,
+            deckType: body.positionUpdate.deckType || updatedProgress.deckType,
+          };
+        }
+      }
+
+      // 2. Card Cache Merge Logic (never store temporary fallback cards in cloud DB)
+      const filterValidCards = (cardsObj: Record<string, any>) => {
+        const clean: Record<string, any> = {};
+        for (const [k, v] of Object.entries(cardsObj || {})) {
+          if (v && !v.isFallback && Array.isArray(v.sentences) && v.sentences.length > 0) {
+            clean[k] = v;
+          }
+        }
+        return clean;
+      };
+
       let updatedCardCache: any;
       if (isFullReset) {
         updatedCardCache = {};
       } else if (body.cardCachePatch !== undefined) {
         // Incremental card addition from AI generator
-        updatedCardCache = { ...(currentData.cardCache || {}), ...body.cardCachePatch };
+        updatedCardCache = { ...(currentData.cardCache || {}), ...filterValidCards(body.cardCachePatch) };
       } else if (body.cardCache !== undefined) {
         // Deep merge full cache so sentences created on computer are preserved when phone syncs!
-        updatedCardCache = { ...(currentData.cardCache || {}), ...body.cardCache };
+        updatedCardCache = { ...(currentData.cardCache || {}), ...filterValidCards(body.cardCache) };
       } else {
         updatedCardCache = currentData.cardCache || {};
       }

@@ -99,6 +99,9 @@ export default function Home() {
   // Cloud Sync state: 'idle' | 'syncing' | 'synced' | 'error'
   const [syncStatus, setSyncStatus] = useState<"idle" | "syncing" | "synced" | "error">("idle");
   const [lastSyncTime, setLastSyncTime] = useState<Date | null>(null);
+  const localLastWordUpdatedAtRef = useRef<number>(0);
+  const lastSyncedWordIdRef = useRef<string | null>(null);
+  const lastSyncedDeckRef = useRef<string | null>(null);
 
   // Helper to validate cached card format
   const isCardValidAndNew = (card: CardData | undefined) => {
@@ -108,7 +111,7 @@ export default function Home() {
     return true;
   };
 
-  // Bidirectional cloud sync with Supabase
+  // Bidirectional cloud sync with Supabase (stats, sentences, AND current card position!)
   const syncWithCloud = useCallback(async (isManual: boolean = false) => {
     try {
       if (isManual) setSyncStatus("syncing");
@@ -128,10 +131,13 @@ export default function Home() {
         const mergedMastered = Array.from(new Set([...(prev.masteredIds || []), ...(dbProgress.masteredIds || [])]));
         const mergedStarred = Array.from(new Set([...(prev.starredIds || []), ...(dbProgress.starredIds || [])]));
         const mergedNotes = { ...(dbProgress.notes || {}), ...(prev.notes || {}) };
-        const merged = {
+        const merged: UserProgress = {
           masteredIds: mergedMastered,
           starredIds: mergedStarred,
-          notes: mergedNotes
+          notes: mergedNotes,
+          lastWordId: dbProgress.lastWordId || prev.lastWordId,
+          lastWordUpdatedAt: Math.max(dbProgress.lastWordUpdatedAt || 0, prev.lastWordUpdatedAt || 0),
+          deckType: dbProgress.deckType || prev.deckType
         };
         try {
           localStorage.setItem("lexiflow_progress", JSON.stringify(merged));
@@ -139,7 +145,7 @@ export default function Home() {
         return merged;
       });
 
-      // 2. Card Cache: Merge cards (cloud cards take priority so phone & PC share identical generated sentences)
+      // 2. Card Cache: Merge cards (cloud cards take priority so phone, iPad & PC share identical generated sentences)
       setCardCache((prev) => {
         const merged: Record<string, CardData> = {};
         for (const k in prev) {
@@ -186,6 +192,35 @@ export default function Home() {
         return merged;
       });
 
+      // 5. Sync current card position & deck across PC, Phone, and iPad
+      if (dbProgress.lastWordId) {
+        const cloudTs = dbProgress.lastWordUpdatedAt || 0;
+        const localTs = localLastWordUpdatedAtRef.current || 0;
+        const localSavedId = typeof window !== "undefined" ? localStorage.getItem("lexiflow_last_word_id") : null;
+
+        // Follow cloud position if cloud is newer OR if this device hasn't navigated yet
+        if (cloudTs > localTs || !localSavedId) {
+          localLastWordUpdatedAtRef.current = cloudTs || Date.now();
+          lastSyncedWordIdRef.current = dbProgress.lastWordId;
+          if (dbProgress.deckType) {
+            lastSyncedDeckRef.current = dbProgress.deckType;
+          }
+          try {
+            localStorage.setItem("lexiflow_last_word_id", dbProgress.lastWordId);
+            localStorage.setItem("lexiflow_last_word_updated_at", String(localLastWordUpdatedAtRef.current));
+            if (dbProgress.deckType) {
+              localStorage.setItem("lexiflow_deck_type", dbProgress.deckType);
+            }
+          } catch (_) {}
+
+          isRestoringRef.current = true;
+          if (dbProgress.deckType) {
+            setFlashcardDeckType(dbProgress.deckType as any);
+          }
+          setLastWordIdToRestore(dbProgress.lastWordId);
+        }
+      }
+
       setSyncStatus("synced");
       setLastSyncTime(new Date());
     } catch (e) {
@@ -223,9 +258,15 @@ export default function Home() {
       const savedDeckType = localStorage.getItem("lexiflow_deck_type");
       if (savedDeckType) {
         setFlashcardDeckType(savedDeckType as any);
+        lastSyncedDeckRef.current = savedDeckType;
+      }
+      const savedLastWordUpdatedAt = Number(localStorage.getItem("lexiflow_last_word_updated_at") || "0");
+      if (savedLastWordUpdatedAt > 0) {
+        localLastWordUpdatedAtRef.current = savedLastWordUpdatedAt;
       }
       const savedLastWordId = localStorage.getItem("lexiflow_last_word_id");
       if (savedLastWordId) {
+        lastSyncedWordIdRef.current = savedLastWordId;
         setLastWordIdToRestore(savedLastWordId);
       } else {
         isRestoringRef.current = false;
@@ -296,18 +337,22 @@ export default function Home() {
     };
   }, [isVoiceDropdownOpen]);
 
-  // Save card cache using partial patches
+  // Save card cache using partial patches (never overwrite cloud DB with temporary fallback cards)
   const addCardToCache = (wordId: string, cardData: CardData) => {
     setCardCache((prevCache) => {
       const updatedCache = { ...prevCache, [wordId]: cardData };
-      localStorage.setItem("lexiflow_card_cache", JSON.stringify(updatedCache));
-      fetch("/api/db", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ cardCachePatch: { [wordId]: cardData } })
-      }).catch((e) => {
-        console.error("Failed to save card cache to server DB", e);
-      });
+      if (!cardData.isFallback) {
+        try {
+          localStorage.setItem("lexiflow_card_cache", JSON.stringify(updatedCache));
+        } catch (_) {}
+        fetch("/api/db", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ cardCachePatch: { [wordId]: cardData } })
+        }).catch((e) => {
+          console.error("Failed to save card cache to server DB", e);
+        });
+      }
       return updatedCache;
     });
   };
@@ -618,12 +663,45 @@ export default function Home() {
 
   const currentWordObj = flashcardWords[currentCardIndex] || null;
 
-  // Save current word ID to localStorage to restore later
+  // Save current word ID & deck to localStorage AND sync to Supabase cloud across devices
   useEffect(() => {
-    if (currentWordObj && hasLoadedSession && !lastWordIdToRestore) {
-      localStorage.setItem("lexiflow_last_word_id", currentWordObj.id);
+    if (!currentWordObj || !hasLoadedSession || lastWordIdToRestore || isRestoringRef.current) {
+      return;
     }
-  }, [currentWordObj, hasLoadedSession, lastWordIdToRestore]);
+
+    const wordChanged = currentWordObj.id !== lastSyncedWordIdRef.current;
+    const deckChanged = flashcardDeckType !== lastSyncedDeckRef.current;
+    if (!wordChanged && !deckChanged) {
+      return;
+    }
+
+    const now = Date.now();
+    lastSyncedWordIdRef.current = currentWordObj.id;
+    lastSyncedDeckRef.current = flashcardDeckType;
+    localLastWordUpdatedAtRef.current = now;
+
+    try {
+      localStorage.setItem("lexiflow_last_word_id", currentWordObj.id);
+      localStorage.setItem("lexiflow_last_word_updated_at", String(now));
+      localStorage.setItem("lexiflow_deck_type", flashcardDeckType);
+    } catch (_) {}
+
+    const syncPosTimer = setTimeout(() => {
+      fetch("/api/db", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          positionUpdate: {
+            lastWordId: currentWordObj.id,
+            lastWordUpdatedAt: now,
+            deckType: flashcardDeckType
+          }
+        })
+      }).catch((e) => console.warn("Failed to sync card position to cloud", e));
+    }, 400);
+
+    return () => clearTimeout(syncPosTimer);
+  }, [currentWordObj, flashcardDeckType, hasLoadedSession, lastWordIdToRestore]);
 
   // Restore the index of the last viewed word once the deck is ready
   useEffect(() => {
@@ -660,7 +738,8 @@ export default function Home() {
 
   // Fetch or generate sentence structures when current card changes
   useEffect(() => {
-    if (!hasLoadedSession) {
+    // Wait for cloud session & position restoration before loading/generating any card
+    if (!hasLoadedSession || lastWordIdToRestore) {
       return;
     }
 
@@ -672,19 +751,20 @@ export default function Home() {
       return;
     }
 
-    if (activeCardId === currentWordObj.id) {
-      // Already loaded!
+    // Check database cache first — ถ้ามีใน cache ใช้เลย ไม่ต้องรัน AI ใหม่ (และอัปเดตทันทีหากคลาวด์ส่งประโยคใหม่มา)
+    const cached = cardCache[currentWordObj.id];
+    const isFallbackCard = cached && (cached.isFallback || (cached.wordTranslation && cached.wordTranslation.includes("คำแปลของ")));
+    if (cached && Array.isArray(cached.sentences) && cached.sentences.length > 0 && !isFallbackCard) {
+      if (activeCardId !== currentWordObj.id || activeCardData !== cached) {
+        setActiveCardData(cached);
+        setActiveCardId(currentWordObj.id);
+      }
+      setApiError(null);
       setLoadingAI(false);
       return;
     }
 
-    // Check database cache first — ถ้ามีใน cache ใช้เลย ไม่ต้องรัน AI ใหม่
-    const cached = cardCache[currentWordObj.id];
-    const isFallbackCard = cached && (cached.isFallback || (cached.wordTranslation && cached.wordTranslation.includes("คำแปลของ")));
-    if (cached && Array.isArray(cached.sentences) && cached.sentences.length > 0 && !isFallbackCard) {
-      setActiveCardData(cached);
-      setActiveCardId(currentWordObj.id);
-      setApiError(null);
+    if (activeCardId === currentWordObj.id && activeCardData) {
       setLoadingAI(false);
       return;
     }
@@ -692,60 +772,84 @@ export default function Home() {
     // Prevent duplicate parallel requests for the same word
     if (isGeneratingRef.current) return;
 
-    // Not in cache, start loading state with 600ms debounce to avoid spamming on fast next/prev clicks
+    // Not in local cache: check cloud DB first before calling AI, with 500ms debounce
     setLoadingAI(true);
     setApiError(null);
     setActiveCardData(null);
     setActiveCardId(null);
 
-    const debounceTimer = setTimeout(() => {
+    const targetWord = currentWordObj;
+    const debounceTimer = setTimeout(async () => {
       isGeneratingRef.current = true;
-      const wordIdx = VOCAB.findIndex((v) => v.id === currentWordObj.id);
-      const storyStyles = ["dialogue", "decision", "search", "narrative"] as const;
-      const assignedStyle = storyStyles[(wordIdx >= 0 ? wordIdx : 0) % 4];
-
-      fetch("/api/generate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          word: currentWordObj.word,
-          pos: currentWordObj.pos,
-          meaning: currentWordObj.meaning,
-          pronunciation: currentWordObj.pronunciation,
-          lengthMode: storyLengthMode,
-          style: assignedStyle
-        })
-      })
-        .then(async (res) => {
-          if (!res.ok) {
-            const errData = await res.json().catch(() => ({}));
-            throw new Error(errData.error || `HTTP ${res.status}`);
+      try {
+        // Step 1: Check latest Supabase cloud DB first (in case Phone/iPad/PC just generated it!)
+        try {
+          const dbRes = await fetch("/api/db?t=" + Date.now(), {
+            headers: { "Cache-Control": "no-cache" }
+          });
+          if (dbRes.ok) {
+            const dbData = await dbRes.json();
+            const cloudCard = dbData?.cardCache?.[targetWord.id];
+            if (isCardValidAndNew(cloudCard)) {
+              setCardCache((prev) => {
+                const merged = { ...prev, ...(dbData.cardCache || {}), [targetWord.id]: cloudCard };
+                try {
+                  localStorage.setItem("lexiflow_card_cache", JSON.stringify(merged));
+                } catch (_) {}
+                return merged;
+              });
+              setActiveCardData(cloudCard);
+              setActiveCardId(targetWord.id);
+              setApiError(null);
+              return;
+            }
           }
-          const data = await res.json();
-          if (data.error) throw new Error(data.error);
-          return data as CardData;
-        })
-        .then((data) => {
-          addCardToCache(currentWordObj.id, data);
-          setActiveCardData(data);
-          setActiveCardId(currentWordObj.id);
-        })
-        .catch((err) => {
-          console.warn("API generate failed, loading client-side fallback sentences.", err);
-          setApiError(err.message || "Unknown API Error");
-          const fallback = generateFallbackCard(currentWordObj);
-          addCardToCache(currentWordObj.id, fallback);
-          setActiveCardData(fallback);
-          setActiveCardId(currentWordObj.id);
-        })
-        .finally(() => {
-          isGeneratingRef.current = false;
-          setLoadingAI(false);
+        } catch (dbCheckErr) {
+          console.warn("Pre-generation cloud cache check skipped:", dbCheckErr);
+        }
+
+        // Step 2: Truly not in cloud DB yet -> call AI to generate and save to cloud DB
+        const wordIdx = VOCAB.findIndex((v) => v.id === targetWord.id);
+        const storyStyles = ["dialogue", "decision", "search", "narrative"] as const;
+        const assignedStyle = storyStyles[(wordIdx >= 0 ? wordIdx : 0) % 4];
+
+        const res = await fetch("/api/generate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            word: targetWord.word,
+            pos: targetWord.pos,
+            meaning: targetWord.meaning,
+            pronunciation: targetWord.pronunciation,
+            lengthMode: storyLengthMode,
+            style: assignedStyle
+          })
         });
-    }, 600);
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          throw new Error(errData.error || `HTTP ${res.status}`);
+        }
+        const data = await res.json();
+        if (data.error) throw new Error(data.error);
+
+        addCardToCache(targetWord.id, data as CardData);
+        setActiveCardData(data as CardData);
+        setActiveCardId(targetWord.id);
+      } catch (err: any) {
+        console.warn("API generate failed, loading client-side fallback sentences.", err);
+        setApiError(err.message || "Unknown API Error");
+        const fallback = generateFallbackCard(targetWord);
+        addCardToCache(targetWord.id, fallback);
+        setActiveCardData(fallback);
+        setActiveCardId(targetWord.id);
+      } finally {
+        isGeneratingRef.current = false;
+        setLoadingAI(false);
+      }
+    }, 500);
 
     return () => clearTimeout(debounceTimer);
-  }, [currentWordObj, cardCache, activeCardId, hasLoadedSession, storyLengthMode]);
+  }, [currentWordObj, cardCache, activeCardId, activeCardData, hasLoadedSession, lastWordIdToRestore, storyLengthMode]);
 
   const toggleStoryLengthMode = (e?: React.MouseEvent) => {
     if (e) e.stopPropagation();

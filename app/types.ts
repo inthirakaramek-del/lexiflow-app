@@ -12,6 +12,9 @@ export interface UserProgress {
   masteredIds: string[];
   starredIds: string[];
   notes: Record<string, string>; // Maps word ID to user notes/custom definitions
+  lastWordId?: string;
+  lastWordUpdatedAt?: number;
+  deckType?: string;
 }
 
 export interface ReviewWord {
