@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { VOCAB } from "./vocab";
 import { Word, UserProgress, ReviewWord, GeneralNote } from "./types";
 import { CardData, generateFallbackCard } from "./utils/fallbackGenerator";
+import CardNoteEditor, { hasCardNoteContent, getNotePlainText } from "./components/CardNoteEditor";
 
 // 10 Natural AI Neural Voices (100% Free via Edge Neural TTS)
 export const AVAILABLE_VOICES = [
@@ -616,6 +617,7 @@ export default function Home() {
   const [flashcardDeckType, setFlashcardDeckType] = useState<"all" | "learning" | "starred" | "A1" | "A2" | "B1" | "B2">("all");
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
   const [showStoryTranslation, setShowStoryTranslation] = useState(false);
+  const [showCardNote, setShowCardNote] = useState(false);
   const touchStartPos = useRef<{ x: number; y: number } | null>(null);
   const isTouchDragging = useRef(false);
   const [cardTransition, setCardTransition] = useState<"none" | "swipe-left" | "swipe-right">("none");
@@ -662,6 +664,11 @@ export default function Home() {
   };
 
   const currentWordObj = flashcardWords[currentCardIndex] || null;
+
+  // Always close card note by default whenever switching to a different word
+  useEffect(() => {
+    setShowCardNote(false);
+  }, [currentWordObj?.id]);
 
   // Save current word ID & deck to localStorage AND sync to Supabase cloud across devices
   useEffect(() => {
@@ -1096,8 +1103,14 @@ export default function Home() {
     if (activeTab !== "flashcards") return;
 
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
-        return; // Ignore inside input fields
+      const targetEl = e.target as HTMLElement | null;
+      if (
+        targetEl instanceof HTMLInputElement ||
+        targetEl instanceof HTMLTextAreaElement ||
+        targetEl?.isContentEditable ||
+        targetEl?.closest?.("[contenteditable='true']")
+      ) {
+        return; // Ignore inside input fields and rich note editors
       }
       if (e.key === " ") {
         e.preventDefault();
@@ -2344,14 +2357,14 @@ export default function Home() {
                                 ))}
                               </div>
 
-                              {/* 3. ปุ่มกดเปิด/ปิดคำแปลบทความทั้งเรื่อง */}
-                              <div className="pt-2">
+                              {/* 3. ปุ่มกดเปิด/ปิดคำแปลบทความ + ปุ่มเปิด/ปิดโน๊ตส่วนตัว (เริ่มต้นปิดทุกครั้ง) */}
+                              <div className="pt-2 flex flex-col sm:flex-row gap-2">
                                 <button
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     setShowStoryTranslation(!showStoryTranslation);
                                   }}
-                                  className={`w-full py-2.5 px-4 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 border shadow-xs ${
+                                  className={`flex-1 py-2.5 px-4 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 border shadow-xs cursor-pointer ${
                                     showStoryTranslation
                                       ? "bg-slate-100 border-slate-200 text-slate-700 hover:bg-slate-200"
                                       : "bg-gradient-to-r from-sky-50 to-indigo-50 hover:from-sky-100 hover:to-indigo-100 border-sky-200 text-sky-800"
@@ -2359,6 +2372,31 @@ export default function Home() {
                                 >
                                   <span>{showStoryTranslation ? "🙈 ซ่อนคำแปลบทความ (Spacebar)" : "👁️ แสดงคำแปลบทความทั้งเรื่อง (Spacebar)"}</span>
                                 </button>
+
+                                {(() => {
+                                  const hasNote = hasCardNoteContent(progress.notes[currentWordObj.id]);
+                                  return (
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setShowCardNote((prev) => !prev);
+                                      }}
+                                      className={`sm:w-auto py-2.5 px-4 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 border shadow-xs cursor-pointer ${
+                                        showCardNote
+                                          ? "bg-[#F5F1EE] border-[#A28C89] text-[#8E7774]"
+                                          : hasNote
+                                          ? "bg-amber-50/80 hover:bg-amber-100/80 border-amber-200 text-amber-800"
+                                          : "bg-white hover:bg-[#FAF7F5] border-[#E5DDD8] text-slate-600"
+                                      }`}
+                                      title="เปิด/ปิดโน๊ตส่วนตัว คำอธิบาย และตารางของคำนี้"
+                                    >
+                                      <span>{showCardNote ? "🙈 ซ่อนโน๊ต" : hasNote ? "📝 แสดงโน๊ตที่จดไว้" : "📝 เพิ่มโน๊ต"}</span>
+                                      {hasNote && !showCardNote && (
+                                        <span className="w-2 h-2 rounded-full bg-amber-500 inline-block" />
+                                      )}
+                                    </button>
+                                  );
+                                })()}
                               </div>
 
                               {/* 4. กล่องคำแปลไทยเมื่อกดเปิด (ยาวต่อเนื่อง ไม่แบ่ง 1 2 3 4 5) */}
@@ -2375,6 +2413,15 @@ export default function Home() {
                                   </p>
                                 </div>
                               )}
+
+                              {/* 5. กล่องโน๊ตส่วนตัว (Rich Text เปลี่ยนสีได้ + เพิ่มตารางเองได้ — เริ่มต้นปิดทุกครั้ง) */}
+                              {showCardNote && (
+                                <CardNoteEditor
+                                  wordId={currentWordObj.id}
+                                  rawValue={progress.notes[currentWordObj.id] || ""}
+                                  onSave={saveNote}
+                                />
+                              )}
                             </div>
                           ) : (
                             <p className="text-xs text-slate-400 text-center">ไม่สามารถโหลดข้อมูลบทความได้</p>
@@ -2388,20 +2435,6 @@ export default function Home() {
                           </span>
                         </div>
                       </div>
-
-                  {/* Starred Notes Input Area */}
-                  <div className="w-full max-w-xl bg-white border border-[#E5E0DC] rounded-2xl p-4 flex flex-col gap-3 shadow-sm">
-                    <label className="text-xs text-slate-500 font-bold uppercase tracking-wider">
-                      Add Custom Study Notes / Translations:
-                    </label>
-                    <textarea
-                      value={progress.notes[currentWordObj.id] || ""}
-                      onChange={(e) => saveNote(currentWordObj.id, e.target.value)}
-                      placeholder="e.g. ละทิ้ง, ปล่อย, เลิกคิด / To leave behind permanently..."
-                      rows={2}
-                      className="bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm text-slate-700 focus:outline-none focus:border-[#B8A3A0] focus:bg-white transition resize-none placeholder:text-slate-400"
-                    />
-                  </div>
 
                   {/* Interactive Controls & Swipe Buttons */}
                   <div className="w-full max-w-xl flex items-center justify-between gap-4">
@@ -3001,9 +3034,9 @@ export default function Home() {
                           <h4 className="text-base font-extrabold text-slate-800 group-hover:text-[#A28C89] transition">{wordObj.word}</h4>
                         </div>
 
-                        {progress.notes[wordObj.id] && (
-                          <p className="text-xs text-slate-600 bg-slate-50 border border-slate-100 rounded-lg px-2.5 py-1.5 mt-1 italic">
-                            {progress.notes[wordObj.id]}
+                        {hasCardNoteContent(progress.notes[wordObj.id]) && (
+                          <p className="text-xs text-slate-600 bg-slate-50 border border-slate-100 rounded-lg px-2.5 py-1.5 mt-1 italic line-clamp-2">
+                            📝 {getNotePlainText(progress.notes[wordObj.id])}
                           </p>
                         )}
 
